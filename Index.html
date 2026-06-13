@@ -89,6 +89,11 @@
             transform: scale(1.08);
             border-color: var(--blue-accent);
         }
+        /* Style Tambahan untuk Menu Baris per Halaman */
+        .Paging-info {
+            font-size: 13px;
+            color: #64748b;
+        }
     </style>
 </head>
 <body>
@@ -142,14 +147,23 @@
                     <label class="form-label small fw-medium">Pilih Hari / Tanggal:</label>
                     <input type="date" id="filterTanggal" class="form-control">
                 </div>
-                <div class="col-md-5">
+                <div class="col-md-4">
                     <label class="form-label small fw-medium">Cari Nama / Zona / Kondisi:</label>
                     <div class="input-group">
                         <span class="input-group-text bg-white border-end-0 text-muted"><i class="fa-solid fa-magnifying-glass"></i></span>
                         <input type="text" id="filterCari" class="form-control border-start-0" placeholder="Ketik kata kunci pencarian...">
                     </div>
                 </div>
-                <div class="col-md-4 d-flex align-items-end">
+                <div class="col-md-2">
+                    <label class="form-label small fw-medium">Baris Per Halaman:</label>
+                    <select id="pilihanLimitBaris" class="form-select" onchange="gantiLimitBarisPaging()">
+                        <option value="10" selected>10 Baris</option>
+                        <option value="25">25 Baris</option>
+                        <option value="50">50 Baris</option>
+                        <option value="100">100 Baris</option>
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
                     <button class="btn btn-outline-secondary w-100" onclick="resetTanggal()">Tampilkan Semua Tanggal</button>
                 </div>
             </div>
@@ -183,6 +197,20 @@
                     <tbody id="bodyTabelPatroli"></tbody>
                 </table>
             </div>
+
+            <div id="footerPagination" class="p-3 bg-light border-top d-flex justify-content-between align-items-center" style="display: none !important;">
+                <div class="Paging-info" id="infoTextPaging">Menampilkan data 0 - 0 dari 0</div>
+                <nav>
+                    <ul class="pagination pagination-sm m-0 gap-1">
+                        <li class="page-item" id="btnHalamanPrev">
+                            <button class="page-link rounded px-3" onclick="navigasiKeHalamanSebelumnya()"><i class="fa-solid fa-angle-left me-1"></i> Prev</button>
+                        </li>
+                        <li class="page-item" id="btnHalamanNext">
+                            <button class="page-link rounded px-3" onclick="navigasiKeHalamanSelanjutnya()">Next <i class="fa-solid fa-angle-right ms-1"></i></button>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
         </div>
     </div>
 
@@ -200,7 +228,13 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         const API_URL_WEBAPP = "https://script.google.com/macros/s/AKfycbyJuzwTGe-bucxDG6Yvgp-GEEsk5RdUpjR7ZX-G6KL_PlkiAn6QhustBE5n2fWBVrmA/exec";
+        
         let dataMasterPusat = [];
+        let dataHasilSaringan = []; // Menyimpan data setelah difilter pencarian/tanggal
+        
+        // Variabel Manajemen Kontrol Pagination
+        let halamanSaatIni = 1;
+        let barisPerHalaman = 10;
 
         document.addEventListener("DOMContentLoaded", function() {
             const hariIni = new Date();
@@ -210,8 +244,8 @@
             document.getElementById('filterTanggal').value = `${yyyy}-${mm}-${dd}`;
             
             muatDataLaporanDashboard();
-            document.getElementById('filterTanggal').addEventListener('change', jalankanFilterData);
-            document.getElementById('filterCari').addEventListener('input', jalankanFilterData);
+            document.getElementById('filterTanggal').addEventListener('change', hitungUlangFilterDanResetPage);
+            document.getElementById('filterCari').addEventListener('input', hitungUlangFilterDanResetPage);
         });
 
         function muatDataLaporanDashboard() {
@@ -220,18 +254,20 @@
             var btnExp = document.getElementById('btnExport');
             var loading = document.getElementById('loadingStatus');
             var tabel = document.getElementById('tabelLogPatroli');
+            var pagingDiv = document.getElementById('footerPagination');
             
             btnRef.disabled = true;
             btnExp.disabled = true;
             iconRef.classList.add('fa-spin'); 
             loading.style.display = "block";
             tabel.style.display = "none";
+            pagingDiv.setAttribute("style", "display: none !important;");
 
             fetch(`${API_URL_WEBAPP}?aksi=ambilData&_=${new Date().getTime()}`)
             .then(res => res.json())
             .then(response => {
                 dataMasterPusat = Array.isArray(response) ? response : (response.logData || []);
-                jalankanFilterData();
+                hitungUlangFilterDanResetPage();
                 btnRef.disabled = false;
                 iconRef.classList.remove('fa-spin');
             })
@@ -242,71 +278,132 @@
             });
         }
 
+        function hitungUlangFilterDanResetPage() {
+            halamanSaatIni = 1; // Reset ke halaman 1 setiap kali user mengubah filter data
+            jalankanFilterData();
+        }
+
+        function gantiLimitBarisPaging() {
+            barisPerHalaman = parseInt(document.getElementById('pilihanLimitBaris').value);
+            halamanSaatIni = 1;
+            renderDataKeTabel();
+        }
+
         function jalankanFilterData() {
             const tglPilihan = document.getElementById('filterTanggal').value; 
             const kataKunci = document.getElementById('filterCari').value.toLowerCase().trim();
-            const tbody = document.getElementById('bodyTabelPatroli');
             
             let tglFormat = tglPilihan ? `${tglPilihan.split('-')[2]}/${tglPilihan.split('-')[1]}/${tglPilihan.split('-')[0]}` : "";
 
-            tbody.innerHTML = "";
-            let counterTerfilter = 0;
             let setPetugasUnik = new Set();
             let setZonaUnik = new Set();
+            
+            // Proses penyaringan data dari data master pusat
+            dataHasilSaringan = dataMasterPusat.filter(item => {
+                if (tglFormat && !item.timestamp.includes(tglFormat)) return false;
+                if (kataKunci && !item.nama.toLowerCase().includes(kataKunci) && !item.zona.toLowerCase().includes(kataKunci) && !item.kondisi.toLowerCase().includes(kataKunci)) return false;
+                
+                if(item.nama && item.nama !== "-") setPetugasUnik.add(item.nama);
+                if(item.zona && item.zona !== "-") setZonaUnik.add(item.zona);
+                return true;
+            });
 
-            if (Array.isArray(dataMasterPusat)) {
-                dataMasterPusat.forEach(item => {
-                    if (tglFormat && !item.timestamp.includes(tglFormat)) return;
-                    if (kataKunci && !item.nama.toLowerCase().includes(kataKunci) && !item.zona.toLowerCase().includes(kataKunci) && !item.kondisi.toLowerCase().includes(kataKunci)) return;
-
-                    counterTerfilter++;
-                    if(item.nama && item.nama !== "-") setPetugasUnik.add(item.nama);
-                    if(item.zona && item.zona !== "-") setZonaUnik.add(item.zona);
-
-                    let kelasBadge = item.kondisi.toLowerCase() === "aman" ? "bg-aman" : "bg-temuan";
-
-                    // LOGIKA RENDER FOTO AUTOMATIC BYPASS
-                    let kolomFoto = "<span class='text-muted small'>Tidak ada foto</span>";
-                    if (item.urlFoto && item.urlFoto.includes("http")) {
-                        kolomFoto = `<img src="${item.urlFoto}" class="img-thumbnail-custom" onclick="bukaModalFoto('${item.urlFoto}')" onerror="this.onerror=null; this.src='https://placehold.co/65x65/f1f5f9/475569?text=Buka+Link'; this.onclick=function(){ window.open('${item.urlAsliDrive || item.urlFoto}', '_blank'); };" title="Klik untuk memperbesar">`;
-                    }
-
-                    // GEOTAGGING FIX TEMPLATE LITERALS SYNTACKS
-                    let kolomPeta = "<span class='text-muted small'>-</span>";
-                    if (item.lat && item.lng && item.lat !== "-") {
-                        kolomPeta = `<a href="https://maps.google.com/?q=${item.lat},${item.lng}" target="_blank" class="btn btn-outline-primary px-2 py-1 small mb-1" style="font-size:11px; text-decoration:none;"><i class="fa-solid fa-map-pin me-1"></i>Peta</a>`;
-                    }
-
-                    let baris = `<tr>
-                        <td><small class="fw-medium">${item.timestamp}</small></td>
-                        <td class="text-capitalize fw-semibold">${item.nama}</td>
-                        <td><span class="badge bg-secondary">${item.zona}</span></td>
-                        <td><span class="badge-kondisi ${kelasBadge}">${item.kondisi}</span></td>
-                        <td>${kolomFoto}</td>
-                        <td>
-                            <div class="d-flex flex-column align-items-start">
-                                ${kolomPeta}
-                                <small class="text-muted text-wrap" style="font-size:10px; max-width:200px; display:block; line-height:1.2;">${item.alamat || '-'}</small>
-                            </div>
-                        </td>
-                    </tr>`;
-                    tbody.innerHTML += baris;
-                });
-            }
-
-            document.getElementById('statTotalLog').innerText = counterTerfilter;
+            // Update statistik berdasarkan data yang lolos filter
+            document.getElementById('statTotalLog').innerText = dataHasilSaringan.length;
             document.getElementById('statPetugas').innerText = setPetugasUnik.size;
             document.getElementById('statZona').innerText = setZonaUnik.size;
             document.getElementById('judulTabel').innerHTML = tglFormat ? `<i class="fa-solid fa-list-ul me-2"></i>Riwayat Patroli Tanggal ${tglFormat}` : `<i class="fa-solid fa-list-ul me-2"></i>Semua Riwayat Aktivitas Patroli`;
 
+            renderDataKeTabel();
+        }
+
+        // FUNGSI UTAMA UNTUK MEMECAH DATA PER HALAMAN (PAGINATION)
+        function renderDataKeTabel() {
+            const tbody = document.getElementById('bodyTabelPatroli');
+            tbody.innerHTML = "";
+
+            const totalData = dataHasilSaringan.length;
+            
+            if (totalData === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-muted fw-medium">Tidak ada riwayat patroli yang cocok dengan filter.</td></tr>`;
+                document.getElementById('loadingStatus').style.display = "none";
+                document.getElementById('tabelLogPatroli').style.display = "table";
+                document.getElementById('footerPagination').setAttribute("style", "display: none !important;");
+                document.getElementById('btnExport').disabled = true;
+                return;
+            }
+
+            // Hitung indeks awal dan akhir data untuk halaman aktif
+            let indexMulai = (halamanSaatIni - 1) * barisPerHalaman;
+            let indexSelesai = indexMulai + barisPerHalaman;
+            if (indexSelesai > totalData) indexSelesai = totalData;
+
+            // Ambil potongan data khusus halaman saat ini saja
+            const dataHalamanIni = dataHasilSaringan.slice(indexMulai, indexSelesai);
+
+            dataHalamanIni.forEach(item => {
+                let kelasBadge = item.kondisi.toLowerCase() === "aman" ? "bg-aman" : "bg-temuan";
+
+                // Render Lampiran Foto
+                let kolomFoto = "<span class='text-muted small'>Tidak ada foto</span>";
+                if (item.urlFoto && item.urlFoto.includes("http")) {
+                    kolomFoto = `<img src="${item.urlFoto}" class="img-thumbnail-custom" onclick="bukaModalFoto('${item.urlFoto}')" onerror="this.onerror=null; this.src='https://placehold.co/65x65/f1f5f9/475569?text=Buka+Link'; this.onclick=function(){ window.open('${item.urlAsliDrive || item.urlFoto}', '_blank'); };" title="Klik untuk memperbesar">`;
+                }
+
+                // Render Geotagging Peta
+                let kolomPeta = "<span class='text-muted small'>-</span>";
+                if (item.lat && item.lng && item.lat !== "-") {
+                    kolomPeta = `<a href="https://maps.google.com/?q=${item.lat},${item.lng}" target="_blank" class="btn btn-outline-primary px-2 py-1 small mb-1" style="font-size:11px; text-decoration:none;"><i class="fa-solid fa-map-pin me-1"></i>Peta</a>`;
+                }
+
+                let baris = `<tr>
+                    <td><small class="fw-medium">${item.timestamp}</small></td>
+                    <td class="text-capitalize fw-semibold">${item.nama}</td>
+                    <td><span class="badge bg-secondary">${item.zona}</span></td>
+                    <td><span class="badge-kondisi ${kelasBadge}">${item.kondisi}</span></td>
+                    <td>${kolomFoto}</td>
+                    <td>
+                        <div class="d-flex flex-column align-items-start">
+                            ${kolomPeta}
+                            <small class="text-muted text-wrap" style="font-size:10px; max-width:200px; display:block; line-height:1.2;">${item.alamat || '-'}</small>
+                        </div>
+                    </td>
+                </tr>`;
+                tbody.innerHTML += baris;
+            });
+
+            // Sinkronisasi Informasi Text & Button Pagination Control
+            document.getElementById('infoTextPaging').innerText = `Menampilkan data ${indexMulai + 1} - ${indexSelesai} dari ${totalData}`;
+            
+            document.getElementById('btnHalamanPrev').classList.toggle('disabled', halamanSaatIni === 1);
+            document.getElementById('btnHalamanNext').classList.toggle('disabled', indexSelesai >= totalData);
+
             document.getElementById('loadingStatus').style.display = "none";
             document.getElementById('tabelLogPatroli').style.display = "table";
-            document.getElementById('btnExport').disabled = counterTerfilter === 0;
+            document.getElementById('footerPagination').setAttribute("style", "display: flex !important;");
+            document.getElementById('btnExport').disabled = false;
+        }
+
+        function navigasiKeHalamanSebelumnya() {
+            if (halamanSaatIni > 1) {
+                halamanSaatIni--;
+                renderDataKeTabel();
+                document.getElementById('tabelLogPatroli').scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        function navigasiKeHalamanSelanjutnya() {
+            const totalHalamanMaks = Math.ceil(dataHasilSaringan.length / barisPerHalaman);
+            if (halamanSaatIni < totalHalamanMaks) {
+                halamanSaatIni++;
+                renderDataKeTabel();
+                document.getElementById('tabelLogPatroli').scrollIntoView({ behavior: 'smooth' });
+            }
         }
 
         function resetTanggal() {
             document.getElementById('filterTanggal').value = "";
-            jalankanFilterData();
+            hitungUlangFilterDanResetPage();
         }
 
         function bukaModalFoto(url) {
