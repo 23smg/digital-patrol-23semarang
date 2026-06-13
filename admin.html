@@ -194,11 +194,11 @@
     </div>
 
     <div class="modal fade" id="modalFoto" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-dialog modal-dialog-centered modal-md">
             <div class="modal-content bg-dark border-0">
                 <div class="modal-body p-1 position-relative text-center">
                     <button type="button" class="btn-close position-absolute top-0 end-0 m-3 bg-white p-2 rounded-circle" data-bs-dismiss="modal" aria-label="Close"></button>
-                    <img id="imgModalTarget" src="" class="img-fluid rounded" style="max-height: 80vh; object-fit: contain;" alt="Preview">
+                    <img id="imgModalTarget" src="" class="img-fluid rounded" style="max-height: 75vh; object-fit: contain; width: 100%;" alt="Pratinjau Foto">
                 </div>
             </div>
         </div>
@@ -305,6 +305,7 @@
                         kelasBadge = "bg-temuan";
                     }
 
+                    // --- PERBAIKAN LOGIKA RENDER FOTO OTOMATIS ---
                     let kolomFoto = "<span class='text-muted small'>Tidak ada foto</span>";
                     if (item.urlFoto && item.urlFoto.includes("http")) {
                         let urlGambarSesuai = item.urlFoto;
@@ -312,16 +313,19 @@
                         if (item.urlFoto.includes("drive.google.com")) {
                             let matchId = item.urlFoto.match(/\/d\/([a-zA-Z0-9-_]+)/) || item.urlFoto.match(/id=([a-zA-Z0-9-_]+)/);
                             if (matchId && matchId[1]) {
-                                urlGambarSesuai = `https://lh3.googleusercontent.com/d/${matchId[1]}`;
+                                // Menggunakan endpoint eksternal resmi Google Docs view bypass yang jauh lebih aman
+                                urlGambarSesuai = `https://docs.google.com/uc?export=view&id=${matchId[1]}`;
                             }
                         }
                         
-                        kolomFoto = `<img src="${urlGambarSesuai}" class="img-thumbnail-custom" onclick="bukaModalFoto('${urlGambarSesuai}')" onerror="this.onerror=null; this.src='https://placehold.co/60x60/f1f5f9/475569?text=Buka+Foto'; this.onclick=function(){ window.open('${item.urlFoto}', '_blank'); };" title="Klik untuk zoom foto">`;
+                        // Menampilkan thumbnail langsung di sel tabel. Jika diklik, memicu modal popup besar.
+                        kolomFoto = `<img src="${urlGambarSesuai}" class="img-thumbnail-custom" onclick="bukaModalFoto('${urlGambarSesuai}')" onerror="this.onerror=null; this.src='https://placehold.co/60x60/f1f5f9/475569?text=Buka+Link'; this.onclick=function(){ window.open('${item.urlFoto}', '_blank'); };" title="Klik untuk zoom foto">`;
                     }
 
+                    // --- PERBAIKAN STRUKTUR LINK MAPS ---
                     let kolomPeta = "<span class='text-muted small'>-</span>";
                     if (item.lat && item.lng && item.lat !== "-") {
-                        kolomPeta = `<a href="https://www.google.com/maps/search/?api=1&query=${item.lat},${item.lng}" target="_blank" class="btn btn-outline-primary px-2 py-1 small mb-1" style="font-size:11px; display:inline-block; text-decoration:none;"><i class="fa-solid fa-map-pin me-1"></i>Peta</a>`;
+                        kolomPeta = `<a href="https://www.google.com/maps?q=${item.lat},${item.lng}" target="_blank" class="btn btn-outline-primary px-2 py-1 small mb-1" style="font-size:11px; display:inline-block; text-decoration:none;"><i class="fa-solid fa-map-pin me-1"></i>Peta</a>`;
                     }
 
                     let baris = `<tr>
