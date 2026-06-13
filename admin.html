@@ -1,523 +1,377 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <base target="_top">
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard Monitoring Patroli - Mall 23Semarang</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
-  
-  <style>
-    :root {
-      --navy-main: #0a1128;
-      --navy-light: #1c2541;
-      --blue-accent: #0066cc;
-      --border-gray: #e2e8f0;
-      --bg-light: #f8fafc;
-    }
-
-    body {
-      background-color: #f4f6f9;
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      color: var(--navy-main);
-      margin: 0;
-      padding: 0;
-    }
-
-    .dashboard-nav {
-      background-color: var(--navy-main);
-      color: #ffffff;
-      padding: 16px 24px;
-      border-bottom: 4px solid var(--blue-accent);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-    }
-    .dashboard-nav h4 {
-      margin: 0;
-      font-weight: 700;
-      font-size: 20px;
-      letter-spacing: 0.5px;
-    }
-    .dashboard-nav p {
-      margin: 4px 0 0 0;
-      font-size: 12px;
-      color: #a4b0be;
-    }
-
-    .main-container {
-      max-width: 1200px;
-      margin: 32px auto;
-      padding: 0 16px;
-    }
-
-    .stat-card {
-      background: #ffffff;
-      border-radius: 12px;
-      padding: 24px;
-      border: 1px solid var(--border-gray);
-      box-shadow: 0 4px 6px rgba(10, 17, 40, 0.02);
-      display: flex;
-      align-items: center;
-      gap: 16px;
-    }
-    .stat-icon {
-      width: 48px;
-      height: 48px;
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 20px;
-    }
-    .stat-info h3 {
-      margin: 0;
-      font-weight: 700;
-      font-size: 24px;
-    }
-    .stat-info p {
-      margin: 0;
-      font-size: 13px;
-      color: #64748b;
-      font-weight: 500;
-    }
-
-    .filter-panel {
-      background: #ffffff;
-      border-radius: 12px;
-      border: 1px solid var(--border-gray);
-      padding: 18px 24px;
-      box-shadow: 0 4px 6px rgba(10, 17, 40, 0.02);
-      margin-top: 24px;
-    }
-    .filter-title {
-      font-size: 14px;
-      font-weight: 700;
-      color: var(--navy-light);
-      margin-bottom: 12px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .form-control-custom {
-      font-size: 13.5px;
-      border-radius: 8px;
-      padding: 8px 12px;
-      border: 1px solid #cbd5e1;
-    }
-
-    .table-container {
-      background: #ffffff;
-      border-radius: 14px;
-      border: 1px solid var(--border-gray);
-      padding: 24px;
-      box-shadow: 0 4px 6px rgba(10, 17, 40, 0.02);
-      margin-top: 24px;
-    }
-    .table-header-flex {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-      flex-wrap: wrap;
-      gap: 12px;
-    }
-    .table-title {
-      font-weight: 700;
-      font-size: 16px;
-      color: var(--navy-light);
-      margin: 0;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    
-    .action-buttons {
-      display: flex;
-      gap: 8px;
-    }
-    
-    .btn-refresh {
-      font-size: 13px;
-      font-weight: 600;
-      padding: 8px 16px;
-      border-radius: 8px;
-    }
-
-    .btn-excel {
-      font-size: 13px;
-      font-weight: 600;
-      padding: 8px 16px;
-      border-radius: 8px;
-      background-color: #107c41;
-      border-color: #107c41;
-      color: white;
-    }
-    .btn-excel:hover {
-      background-color: #0b592e;
-      color: white;
-    }
-    
-    .custom-table {
-      width: 100%;
-      margin-bottom: 0;
-      vertical-align: middle;
-    }
-    .custom-table thead th {
-      background-color: var(--bg-light);
-      color: #475569;
-      font-weight: 600;
-      font-size: 13px;
-      text-transform: uppercase;
-      padding: 14px;
-      border-bottom: 2px solid var(--border-gray);
-      text-align: center;
-    }
-    .custom-table tbody td {
-      padding: 14px;
-      font-size: 13.5px;
-      color: #334155;
-      border-bottom: 1px solid #f1f5f9;
-      text-align: center;
-    }
-
-    .img-thumbnail-custom {
-      width: 45px;
-      height: 45px;
-      object-fit: cover;
-      border-radius: 6px;
-      border: 1px solid var(--border-gray);
-      cursor: pointer;
-    }
-
-    .btn-map {
-      padding: 6px 12px;
-      font-size: 12px;
-      border-radius: 6px;
-    }
-
-    .loading-overlay {
-      text-align: center;
-      padding: 40px 0;
-      color: #64748b;
-    }
-
-    .dashboard-watermark {
-      margin-top: 48px;
-      padding-top: 24px;
-      border-top: 1px solid #e2e8f0;
-      text-align: center;
-      font-size: 11px;
-      color: #94a3b8;
-    }
-    
-    /* STYLE LOCK PANEL KEAMANAN */
-    #lockScreen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--navy-main); z-index: 9999; display: flex; align-items: center; justify-content: center; color: white; }
-    .lock-box { background: var(--navy-light); padding: 32px; border-radius: 16px; border: 1px solid #2e3a5f; text-align: center; max-width: 380px; width: 90%; box-shadow: 0 10px 25px rgba(0,0,0,0.4); }
-  </style>
+    <base target="_top">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Monitoring Patroli - Mall 23Semarang</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2=family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
+    <style>
+        :root {
+            --navy-main: #0a1128;
+            --navy-light: #1c2541;
+            --blue-accent: #0066cc;
+            --border-gray: #e2e8f0;
+            --bg-light: #f8fafc;
+        }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-light);
+            color: #334155;
+        }
+        .navbar-custom {
+            background-color: var(--navy-main);
+            color: white;
+            padding: 1.5rem 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        }
+        .stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            border: 1px solid var(--border-gray);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            transition: transform 0.2s;
+        }
+        .stat-card:hover {
+            transform: translateY(-2px);
+        }
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+        .filter-section {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            border: 1px solid var(--border-gray);
+            margin-bottom: 1.5rem;
+        }
+        .table-container {
+            background: white;
+            border-radius: 16px;
+            border: 1px solid var(--border-gray);
+            overflow: hidden;
+        }
+        .table-custom th {
+            background-color: #f1f5f9;
+            color: #475569;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            padding: 1rem;
+        }
+        .table-custom td {
+            padding: 1rem;
+            vertical-align: middle;
+            border-bottom: 1px solid var(--border-gray);
+        }
+        .badge-kondisi {
+            padding: 0.35rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .bg-aman { background-color: #dcfce7; color: #166534; }
+        .bg-temuan { background-color: #fee2e2; color: #991b1b; }
+        .img-thumbnail-custom {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
 
-  <div id="lockScreen">
-    <div class="lock-box">
-      <i class="fa-solid fa-shield-halved text-warning mb-3" style="font-size: 40px;"></i>
-      <h5 class="fw-bold">Akses Terkunci</h5>
-      <p style="font-size: 12px; color: #94a3b8;">Masukkan PIN Keamanan Manajemen untuk memuat basis data patroli.</p>
-      <input type="password" id="inputPinKeamanan" class="form-control text-center mb-3" placeholder="Masukkan PIN Admin" style="letter-spacing: 4px; font-weight: bold;">
-      <button class="btn btn-primary w-100 fw-bold" onclick="verifikasiPinAdmin()">MASUK DASHBOARD</button>
-      <div id="pesanSalah" class="text-danger small mt-2 fw-bold" style="display: none;">PIN Salah! Akses ditolak.</div>
-    </div>
-  </div>
+    <nav class="navbar-custom mb-4">
+        <h4 class="m-0 fw-bold">MONITORING DASHBOARD PATROLI</h4>
+        <small class="text-white-50">Pusat Kendali Data Lapangan Real-Time • Mall 23Semarang</small>
+    </nav>
 
-  <div id="kontenUtamaDashboard" style="display: none;">
-    <div class="dashboard-nav">
-      <div style="max-width: 1200px; margin: 0 auto;">
-        <h4>MONITORING DASHBOARD PATROLI</h4>
-        <p>Pusat Kendali Data Lapangan Real-Time • Mall 23Semarang</p>
-      </div>
-    </div>
-
-    <div class="main-container">
-      
-      <div class="row g-3">
-        <div class="col-12 col-md-4">
-          <div class="stat-card">
-            <div class="stat-icon bg-primary-subtle text-primary"><i class="fa-solid fa-clipboard-check"></i></div>
-            <div class="stat-info"><h3 id="statTotalLaporan">0</h3><p>Total Log Terfilter</p></div>
-          </div>
-        </div>
-        <div class="col-12 col-md-4">
-          <div class="stat-card">
-            <div class="stat-icon bg-success-subtle text-success"><i class="fa-solid fa-user-shield"></i></div>
-            <div class="stat-info"><h3 id="statTotalPetugas">0</h3><p>Petugas Aktif</p></div>
-          </div>
-        </div>
-        <div class="col-12 col-md-4">
-          <div class="stat-card">
-            <div class="stat-icon bg-warning-subtle text-warning"><i class="fa-solid fa-map-location-dot"></i></div>
-            <div class="stat-info"><h3 id="statTotalZona">0</h3><p>Zona Terinspeksi</p></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="filter-panel">
-        <div class="filter-title"><i class="fa-solid fa-filter text-primary"></i> Saring Data Kontrol Lapangan</div>
-        <div class="row g-3">
-          <div class="col-12 col-md-4">
-            <label class="form-label small fw-bold text-secondary mb-1">Pilih Hari / Tanggal:</label>
-            <div class="input-group">
-              <span class="input-group-text bg-light text-secondary"><i class="fa-solid fa-calendar-day"></i></span>
-              <input type="date" id="filterTanggal" class="form-control form-control-custom" onchange="jalankanFilterData()">
+    <div class="container-fluid px-4">
+        <div class="row g-4 mb-4">
+            <div class="col-md-4">
+                <div class="stat-card d-flex align-items-center justify-content-between">
+                    <div>
+                        <h2 class="fw-bold m-0" id="statTotalLog">0</h2>
+                        <small class="text-muted">Total Log Terfilter</small>
+                    </div>
+                    <div class="stat-icon bg-primary bg-opacity-10 text-primary">
+                        <i class="fa-solid fa-clipboard-check"></i>
+                    </div>
+                </div>
             </div>
-          </div>
-          <div class="col-12 col-md-5">
-            <label class="form-label small fw-bold text-secondary mb-1">Cari Nama / Zona / Kondisi:</label>
-            <div class="input-group">
-              <span class="input-group-text bg-light text-secondary"><i class="fa-solid fa-magnifying-glass"></i></span>
-              <input type="text" id="filterCariGlobal" class="form-control form-control-custom" placeholder="Ketik kata kunci pencarian..." onkeyup="jalankanFilterData()">
+            <div class="col-md-4">
+                <div class="stat-card d-flex align-items-center justify-content-between">
+                    <div>
+                        <h2 class="fw-bold m-0" id="statPetugas">0</h2>
+                        <small class="text-muted">Petugas Aktif</small>
+                    </div>
+                    <div class="stat-icon bg-success bg-opacity-10 text-success">
+                        <i class="fa-solid fa-user-shield"></i>
+                    </div>
+                </div>
             </div>
-          </div>
-          <div class="col-12 col-md-3 d-flex align-items-end">
-            <button class="btn btn-outline-secondary w-100" style="font-size:13px; font-weight:600; height:39px; border-radius:8px;" onclick="resetSemuaFilter()">
-              <i class="fa-solid fa-arrows-rotate me-1"></i> Tampilkan Semua Tanggal
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div class="table-container">
-        <div class="table-header-flex">
-          <h2 class="table-title">
-            <i class="fa-solid fa-list-check text-primary"></i> <span id="labelJudulTabel">Riwayat Aktivitas Patroli Terkini</span>
-          </h2>
-          <div class="action-buttons">
-            <button id="btnExport" class="btn btn-excel" onclick="tarikKeExcel()" disabled><i class="fa-solid fa-file-excel me-1"></i> Tarik Data Excel</button>
-            <button id="btnRefresh" class="btn btn-primary btn-refresh" onclick="muatDataLaporanDashboard()"><i id="iconRefresh" class="fa-solid fa-rotate me-1"></i> Refresh Data</button>
-          </div>
-        </div>
-        
-        <div id="loadingStatus" class="loading-overlay">
-          <div class="spinner-border spinner-border-sm text-secondary mb-2" role="status"></div>
-          <div>Sinkronisasi basis data log pusat...</div>
+            <div class="col-md-4">
+                <div class="stat-card d-flex align-items-center justify-content-between">
+                    <div>
+                        <h2 class="fw-bold m-0" id="statZona">0</h2>
+                        <small class="text-muted">Zona Terinspeksi</small>
+                    </div>
+                    <div class="stat-icon bg-warning bg-opacity-10 text-warning">
+                        <i class="fa-solid fa-map-location-dot"></i>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <div class="table-responsive">
-          <table class="table custom-table" id="tabelLogPatroli" style="display: none;">
-            <thead>
-              <tr><th>Waktu Log</th><th>Nama Personel</th><th>Zona Area</th><th>Kondisi Sektor</th><th>Lampiran</th><th>Geotagging</th></tr>
-            </thead>
-            <tbody id="bodyDataPatroli"></tbody>
-          </table>
+        <div class="filter-section">
+            <h6 class="fw-bold mb-3 text-primary"><i class="fa-solid fa-filter me-2"></i>Saring Data Kontrol Lapangan</h6>
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label small fw-medium">Pilih Hari / Tanggal:</label>
+                    <input type="date" id="filterTanggal" class="form-control">
+                </div>
+                <div class="col-md-5">
+                    <label class="form-label small fw-medium">Cari Nama / Zona / Kondisi:</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0 text-muted"><i class="fa-solid fa-magnifying-glass"></i></span>
+                        <input type="text" id="filterCari" class="form-control border-start-0" placeholder="Ketik kata kunci pencarian...">
+                    </div>
+                </div>
+                <div class="col-md-4 d-flex align-items-end gap-2">
+                    <button class="btn btn-outline-secondary w-100" onclick="resetTanggal()">Tampilkan Semua Tanggal</button>
+                </div>
+            </div>
         </div>
-      </div>
 
-      <div class="dashboard-watermark">
-        <div>Digital Patrol System v2.5 • Mall 23Semarang</div>
-        <div>Developed by: <strong>Alif Rizal</strong> (IT Department)</div>
-      </div>
+        <div class="table-container mb-4">
+            <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
+                <h6 class="fw-bold m-0 text-navy-main" id="judulTabel"><i class="fa-solid fa-list-ul me-2"></i>Riwayat Aktivitas Patroli Terkini</h6>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-success btn-sm" id="btnExport" onclick="eksporKeExcel()"><i class="fa-solid fa-file-excel me-1"></i> Tarik Data Excel</button>
+                    <button class="btn btn-primary btn-sm" id="btnRefresh" onclick="muatDataLaporanDashboard()"><i class="fa-solid fa-arrow-rotate-right me-1" id="iconRefresh"></i> Refresh Data</button>
+                </div>
+            </div>
+            
+            <div id="loadingStatus" class="p-5 text-center fw-medium text-muted">
+                <i class="fa-solid fa-spinner fa-spin fa-2xl mb-3 text-primary d-block"></i> Sedang menghubungkan ke server API Google Sheets...
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-custom m-0" id="tabelLogPatroli" style="display: none;">
+                    <thead>
+                        <tr>
+                            <th>Waktu Log</th>
+                            <th>Nama Personel</th>
+                            <th>Zona Area</th>
+                            <th>Kondisi Sektor</th>
+                            <th>Lampiran</th>
+                            <th>Geotagging</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bodyTabelPatroli">
+                        </tbody>
+                </table>
+            </div>
+        </div>
     </div>
-  </div>
 
-  <div class="modal fade" id="modalZoomFoto" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content" style="border-radius:12px; overflow:hidden;">
-        <div class="modal-header bg-dark text-white p-2 px-3 border-0">
-          <small class="fw-semibold"><i class="fa-regular fa-image me-1"></i> Dokumentasi Lapangan</small>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" style="font-size:10px;"></button>
+    <div class="modal fade" id="modalFoto" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body p-1 position-relative">
+                    <button type="text" class="btn-close position-absolute top-0 end-0 m-3 bg-white p-2 rounded-circle" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <img id="imgModalTarget" src="" class="img-fluid w-100 rounded">
+                </div>
+            </div>
         </div>
-        <div class="modal-body p-0 bg-light text-center">
-          <img id="imgKontenZoom" src="" class="img-fluid w-100" style="max-height:75vh; object-fit:contain;">
-        </div>
-      </div>
     </div>
-  </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-  <script>
-    // MASUKKAN ALAMAT WEB APP /EXEC ANDA YANG SAMA SEPERTI DI SCREENSHOT SPREADSHEET DI SINI
-    const API_URL_WEBAPP = "https://script.google.com/macros/s/AKfycbyme8gb6UL0Nhc0cFbqu9TPqF_SvsQKpKHTMFBTXODEEA8Ez3EnHJ65syJeNfF_Vzia/exec";
-
-    var dataMasterPusat = []; 
-    var dataTerfilterSore = []; 
-
-    // VERIFIKASI LOCK SCREEN PIN
-    function verifikasiPinAdmin() {
-      var pinInput = document.getElementById('inputPinKeamanan').value;
-      
-      // Silakan ganti PIN "1234" di bawah ini sesuai selera Anda
-      if (pinInput === "1234") {
-        document.getElementById('lockScreen').style.setProperty('display', 'none', 'important');
-        document.getElementById('kontenUtamaDashboard').style.display = "block";
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // https://script.google.com/macros/s/AKfycbywe8gb6UL0Nhc0cFbqU9TpQf_SvsQKpKHTMFBTXODEEA8Ez3ENhJ65syJeNff_Vzia/exec?page=admin
+        const API_URL_WEBAPP = "https://script.google.com/macros/s/AKfycbywe8gb6UL0Nhc0cFbqU9TpQf_SvsQKpKHTMFBTXODEEA8Ez3ENhJ65syJeNff_Vzia/exec?page=admin";
         
-        // Atur Tanggal Hari Ini Default
-        var hariIni = new Date();
-        var yyyy = hariIni.getFullYear();
-        var mm = String(hariIni.getMonth() + 1).padStart(2, '0');
-        var dd = String(hariIni.getDate()).padStart(2, '0');
-        document.getElementById('filterTanggal').value = yyyy + '-' + mm + '-' + dd;
-        
-        muatDataLaporanDashboard();
-      } else {
-        document.getElementById('pesanSalah').style.display = "block";
-        document.getElementById('inputPinKeamanan').value = "";
-      }
-    }
+        let dataMasterPusat = [];
 
-    // PENARIKAN DATA MENGGUNAKAN FETCH API (UNTUK GITHUB PAGES)
-    function muatDataLaporanDashboard() {
-      var btnRef = document.getElementById('btnRefresh');
-      var iconRef = document.getElementById('iconRefresh');
-      var btnExp = document.getElementById('btnExport');
-      var loading = document.getElementById('loadingStatus');
-      var tabel = document.getElementById('tabelLogPatroli');
-      
-      btnRef.disabled = true;
-      btnExp.disabled = true;
-      iconRef.classList.add('fa-spin'); 
-      loading.style.display = "block";
-      tabel.style.display = "none";
+        document.addEventListener("DOMContentLoaded", function() {
+            // Set default filter tanggal ke hari ini saat pertama buka
+            const hariIni = new Date();
+            const yyyy = hariIni.getFullYear();
+            const mm = String(hariIni.getMonth() + 1).padStart(2, '0');
+            const dd = String(hariIni.getDate()).padStart(2, '0');
+            document.getElementById('filterTanggal').value = `${yyyy}-${mm}-${dd}`;
+            
+            muatDataLaporanDashboard();
 
-      fetch(API_URL_WEBAPP, {
-        method: "POST",
-        mode: "cors",
-        body: JSON.stringify({ aksi: "ambilData" })
-      })
-      .then(res => res.json())
-      .then(response => {
-        if (response && response.logData) {
-          dataMasterPusat = response.logData;
-        } else if (Array.isArray(response)) {
-          dataMasterPusat = response;
-        }
-        jalankanFilterData();
-        btnRef.disabled = false;
-        iconRef.classList.remove('fa-spin');
-      })
-      .catch(err => {
-        loading.innerHTML = "<span class='text-danger'><i class='fa-solid fa-triangle-exclamation'></i> Gagal memproses sinkronisasi data dari API.</span>";
-        btnRef.disabled = false;
-        iconRef.classList.remove('fa-spin');
-      });
-    }
-
-    function jalankanFilterData() {
-      var tbody = document.getElementById('bodyDataPatroli');
-      var tabel = document.getElementById('tabelLogPatroli');
-      var loading = document.getElementById('loadingStatus');
-      var isiFilterTanggal = document.getElementById('filterTanggal').value; 
-      var isiFilterCari = document.getElementById('filterCariGlobal').value.toLowerCase().trim();
-
-      var kriteriaTanggal = "";
-      if (isiFilterTanggal) {
-        var parts = isiFilterTanggal.split('-'); 
-        kriteriaTanggal = parts[2] + '/' + parts[1] + '/' + parts[0]; 
-        document.getElementById('labelJudulTabel').innerText = "Riwayat Aktivitas Patroli Tanggal " + kriteriaTanggal;
-      } else {
-        document.getElementById('labelJudulTabel').innerText = "Semua Riwayat Aktivitas Patroli";
-      }
-
-      dataTerfilterSore = dataMasterPusat.filter(function(row) {
-        var cocokTanggal = true;
-        if (kriteriaTanggal) {
-          var tglDataSaja = row.timestamp ? row.timestamp.split(' ')[0] : "";
-          cocokTanggal = (tglDataSaja === kriteriaTanggal);
-        }
-        var cocokCari = true;
-        if (isiFilterCari) {
-          var stringGabungan = (row.nama + " " + row.zona + " " + row.kondisi).toLowerCase();
-          cocokCari = stringGabungan.includes(isiFilterCari);
-        }
-        return cocokTanggal && cocokCari;
-      });
-
-      if (dataTerfilterSore.length > 0) {
-        var htmlRows = "";
-        dataTerfilterSore.forEach(function(row) {
-          htmlRows += "<tr>";
-          htmlRows += "<td>" + row.timestamp + "</td>";
-          htmlRows += "<td class='fw-semibold'>" + row.nama + "</td>";
-          htmlRows += "<td><span class='badge bg-light text-dark border'>" + row.zona + "</span></td>";
-          htmlRows += "<td>" + row.kondisi + "</td>";
-          
-          if(row.urlFoto && row.urlFoto !== "#" && row.urlFoto !== "Tidak ada foto" && row.urlFoto !== "Tidak Ada Foto") {
-            htmlRows += "<td><img src='" + row.urlFoto + "' class='img-thumbnail-custom' onclick='bukaZoomFoto(\"" + row.urlFoto + "\")'></td>";
-          } else {
-            htmlRows += "<td class='text-muted small'>Tidak ada foto</td>";
-          }
-
-          if(row.lat && row.lng && row.lat !== "-" && row.lng !== "-") {
-            var mapUrl = "https://maps.google.com/?q=" + row.lat + "," + row.lng;
-            htmlRows += "<td><a href='" + mapUrl + "' target='_blank' class='btn btn-outline-primary btn-map'><i class='fa-solid fa-location-dot'></i> Peta</a></td>";
-          } else {
-            htmlRows += "<td class='text-muted small'>Tidak terkunci</td>";
-          }
-          htmlRows += "</tr>";
+            // Pasang event listener pencarian otomatis
+            document.getElementById('filterTanggal').addEventListener('change', jalankanFilterData);
+            document.getElementById('filterCari').addEventListener('input', jalankanFilterData);
         });
 
-        var uniquePetugas = [], uniqueZona = [];
-        dataTerfilterSore.forEach(function(item) {
-          if(item.nama && !uniquePetugas.includes(item.nama) && item.nama !== "-") uniquePetugas.push(item.nama);
-          if(item.zona && !uniqueZona.includes(item.zona) && item.zona !== "-") uniqueZona.push(item.zona);
-        });
+        function muatDataLaporanDashboard() {
+            var btnRef = document.getElementById('btnRefresh');
+            var iconRef = document.getElementById('iconRefresh');
+            var btnExp = document.getElementById('btnExport');
+            var loading = document.getElementById('loadingStatus');
+            var tabel = document.getElementById('tabelLogPatroli');
+            
+            btnRef.disabled = true;
+            btnExp.disabled = true;
+            iconRef.classList.add('fa-spin'); 
+            loading.innerHTML = "<i class='fa-solid fa-spinner fa-spin fa-2xl mb-3 text-primary d-block'></i> Memproses sinkronisasi data dari API...";
+            loading.style.display = "block";
+            tabel.style.display = "none";
 
-        document.getElementById('statTotalLaporan').innerText = dataTerfilterSore.length;
-        document.getElementById('statTotalPetugas').innerText = uniquePetugas.length;
-        document.getElementById('statTotalZona').innerText = uniqueZona.length;
+            // FIX CORS METHOD: Membungkus aksi ke dalam URLSearchParams (FormData)
+            var formPayload = new URLSearchParams();
+            formPayload.append("aksi", "ambilData");
 
-        tbody.innerHTML = htmlRows;
-        tabel.style.display = "table";
-        loading.style.display = "none";
-        document.getElementById('btnExport').disabled = false;
-      } else {
-        tbody.innerHTML = "";
-        tabel.style.display = "none";
-        loading.style.display = "block";
-        loading.innerHTML = "Tidak ditemukan data laporan patroli yang cocok dengan filter saat ini.";
-        document.getElementById('statTotalLaporan').innerText = 0;
-        document.getElementById('statTotalPetugas').innerText = 0;
-        document.getElementById('statTotalZona').innerText = 0;
-        document.getElementById('btnExport').disabled = true;
-      }
-    }
+            fetch(API_URL_WEBAPP, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                body: formPayload.toString()
+            })
+            .then(res => res.json())
+            .then(response => {
+                if (response && response.logData) {
+                    dataMasterPusat = response.logData;
+                } else if (Array.isArray(response)) {
+                    dataMasterPusat = response;
+                } else {
+                    dataMasterPusat = [];
+                }
+                
+                jalankanFilterData();
+                btnRef.disabled = false;
+                iconRef.classList.remove('fa-spin');
+            })
+            .catch(err => {
+                loading.innerHTML = "<span class='text-danger'><i class='fa-solid fa-triangle-exclamation d-block fa-2xl mb-2'></i> Gagal memproses sinkronisasi data dari API.</span>";
+                btnRef.disabled = false;
+                iconRef.classList.remove('fa-spin');
+                console.error(err);
+            });
+        }
 
-    function resetSemuaFilter() {
-      document.getElementById('filterTanggal').value = "";
-      document.getElementById('filterCariGlobal').value = "";
-      jalankanFilterData();
-    }
+        function jalankanFilterData() {
+            const tglPilihan = document.getElementById('filterTanggal').value; 
+            const kataKunci = document.getElementById('filterCari').value.toLowerCase().trim();
+            const tbody = document.getElementById('bodyTabelPatroli');
+            
+            let tglFormat = "";
+            if (tglPilihan) {
+                const sp = tglPilihan.split('-');
+                tglFormat = `${sp[2]}/${sp[1]}/${sp[0]}`; // Ubah yyyy-mm-dd ke dd/mm/yyyy
+            }
 
-    function bukaZoomFoto(linkGambar) {
-      document.getElementById('imgKontenZoom').src = linkGambar;
-      new bootstrap.Modal(document.getElementById('modalZoomFoto')).show();
-    }
+            tbody.innerHTML = "";
+            let counterTerfilter = 0;
+            let setPetugasUnik = new Set();
+            let setZonaUnik = new Set();
 
-    function tarikKeExcel() {
-      if (dataTerfilterSore.length === 0) return;
-      var isiFilterTanggal = document.getElementById('filterTanggal').value;
-      var labelWaktuFile = isiFilterTanggal ? isiFilterTanggal : "Semua_Hari";
-      var namaFileOutput = "Laporan_Patroli_" + labelWaktuFile + ".xls";
+            dataMasterPusat.forEach(item => {
+                // Filter 1: Tanggal
+                if (tglFormat && !item.timestamp.includes(tglFormat)) return;
+                
+                // Filter 2: Kata Kunci (Nama / Zona / Kondisi)
+                if (kataKunci && !item.nama.toLowerCase().includes(kataKunci) && 
+                    !item.zona.toLowerCase().includes(kataKunci) && 
+                    !item.kondisi.toLowerCase().includes(kataKunci)) return;
 
-      var htmlTemplateExcel = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><style>body { font-family: "Arial", sans-serif; } th { background-color: #107c41; color: #ffffff; font-weight: bold; text-align: center; border: 1px solid #d2d2d2; height: 30px; } td { border: 1px solid #d2d2d2; text-align: center; vertical-align: middle; height: 25px; font-size: 11pt; } .text-left { text-align: left; } .link-style { color: #0066cc; text-decoration: underline; font-weight: bold; }</style></head><body><table><thead><tr><th>Waktu Log</th><th>Nama Personel</th><th>Zona Area</th><th>Kondisi Sektor</th><th>Lampiran Foto</th><th>Geotagging</th><th>Alamat Acuan Pelacakan</th></tr></thead><tbody>';
+                counterTerfilter++;
+                if(item.nama && item.nama !== "-") setPetugasUnik.add(item.nama);
+                if(item.zona && item.zona !== "-") setZonaUnik.add(item.zona);
 
-      dataTerfilterSore.forEach(function(item) {
-        var kondisiClean = (item.kondisi || "-").toString().replace(/\r?\n|\r/g, " ");
-        var alamatClean = (item.alamat || "-").toString().replace(/\r?\n|\r/g, " ");
-        var kolomFotoCell = item.urlFoto && item.urlFoto !== "#" && !item.urlFoto.includes("Tidak") ? '<a class="link-style" href="' + item.urlFoto + '">Buka Foto</a>' : "Tidak Ada Foto";
-        var kolomPetaCell = item.lat && item.lng && item.lat !== "-" ? '<a class="link-style" href="https://maps.google.com/?q=' + item.lat + ',' + item.lng + '">Lihat Lokasi</a>' : "Tidak Terkunci";
+                // Atur badge kondisi sektor
+                let kelasBadge = "bg-aman";
+                if(item.kondisi.toLowerCase() !== "aman") {
+                    kelasBadge = "bg-temuan";
+                }
 
-        htmlTemplateExcel += '<tr><td>' + item.timestamp + '</td><td><b>' + item.nama + '</b></td><td>' + item.zona + '</td><td>' + kondisiClean + '</td><td>' + kolomFotoCell + '</td><td>' + kolomPetaCell + '</td><td class="text-left">' + alamatClean + '</td></tr>';
-      });
+                // Atur kolom foto
+                let kolomFoto = "<span class='text-muted small'>Tidak ada foto</span>";
+                if (item.urlFoto && item.urlFoto.includes("http")) {
+                    kolomFoto = `<img src="${item.urlFoto}" class="img-thumbnail-custom" onclick="bukaModalFoto('${item.urlFoto}')">`;
+                }
 
-      htmlTemplateExcel += '</tbody></table></body></html>';
-      var blobData = new Blob([htmlTemplateExcel], { type: 'application/vnd.ms-excel;charset=utf-8;' });
-      var linkDownload = document.createElement("a");
-      linkDownload.href = URL.createObjectURL(blobData);
-      linkDownload.download = namaFileOutput;
-      document.body.appendChild(linkDownload);
-      linkDownload.click();
-      document.body.removeChild(linkDownload);
-    }
-  </script>
-</body>
-</html>
+                // Atur kolom geotagging lokasi map
+                let kolomPeta = "<span class='text-muted small'>-</span>";
+                if (item.lat && item.lng && item.lat !== "-") {
+                    kolomPeta = `<a href="https://www.google.com/maps?q=${item.lat},${item.lng}" target="_blank" class="btn btn-outline-primary btn-xs px-2 py-1 small" style="font-size:11px;"><i class="fa-solid fa-map-pin me-1"></i>Peta</a>`;
+                }
+
+                let baris = `<tr>
+                    <td><small class="fw-medium">${item.timestamp}</small></td>
+                    <td class="text-capitalize fw-semibold">${item.nama}</td>
+                    <td><span class="badge bg-secondary text-white">${item.zona}</span></td>
+                    <td><span class="badge-kondisi ${kelasBadge}">${item.kondisi}</span></td>
+                    <td>${kolomFoto}</td>
+                    <td>
+                        <div class="d-flex flex-column">
+                            ${kolomPeta}
+                            <small class="text-muted mt-1" style="font-size:10px; max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${item.alamat}</small>
+                        </div>
+                    </td>
+                </tr>`;
+                tbody.innerHTML += baris;
+            });
+
+            // Update Angka Statistik Dashboard Atas
+            document.getElementById('statTotalLog').innerText = counterTerfilter;
+            document.getElementById('statPetugas').innerText = setPetugasUnik.size;
+            document.getElementById('statZona').innerText = setZonaUnik.size;
+
+            // Set judul tabel berdasarkan status pencarian tanggal
+            if (tglFormat) {
+                document.getElementById('judulTabel').innerHTML = `<i class="fa-solid fa-list-ul me-2"></i>Riwayat Aktivitas Patroli Tanggal ${tglFormat}`;
+            } else {
+                document.getElementById('judulTabel').innerHTML = `<i class="fa-solid fa-list-ul me-2"></i>Semua Riwayat Aktivitas Patroli`;
+            }
+
+            document.getElementById('loadingStatus').style.display = "none";
+            document.getElementById('tabelLogPatroli').style.display = "table";
+            document.getElementById('btnExport').disabled = counterTerfilter === 0;
+        }
+
+        function resetTanggal() {
+            document.getElementById('filterTanggal').value = "";
+            jalankanFilterData();
+        }
+
+        function bukaModalFoto(url) {
+            document.getElementById('imgModalTarget').src = url;
+            var myModal = new bootstrap.Modal(document.getElementById('modalFoto'));
+            myModal.show();
+        }
+
+        function eksporKeExcel() {
+            let tabelHtml = document.getElementById('tabelLogPatroli').cloneNode(true);
+            // Bersihkan kolom aksi/peta dan foto agar tidak berantakan di Excel
+            let barisTabel = tabelHtml.querySelectorAll('tr');
+            barisTabel.forEach(tr => {
+                let kolom = tr.querySelectorAll('td, th');
+                if(kolom.length >= 6) {
+                    // Jika ada link peta, ubah jadi teks alamat biasa
+                    let divPeta = kolom[5].querySelector('small');
+                    if(divPeta) kolom[5].innerHTML = divPeta.innerText;
+                }
+            });
+
+            let linkDownload = document.createElement('a');
+            let dataData = tabelHtml.outerHTML.replace(/ /g, '%20');
+            linkDownload.href = 'data:application/vnd.ms-excel,' + dataData;
+            linkDownload.download = 'Laporan_Patroli_Mall_23Semarang_' +
