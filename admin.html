@@ -187,7 +187,6 @@
         </div>
     </div>
 
-    <!-- Modal Pop-up untuk Zoom Foto Dokumentasi -->
     <div class="modal fade" id="modalFoto" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -201,7 +200,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // URL API Web App Google Apps Script Aktif
         const API_URL_WEBAPP = "https://script.google.com/macros/s/AKfycbyJuzwTGe-bucxDG6Yvgp-GEEsk5RdUpjR7ZX-G6KL_PlkiAn6QhustBE5n2fWBVrmA/exec";
         
         let dataMasterPusat = [];
@@ -301,20 +299,21 @@
                         kelasBadge = "bg-temuan";
                     }
 
-                    // SINKRONISASI & PERBAIKAN AUTO-CONVERTER FOTO GOOGLE DRIVE
+                    // JALUR EMERGENSI & STABILIZER GAMBAR GOOGLE DRIVE
                     let kolomFoto = "<span class='text-muted small'>Tidak ada foto</span>";
                     if (item.urlFoto && item.urlFoto.includes("http")) {
                         let urlGambarSesuai = item.urlFoto;
                         
-                        // Deteksi jika link bertipe view/open Google Drive, ubah otomatis ke direct image link server Google 
                         if (item.urlFoto.includes("drive.google.com")) {
                             let matchId = item.urlFoto.match(/\/d\/([a-zA-Z0-9-_]+)/) || item.urlFoto.match(/id=([a-zA-Z0-9-_]+)/);
                             if (matchId && matchId[1]) {
-                                urlGambarSesuai = `https://lh3.googleusercontent.com/u/0/d/${matchId[1]}=w200-h200-p`;
+                                // Menggunakan endpoint uc?export=view yang terbukti tembus CORS
+                                urlGambarSesuai = `https://docs.google.com/uc?export=view&id=${matchId[1]}`;
                             }
                         }
                         
-                        kolomFoto = `<img src="${urlGambarSesuai}" class="img-thumbnail-custom" onclick="bukaModalFoto('${urlGambarSesuai}')" onerror="this.onerror=null; this.src='https://placehold.co/50x50?text=Drive+Error';">`;
+                        // Proteksi ganda: jika gambar gagal render langsung, klik gambar akan otomatis membawanya ke link asli Drive
+                        kolomFoto = `<img src="${urlGambarSesuai}" class="img-thumbnail-custom" onclick="bukaModalFoto('${urlGambarSesuai}')" onerror="this.onerror=null; this.src='https://placehold.co/50x50/e2e8f0/475569?text=Buka+Foto'; this.onclick=function(){ window.open('${item.urlFoto}', '_blank'); };" title="Klik untuk memperbesar">`;
                     }
 
                     let kolomPeta = "<span class='text-muted small'>-</span>";
