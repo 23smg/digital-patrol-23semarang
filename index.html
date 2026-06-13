@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form Laporan Patroli - Mall 23Semarang</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #f1f5f9;
+            color: #334155;
+        }
+        .card-form {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05);
+            border: 1px solid #e2e8f0;
+        }
+        .btn-submit {
+            background-color: #0066cc;
+            border: none;
+            font-weight: 600;
+        }
+        .btn-submit:hover {
+            background-color: #0052a3;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-5">
+                <div class="card-form p-4">
+                    <div class="text-center mb-4">
+                        <div class="bg-primary bg-opacity-10 text-primary d-inline-block p-3 rounded-circle mb-2">
+                            <i class="fa-solid fa-user-shield fa-2xl"></i>
+                        </div>
+                        <h4 class="fw-bold m-0 text-dark">FORM PATROLI SATPAM</h4>
+                        <small class="text-muted">Mall 23Semarang</small>
+                    </div>
+
+                    <form id="formPatroli">
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Nama Personel:</label>
+                            <select id="namaPetugas" class="form-select" required>
+                                <option value="">-- Pilih Nama Anda --</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Zona / Sektor:</label>
+                            <select id="zonaArea" class="form-select" required>
+                                <option value="">-- Pilih Area Inspeksi --</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Kondisi Lapangan:</label>
+                            <select id="kondisiSektor" class="form-select" required>
+                                <option value="">-- Pilih Kondisi --</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label small fw-semibold">Lampiran Foto Lapangan:</label>
+                            <input type="file" id="fileFoto" class="form-control" accept="image/*" capture="environment" required>
+                            <div class="form-text" style="font-size: 11px;">Kamera akan terbuka otomatis di smartphone petugas.</div>
+                        </div>
+
+                        <button type="submit" id="btnSubmit" class="btn btn-primary btn-submit w-100 py-2.5 text-white">
+                            <i class="fa-solid fa-paper-plane me-2"></i>KIRIM LAPORAN REAL-TIME
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL_WEBAPP = "https://script.google.com/macros/s/AKfycbyJuzwTGe-bucxDG6Yvgp-GEEsk5RdUpjR7ZX-G6KL_PlkiAn6QhustBE5n2fWBVrmA/exec";
+
+        // Memuat opsi dropdown dinamis dari Google Sheets saat form dibuka
+        document.addEventListener("DOMContentLoaded", function() {
+            fetch(`${API_URL_WEBAPP}?aksi=ambilDropdown`)
+            .then(res => res.json())
+            .then(data => {
+                const selectNama = document.getElementById('namaPetugas');
+                const selectZona = document.getElementById('zonaArea');
+                const selectKondisi = document.getElementById('kondisiSektor');
+                
+                if(data.daftarNama) data.daftarNama.forEach(n => selectNama.innerHTML += `<option value="${n}">${n}</option>`);
+                if(data.daftarZona) data.daftarZona.forEach(z => selectZona.innerHTML += `<option value="${z}">${z}</option>`);
+                if(data.daftarKondisi) data.daftarKondisi.forEach(k => selectKondisi.innerHTML += `<option value="${k}">${k}</option>`);
+            })
+            .catch(err => {
+                alert("Gagal memuat daftar petugas/zona dari server API.");
+            });
+            
+            // Kunci titik koordinat GPS secara otomatis (Geotagging)
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(pos => {
+                    window.latCoordinate = pos.coords.latitude;
+                    window.lngCoordinate = pos.coords.longitude;
+                }, err => {
+                    console.log("Izin GPS ditolak oleh pengguna.");
+                }, { enableHighAccuracy: true });
+            }
+        });
+
+        // Manajemen pengiriman form data
+        document.getElementById('formPatroli').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const tombol = document.getElementById('btnSubmit');
+            tombol.disabled = true;
+            tombol.innerHTML = `<i class="fa-solid fa-spinner fa-spin me-2"></i>Sedang Mengirim Laporan...`;
+
+            const fileKomponen = document.getElementById('fileFoto').files[0];
+            const pembacaFile = new FileReader();
+            
+            pembacaFile.onload = function(event) {
+                const base64FormatData = event.target.result.split(',')[1];
+                
+                const paketKirim = {
+                    aksi: "simpanData",
+                    payload: {
+                        nama: document.getElementById('namaPetugas').value,
+                        zona: document.getElementById('zonaArea').value,
+                        kondisi: document.getElementById('kondisiSektor').value,
+                        fotoBase64: base64FormatData,
+                        fotoMime: fileKomponen.type,
+                        lat: window.latCoordinate || "-",
+                        lng: window.lngCoordinate || "-"
+                    }
+                };
+
+                fetch(API_URL_WEBAPP, {
+                    method: "POST",
+                    body: JSON.stringify(paketKirim)
+                })
+                .then(res => res.json())
+                .then(hasil => {
+                    alert(hasil.message);
+                    if(hasil.status === "SUCCESS") {
+                        location.reload();
+                    } else {
+                        tombol.disabled = false;
+                        tombol.innerHTML = `<i class="fa-solid fa-paper-plane me-2"></i>KIRIM LAPORAN REAL-TIME`;
+                    }
+                })
+                .catch(err => {
+                    alert("Koneksi gagal atau bermasalah!");
+                    tombol.disabled = false;
+                    tombol.innerHTML = `<i class="fa-solid fa-paper-plane me-2"></i>KIRIM LAPORAN REAL-TIME`;
+                });
+            };
+            pembacaFile.readAsDataURL(fileKomponen);
+        });
+    </script>
+</body>
+</html>
