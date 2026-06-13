@@ -187,6 +187,7 @@
         </div>
     </div>
 
+    <!-- Modal Pop-up untuk Zoom Foto Dokumentasi -->
     <div class="modal fade" id="modalFoto" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -200,7 +201,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // URL BARU YANG SUDAH DISESUAIKAN SAMA ID AKfycbyJuzw...
+        // URL API Web App Google Apps Script Aktif
         const API_URL_WEBAPP = "https://script.google.com/macros/s/AKfycbyJuzwTGe-bucxDG6Yvgp-GEEsk5RdUpjR7ZX-G6KL_PlkiAn6QhustBE5n2fWBVrmA/exec";
         
         let dataMasterPusat = [];
@@ -300,14 +301,24 @@
                         kelasBadge = "bg-temuan";
                     }
 
+                    // SINKRONISASI & PERBAIKAN AUTO-CONVERTER FOTO GOOGLE DRIVE
                     let kolomFoto = "<span class='text-muted small'>Tidak ada foto</span>";
                     if (item.urlFoto && item.urlFoto.includes("http")) {
-                        kolomFoto = `<img src="${item.urlFoto}" class="img-thumbnail-custom" onclick="bukaModalFoto('${item.urlFoto}')">`;
+                        let urlGambarSesuai = item.urlFoto;
+                        
+                        // Deteksi jika link bertipe view/open Google Drive, ubah otomatis ke direct image link server Google 
+                        if (item.urlFoto.includes("drive.google.com")) {
+                            let matchId = item.urlFoto.match(/\/d\/([a-zA-Z0-9-_]+)/) || item.urlFoto.match(/id=([a-zA-Z0-9-_]+)/);
+                            if (matchId && matchId[1]) {
+                                urlGambarSesuai = `https://lh3.googleusercontent.com/u/0/d/${matchId[1]}=w200-h200-p`;
+                            }
+                        }
+                        
+                        kolomFoto = `<img src="${urlGambarSesuai}" class="img-thumbnail-custom" onclick="bukaModalFoto('${urlGambarSesuai}')" onerror="this.onerror=null; this.src='https://placehold.co/50x50?text=Drive+Error';">`;
                     }
 
                     let kolomPeta = "<span class='text-muted small'>-</span>";
                     if (item.lat && item.lng && item.lat !== "-") {
-                        // REPARASI TOTAL LINK MAPS (Menggunakan standard ES6 Template Literals):
                         kolomPeta = `<a href="https://www.google.com/maps?q=${item.lat},${item.lng}" target="_blank" class="btn btn-outline-primary px-2 py-1 small mb-1" style="font-size:11px; display:inline-block; text-decoration:none;"><i class="fa-solid fa-map-pin me-1"></i>Peta</a>`;
                     }
 
