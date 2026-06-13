@@ -116,7 +116,7 @@
                 <div class="stat-card d-flex align-items-center justify-content-between">
                     <div>
                         <h2 class="fw-bold m-0" id="statPetugas">0</h2>
-                        <small class="text-muted">Petugas Aktif</small>
+                        <small class="text-muted">Petugas Hikmat</small>
                     </div>
                     <div class="stat-icon bg-success bg-opacity-10 text-success">
                         <i class="fa-solid fa-user-shield"></i>
@@ -307,7 +307,7 @@
                         if (item.urlFoto.includes("drive.google.com")) {
                             let matchId = item.urlFoto.match(/\/d\/([a-zA-Z0-9-_]+)/) || item.urlFoto.match(/id=([a-zA-Z0-9-_]+)/);
                             if (matchId && matchId[1]) {
-                                // Menggunakan standard Direct Rendering Endpoint Google Drive Resmi (${matchId[1]})
+                                // Menggunakan standard Direct Rendering Endpoint Google Drive Resmi
                                 urlGambarSesuai = `https://lh3.googleusercontent.com/d/${matchId[1]}`;
                             }
                         }
@@ -317,7 +317,7 @@
 
                     let kolomPeta = "<span class='text-muted small'>-</span>";
                     if (item.lat && item.lng && item.lat !== "-") {
-                        kolomPeta = `<a href="https://www.google.com/maps?q=${item.lat},${item.lng}" target="_blank" class="btn btn-outline-primary px-2 py-1 small mb-1" style="font-size:11px; display:inline-block; text-decoration:none;"><i class="fa-solid fa-map-pin me-1"></i>Peta</a>`;
+                        kolomPeta = `<a href="https://maps.google.com/?q=${item.lat},${item.lng}" target="_blank" class="btn btn-outline-primary px-2 py-1 small mb-1" style="font-size:11px; display:inline-block; text-decoration:none;"><i class="fa-solid fa-map-pin me-1"></i>Peta</a>`;
                     }
 
                     let baris = `<tr>
