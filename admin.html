@@ -299,7 +299,7 @@
                         kelasBadge = "bg-temuan";
                     }
 
-                    // JALUR EMERGENSI & STABILIZER GAMBAR GOOGLE DRIVE
+                    // RESOLUSI UTAMA TAMPILAN FOTO LANGSUNG DI TABEL
                     let kolomFoto = "<span class='text-muted small'>Tidak ada foto</span>";
                     if (item.urlFoto && item.urlFoto.includes("http")) {
                         let urlGambarSesuai = item.urlFoto;
@@ -307,13 +307,12 @@
                         if (item.urlFoto.includes("drive.google.com")) {
                             let matchId = item.urlFoto.match(/\/d\/([a-zA-Z0-9-_]+)/) || item.urlFoto.match(/id=([a-zA-Z0-9-_]+)/);
                             if (matchId && matchId[1]) {
-                                // Menggunakan endpoint uc?export=view yang terbukti tembus CORS
-                                urlGambarSesuai = `https://docs.google.com/uc?export=view&id=${matchId[1]}`;
+                                // Menggunakan standard Direct Rendering Endpoint Google Drive Resmi (${matchId[1]})
+                                urlGambarSesuai = `https://lh3.googleusercontent.com/d/${matchId[1]}`;
                             }
                         }
                         
-                        // Proteksi ganda: jika gambar gagal render langsung, klik gambar akan otomatis membawanya ke link asli Drive
-                        kolomFoto = `<img src="${urlGambarSesuai}" class="img-thumbnail-custom" onclick="bukaModalFoto('${urlGambarSesuai}')" onerror="this.onerror=null; this.src='https://placehold.co/50x50/e2e8f0/475569?text=Buka+Foto'; this.onclick=function(){ window.open('${item.urlFoto}', '_blank'); };" title="Klik untuk memperbesar">`;
+                        kolomFoto = `<img src="${urlGambarSesuai}" class="img-thumbnail-custom" onclick="bukaModalFoto('${urlGambarSesuai}')" onerror="this.onerror=null; this.src='https://placehold.co/50x50/f1f5f9/475569?text=Buka+Foto'; this.onclick=function(){ window.open('${item.urlFoto}', '_blank'); };" title="Klik untuk memperbesar">`;
                     }
 
                     let kolomPeta = "<span class='text-muted small'>-</span>";
