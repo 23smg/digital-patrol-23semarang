@@ -7,7 +7,7 @@
     <title>Dashboard Monitoring Patroli - Mall 23Semarang</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2=family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
     <style>
         :root {
             --navy-main: #0a1128;
@@ -180,8 +180,7 @@
                             <th>Geotagging</th>
                         </tr>
                     </thead>
-                    <tbody id="bodyTabelPatroli">
-                        </tbody>
+                    <tbody id="bodyTabelPatroli"></tbody>
                 </table>
             </div>
         </div>
@@ -191,7 +190,7 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-body p-1 position-relative">
-                    <button type="text" class="btn-close position-absolute top-0 end-0 m-3 bg-white p-2 rounded-circle" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close position-absolute top-0 end-0 m-3 bg-white p-2 rounded-circle" data-bs-dismiss="modal" aria-label="Close"></button>
                     <img id="imgModalTarget" src="" class="img-fluid w-100 rounded">
                 </div>
             </div>
@@ -200,13 +199,12 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // https://script.google.com/macros/s/AKfycbywe8gb6UL0Nhc0cFbqU9TpQf_SvsQKpKHTMFBTXODEEA8Ez3ENhJ65syJeNff_Vzia/exec
+        // URL BERSIH TANPA STRIP PARAMETER AKHIR (?page=admin DIBUANG)
         const API_URL_WEBAPP = "https://script.google.com/macros/s/AKfycbywe8gb6UL0Nhc0cFbqU9TpQf_SvsQKpKHTMFBTXODEEA8Ez3ENhJ65syJeNff_Vzia/exec";
         
         let dataMasterPusat = [];
 
         document.addEventListener("DOMContentLoaded", function() {
-            // Set default filter tanggal ke hari ini saat pertama buka
             const hariIni = new Date();
             const yyyy = hariIni.getFullYear();
             const mm = String(hariIni.getMonth() + 1).padStart(2, '0');
@@ -215,7 +213,6 @@
             
             muatDataLaporanDashboard();
 
-            // Pasang event listener pencarian otomatis
             document.getElementById('filterTanggal').addEventListener('change', jalankanFilterData);
             document.getElementById('filterCari').addEventListener('input', jalankanFilterData);
         });
@@ -234,7 +231,6 @@
             loading.style.display = "block";
             tabel.style.display = "none";
 
-            // FIX CORS METHOD: Membungkus aksi ke dalam URLSearchParams (FormData)
             var formPayload = new URLSearchParams();
             formPayload.append("aksi", "ambilData");
 
@@ -247,10 +243,11 @@
             })
             .then(res => res.json())
             .then(response => {
-                if (response && response.logData) {
-                    dataMasterPusat = response.logData;
-                } else if (Array.isArray(response)) {
+                // Penyesuaian Proteksi Dupleks Array data
+                if (Array.isArray(response)) {
                     dataMasterPusat = response;
+                } else if (response && response.logData) {
+                    dataMasterPusat = response.logData;
                 } else {
                     dataMasterPusat = [];
                 }
@@ -275,7 +272,7 @@
             let tglFormat = "";
             if (tglPilihan) {
                 const sp = tglPilihan.split('-');
-                tglFormat = `${sp[2]}/${sp[1]}/${sp[0]}`; // Ubah yyyy-mm-dd ke dd/mm/yyyy
+                tglFormat = `${sp[2]}/${sp[1]}/${sp[0]}`;
             }
 
             tbody.innerHTML = "";
@@ -283,59 +280,54 @@
             let setPetugasUnik = new Set();
             let setZonaUnik = new Set();
 
-            dataMasterPusat.forEach(item => {
-                // Filter 1: Tanggal
-                if (tglFormat && !item.timestamp.includes(tglFormat)) return;
-                
-                // Filter 2: Kata Kunci (Nama / Zona / Kondisi)
-                if (kataKunci && !item.nama.toLowerCase().includes(kataKunci) && 
-                    !item.zona.toLowerCase().includes(kataKunci) && 
-                    !item.kondisi.toLowerCase().includes(kataKunci)) return;
+            if (Array.isArray(dataMasterPusat)) {
+                dataMasterPusat.forEach(item => {
+                    if (tglFormat && !item.timestamp.includes(tglFormat)) return;
+                    
+                    if (kataKunci && !item.nama.toLowerCase().includes(kataKunci) && 
+                        !item.zona.toLowerCase().includes(kataKunci) && 
+                        !item.kondisi.toLowerCase().includes(kataKunci)) return;
 
-                counterTerfilter++;
-                if(item.nama && item.nama !== "-") setPetugasUnik.add(item.nama);
-                if(item.zona && item.zona !== "-") setZonaUnik.add(item.zona);
+                    counterTerfilter++;
+                    if(item.nama && item.nama !== "-") setPetugasUnik.add(item.nama);
+                    if(item.zona && item.zona !== "-") setZonaUnik.add(item.zona);
 
-                // Atur badge kondisi sektor
-                let kelasBadge = "bg-aman";
-                if(item.kondisi.toLowerCase() !== "aman") {
-                    kelasBadge = "bg-temuan";
-                }
+                    let kelasBadge = "bg-aman";
+                    if(item.kondisi.toLowerCase() !== "aman") {
+                        kelasBadge = "bg-temuan";
+                    }
 
-                // Atur kolom foto
-                let kolomFoto = "<span class='text-muted small'>Tidak ada foto</span>";
-                if (item.urlFoto && item.urlFoto.includes("http")) {
-                    kolomFoto = `<img src="${item.urlFoto}" class="img-thumbnail-custom" onclick="bukaModalFoto('${item.urlFoto}')">`;
-                }
+                    let kolomFoto = "<span class='text-muted small'>Tidak ada foto</span>";
+                    if (item.urlFoto && item.urlFoto.includes("http")) {
+                        kolomFoto = `<img src="${item.urlFoto}" class="img-thumbnail-custom" onclick="bukaModalFoto('${item.urlFoto}')">`;
+                    }
 
-                // Atur kolom geotagging lokasi map
-                let kolomPeta = "<span class='text-muted small'>-</span>";
-                if (item.lat && item.lng && item.lat !== "-") {
-                    kolomPeta = `<a href="https://www.google.com/maps?q=${item.lat},${item.lng}" target="_blank" class="btn btn-outline-primary btn-xs px-2 py-1 small" style="font-size:11px;"><i class="fa-solid fa-map-pin me-1"></i>Peta</a>`;
-                }
+                    let kolomPeta = "<span class='text-muted small'>-</span>";
+                    if (item.lat && item.lng && item.lat !== "-") {
+                        kolomPeta = `<a href="https://maps.google.com/?q=${item.lat},${item.lng}" target="_blank" class="btn btn-outline-primary btn-xs px-2 py-1 small" style="font-size:11px;"><i class="fa-solid fa-map-pin me-1"></i>Peta</a>`;
+                    }
 
-                let baris = `<tr>
-                    <td><small class="fw-medium">${item.timestamp}</small></td>
-                    <td class="text-capitalize fw-semibold">${item.nama}</td>
-                    <td><span class="badge bg-secondary text-white">${item.zona}</span></td>
-                    <td><span class="badge-kondisi ${kelasBadge}">${item.kondisi}</span></td>
-                    <td>${kolomFoto}</td>
-                    <td>
-                        <div class="d-flex flex-column">
-                            ${kolomPeta}
-                            <small class="text-muted mt-1" style="font-size:10px; max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${item.alamat}</small>
-                        </div>
-                    </td>
-                </tr>`;
-                tbody.innerHTML += baris;
-            });
+                    let baris = `<tr>
+                        <td><small class="fw-medium">${item.timestamp}</small></td>
+                        <td class="text-capitalize fw-semibold">${item.nama}</td>
+                        <td><span class="badge bg-secondary text-white">${item.zona}</span></td>
+                        <td><span class="badge-kondisi ${kelasBadge}">${item.kondisi}</span></td>
+                        <td>${kolomFoto}</td>
+                        <td>
+                            <div class="d-flex flex-column">
+                                ${kolomPeta}
+                                <small class="text-muted mt-1" style="font-size:10px; max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${item.alamat}</small>
+                            </div>
+                        </td>
+                    </tr>`;
+                    tbody.innerHTML += baris;
+                });
+            }
 
-            // Update Angka Statistik Dashboard Atas
             document.getElementById('statTotalLog').innerText = counterTerfilter;
             document.getElementById('statPetugas').innerText = setPetugasUnik.size;
             document.getElementById('statZona').innerText = setZonaUnik.size;
 
-            // Set judul tabel berdasarkan status pencarian tanggal
             if (tglFormat) {
                 document.getElementById('judulTabel').innerHTML = `<i class="fa-solid fa-list-ul me-2"></i>Riwayat Aktivitas Patroli Tanggal ${tglFormat}`;
             } else {
@@ -360,12 +352,10 @@
 
         function eksporKeExcel() {
             let tabelHtml = document.getElementById('tabelLogPatroli').cloneNode(true);
-            // Bersihkan kolom aksi/peta dan foto agar tidak berantakan di Excel
             let barisTabel = tabelHtml.querySelectorAll('tr');
             barisTabel.forEach(tr => {
                 let kolom = tr.querySelectorAll('td, th');
                 if(kolom.length >= 6) {
-                    // Jika ada link peta, ubah jadi teks alamat biasa
                     let divPeta = kolom[5].querySelector('small');
                     if(divPeta) kolom[5].innerHTML = divPeta.innerText;
                 }
@@ -374,4 +364,11 @@
             let linkDownload = document.createElement('a');
             let dataData = tabelHtml.outerHTML.replace(/ /g, '%20');
             linkDownload.href = 'data:application/vnd.ms-excel,' + dataData;
-            linkDownload.download = 'Laporan_Patroli_Mall_23Semarang_' +
+            linkDownload.download = 'Laporan_Patroli_Mall_23Semarang_' + (document.getElementById('filterTanggal').value || 'Semua_Hari') + '.xls';
+            document.body.appendChild(linkDownload);
+            linkDownload.click();
+            document.body.removeChild(linkDownload);
+        }
+    </script>
+</body>
+</html>
