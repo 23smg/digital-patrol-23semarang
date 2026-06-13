@@ -83,12 +83,18 @@
         .bg-aman { background-color: #dcfce7; color: #166534; }
         .bg-temuan { background-color: #fee2e2; color: #991b1b; }
         .img-thumbnail-custom {
-            width: 50px;
-            height: 50px;
+            width: 60px;
+            height: 60px;
             object-fit: cover;
             border-radius: 8px;
             cursor: pointer;
-            border: 1px solid var(--border-gray);
+            border: 2px solid var(--border-gray);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: transform 0.15s ease-in-out;
+        }
+        .img-thumbnail-custom:hover {
+            transform: scale(1.08);
+            border-color: var(--blue-accent);
         }
     </style>
 </head>
@@ -116,7 +122,7 @@
                 <div class="stat-card d-flex align-items-center justify-content-between">
                     <div>
                         <h2 class="fw-bold m-0" id="statPetugas">0</h2>
-                        <small class="text-muted">Petugas Hikmat</small>
+                        <small class="text-muted">Petugas Aktif</small>
                     </div>
                     <div class="stat-icon bg-success bg-opacity-10 text-success">
                         <i class="fa-solid fa-user-shield"></i>
@@ -188,11 +194,11 @@
     </div>
 
     <div class="modal fade" id="modalFoto" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-body p-1 position-relative">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content bg-dark border-0">
+                <div class="modal-body p-1 position-relative text-center">
                     <button type="button" class="btn-close position-absolute top-0 end-0 m-3 bg-white p-2 rounded-circle" data-bs-dismiss="modal" aria-label="Close"></button>
-                    <img id="imgModalTarget" src="" class="img-fluid w-100 rounded" alt="Preview">
+                    <img id="imgModalTarget" src="" class="img-fluid rounded" style="max-height: 80vh; object-fit: contain;" alt="Preview">
                 </div>
             </div>
         </div>
@@ -299,7 +305,6 @@
                         kelasBadge = "bg-temuan";
                     }
 
-                    // RESOLUSI UTAMA TAMPILAN FOTO LANGSUNG DI TABEL
                     let kolomFoto = "<span class='text-muted small'>Tidak ada foto</span>";
                     if (item.urlFoto && item.urlFoto.includes("http")) {
                         let urlGambarSesuai = item.urlFoto;
@@ -307,17 +312,16 @@
                         if (item.urlFoto.includes("drive.google.com")) {
                             let matchId = item.urlFoto.match(/\/d\/([a-zA-Z0-9-_]+)/) || item.urlFoto.match(/id=([a-zA-Z0-9-_]+)/);
                             if (matchId && matchId[1]) {
-                                // Menggunakan standard Direct Rendering Endpoint Google Drive Resmi
                                 urlGambarSesuai = `https://lh3.googleusercontent.com/d/${matchId[1]}`;
                             }
                         }
                         
-                        kolomFoto = `<img src="${urlGambarSesuai}" class="img-thumbnail-custom" onclick="bukaModalFoto('${urlGambarSesuai}')" onerror="this.onerror=null; this.src='https://placehold.co/50x50/f1f5f9/475569?text=Buka+Foto'; this.onclick=function(){ window.open('${item.urlFoto}', '_blank'); };" title="Klik untuk memperbesar">`;
+                        kolomFoto = `<img src="${urlGambarSesuai}" class="img-thumbnail-custom" onclick="bukaModalFoto('${urlGambarSesuai}')" onerror="this.onerror=null; this.src='https://placehold.co/60x60/f1f5f9/475569?text=Buka+Foto'; this.onclick=function(){ window.open('${item.urlFoto}', '_blank'); };" title="Klik untuk zoom foto">`;
                     }
 
                     let kolomPeta = "<span class='text-muted small'>-</span>";
                     if (item.lat && item.lng && item.lat !== "-") {
-                        kolomPeta = `<a href="https://maps.google.com/?q=${item.lat},${item.lng}" target="_blank" class="btn btn-outline-primary px-2 py-1 small mb-1" style="font-size:11px; display:inline-block; text-decoration:none;"><i class="fa-solid fa-map-pin me-1"></i>Peta</a>`;
+                        kolomPeta = `<a href="https://www.google.com/maps/search/?api=1&query=${item.lat},${item.lng}" target="_blank" class="btn btn-outline-primary px-2 py-1 small mb-1" style="font-size:11px; display:inline-block; text-decoration:none;"><i class="fa-solid fa-map-pin me-1"></i>Peta</a>`;
                     }
 
                     let baris = `<tr>
@@ -329,7 +333,7 @@
                         <td>
                             <div class="d-flex flex-column align-items-start">
                                 ${kolomPeta}
-                                <small class="text-muted text-wrap" style="font-size:10px; max-width:200px; display:block; line-height:1.2;">${item.alamat}</small>
+                                <small class="text-muted text-wrap" style="font-size:10px; max-width:200px; display:block; line-height:1.2;">${item.alamat || '-'}</small>
                             </div>
                         </td>
                     </tr>`;
