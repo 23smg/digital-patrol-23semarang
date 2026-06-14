@@ -20,18 +20,18 @@
             font-family: 'Plus Jakarta Sans', sans-serif;
             background-color: var(--bg-light);
             color: #334155;
-            font-size: 13px; /* Memperkecil base font default global */
+            font-size: 13px;
         }
         .navbar-custom {
             background-color: var(--navy-main);
             color: white;
-            padding: 1rem 2rem; /* Diperkecil dari 1.5rem */
+            padding: 1rem 2rem;
             box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
         }
         .stat-card {
             background: white;
             border-radius: 12px;
-            padding: 1rem; /* Lebih padat */
+            padding: 1rem;
             border: 1px solid var(--border-gray);
             box-shadow: 0 1px 3px rgba(0,0,0,0.05);
             transition: transform 0.2s;
@@ -51,7 +51,7 @@
         .filter-section {
             background: white;
             border-radius: 12px;
-            padding: 1rem;
+            padding: 1.25rem 1rem;
             border: 1px solid var(--border-gray);
             margin-bottom: 1rem;
         }
@@ -68,7 +68,6 @@
         .table-custom tbody tr:hover {
             background-color: #f1f5f9 !important;
         }
-        /* OPTIMASI UKURAN DAN PADAT DATA PADA TABEL */
         .table-custom th {
             background-color: #f1f5f9;
             color: #475569;
@@ -76,10 +75,10 @@
             text-transform: uppercase;
             font-size: 0.7rem;
             letter-spacing: 0.05em;
-            padding: 0.6rem 0.7rem; /* Diperketat */
+            padding: 0.6rem 0.7rem;
         }
         .table-custom td {
-            padding: 0.4rem 0.7rem; /* Diperketat signifikan menghilangkan space kosong berlebih */
+            padding: 0.4rem 0.7rem;
             vertical-align: middle;
             border-bottom: 1px solid var(--border-gray);
             font-size: 12.5px;
@@ -92,8 +91,6 @@
         }
         .bg-aman { background-color: #dcfce7; color: #166534; }
         .bg-temuan { background-color: #fee2e2; color: #991b1b; }
-        
-        /* Thumbnail Foto Diperkecil */
         .img-thumbnail-custom {
             width: 45px;
             height: 45px;
@@ -146,7 +143,6 @@
     </nav>
 
     <div class="container-fluid px-3">
-        <!-- STATISTIK UTAMA -->
         <div class="row g-3 mb-3">
             <div class="col-md-4">
                 <div class="stat-card d-flex align-items-center justify-content-between">
@@ -183,25 +179,30 @@
             </div>
         </div>
 
-        <!-- FILTER SELECTION -->
         <div class="filter-section">
-            <div class="row g-2">
+            <h6 class="fw-bold mb-2 text-primary" style="font-size: 12px;"><i class="fa-solid fa-filter me-1"></i> Parameter Saring Data</h6>
+            <div class="row g-2 align-items-end">
                 <div class="col-md-3">
-                    <input type="date" id="filterTanggal" class="form-control form-control-sm">
+                    <label class="text-muted mb-1" style="font-size: 11px; font-weight: 500;">Dari Tanggal:</label>
+                    <input type="date" id="filterTanggalStart" class="form-control form-control-sm">
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-3">
+                    <label class="text-muted mb-1" style="font-size: 11px; font-weight: 500;">Sampai Tanggal:</label>
+                    <input type="date" id="filterTanggalEnd" class="form-control form-control-sm">
+                </div>
+                <div class="col-md-4">
+                    <label class="text-muted mb-1" style="font-size: 11px; font-weight: 500;">Kata Kunci Pencarian:</label>
                     <div class="input-group input-group-sm">
                         <span class="input-group-text bg-white border-end-0 text-muted"><i class="fa-solid fa-magnifying-glass"></i></span>
                         <input type="text" id="filterCari" class="form-control border-start-0" placeholder="Cari Nama / Zona / Kondisi...">
                     </div>
                 </div>
-                <div class="col-md-3">
-                    <button class="btn btn-outline-secondary btn-sm w-100" onclick="resetTanggal()">Semua Tanggal</button>
+                <div class="col-md-2">
+                    <button class="btn btn-outline-secondary btn-sm w-100" onclick="resetSemuaFilter()">Semua Waktu</button>
                 </div>
             </div>
         </div>
 
-        <!-- TABEL KONTEN UTAMA -->
         <div class="table-container mb-3">
             <div class="px-3 py-2 border-bottom d-flex justify-content-between align-items-center bg-white">
                 <span class="fw-bold text-navy-main" id="judulTabel" style="font-size: 13px;"><i class="fa-solid fa-list-ul me-2"></i>Riwayat Aktivitas</span>
@@ -231,7 +232,6 @@
                 </table>
             </div>
 
-            <!-- FOOTER NAVIGASI HALAMAN (PAGINATION PANEL) -->
             <div id="panelNavigasiHalaman" class="px-3 py-2 bg-light border-top d-flex justify-content-between align-items-center" style="display: none !important;">
                 <div class="pagination-info" id="infoTeksHalaman">Menampilkan 0-0 dari 0 data</div>
                 <nav>
@@ -253,7 +253,6 @@
         </div>
     </div>
 
-    <!-- MODAL POP UP DETAIL -->
     <div class="modal fade" id="modalDetailPatroli" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content modal-detail-content">
@@ -304,23 +303,28 @@
         document.addEventListener("DOMContentLoaded", function() {
             komponenModalDetail = new bootstrap.Modal(document.getElementById('modalDetailPatroli'));
 
+            // Default aplikasi langsung set filter ke hari ini untuk start & end
             const hariIni = new Date();
             const yyyy = hariIni.getFullYear();
             const mm = String(hariIni.getMonth() + 1).padStart(2, '0');
             const dd = String(hariIni.getDate()).padStart(2, '0');
-            document.getElementById('filterTanggal').value = `${yyyy}-${mm}-${dd}`;
+            const formatStringTanggal = `${yyyy}-${mm}-${dd}`;
+            
+            document.getElementById('filterTanggalStart').value = formatStringTanggal;
+            document.getElementById('filterTanggalEnd').value = formatStringTanggal;
             
             muatDataLaporanDashboard();
 
-            document.getElementById('filterTanggal').addEventListener('change', function() {
-                halamanSaatIni = 1;
-                jalankanFilterData();
-            });
-            document.getElementById('filterCari').addEventListener('input', function() {
-                halamanSaatIni = 1;
-                jalankanFilterData();
-            });
+            // Pasang event listener pemantau perubahan data filter
+            document.getElementById('filterTanggalStart').addEventListener('change', memicuUlangFilter);
+            document.getElementById('filterTanggalEnd').addEventListener('change', memicuUlangFilter);
+            document.getElementById('filterCari').addEventListener('input', memicuUlangFilter);
         });
+
+        function memicuUlangFilter() {
+            halamanSaatIni = 1;
+            jalankanFilterData();
+        }
 
         function muatDataLaporanDashboard() {
             var btnRef = document.getElementById('btnRefresh');
@@ -371,15 +375,33 @@
             });
         }
 
+        // FUNGSI UTAMA CONVERT STRING TIMESTAMP "DD/MM/YYYY HH:MM" MENJADI OBJEK DATE VALID
+        function ubahTimestampSheetKeDate(strTimestamp) {
+            if(!strTimestamp || strTimestamp === "-") return null;
+            try {
+                // Potong string "14/06/2026 11:21" berdasarkan spasi
+                let pecahanAwal = strTimestamp.split(' ');
+                let bagianTanggal = pecahanAwal[0]; // "14/06/2026"
+                
+                let komponen = bagianTanggal.split('/'); // [14, 06, 2026]
+                let hari = parseInt(komponen[0], 10);
+                let bulan = parseInt(komponen[1], 10) - 1; // Bulan JavaScript dimulai dari indeks 0
+                let tahun = parseInt(komponen[2], 10);
+                
+                return new Date(tahun, bulan, hari, 0, 0, 0, 0);
+            } catch(e) {
+                return null;
+            }
+        }
+
         function jalankanFilterData() {
-            const tglPilihan = document.getElementById('filterTanggal').value; 
+            const tglStartVal = document.getElementById('filterTanggalStart').value; 
+            const tglEndVal = document.getElementById('filterTanggalEnd').value; 
             const kataKunci = document.getElementById('filterCari').value.toLowerCase().trim();
             
-            let tglFormat = "";
-            if (tglPilihan) {
-                const sp = tglPilihan.split('-');
-                tglFormat = `${sp[2]}/${sp[1]}/${sp[0]}`; 
-            }
+            // Siapkan pembanding Date Objek
+            let dateMulai = tglStartVal ? new Date(tglStartVal + "T00:00:00") : null;
+            let dateSelesai = tglEndVal ? new Date(tglEndVal + "T23:59:59") : null;
 
             dataTerfilterSaatIni = []; 
             let setPetugasUnik = new Set();
@@ -387,8 +409,16 @@
 
             if (Array.isArray(dataMasterPusat)) {
                 dataMasterPusat.forEach(item => {
-                    if (tglFormat && !item.timestamp.includes(tglFormat)) return;
+                    // Validasi Rentang Tanggal
+                    if(item.timestamp && item.timestamp !== "-") {
+                        let dateDataLog = ubahTimestampSheetKeDate(item.timestamp);
+                        if(dateDataLog) {
+                            if (dateMulai && dateDataLog < dateMulai) return;
+                            if (dateSelesai && dateDataLog > dateSelesai) return;
+                        }
+                    }
                     
+                    // Validasi Keyword Kata Kunci
                     if (kataKunci && !item.nama.toLowerCase().includes(kataKunci) && 
                         !item.zona.toLowerCase().includes(kataKunci) && 
                         !item.kondisi.toLowerCase().includes(kataKunci)) return;
@@ -404,10 +434,15 @@
             document.getElementById('statPetugas').innerText = setPetugasUnik.size;
             document.getElementById('statZona').innerText = setZonaUnik.size;
 
-            if (tglFormat) {
-                document.getElementById('judulTabel').innerHTML = `<i class="fa-solid fa-list-ul me-2"></i>Riwayat Aktivitas Kontrol Tanggal ${tglFormat}`;
+            // Kustomisasi Dinamis Judul Tabel Laporan
+            if (tglStartVal && tglEndVal) {
+                if(tglStartVal === tglEndVal) {
+                    document.getElementById('judulTabel').innerHTML = `<i class="fa-solid fa-list-ul me-2"></i>Riwayat Patroli Hari Ini (${tglStartVal.split('-').reverse().join('/')})`;
+                } else {
+                    document.getElementById('judulTabel').innerHTML = `<i class="fa-solid fa-list-ul me-2"></i>Riwayat Periode ${tglStartVal.split('-').reverse().join('/')} s/d ${tglEndVal.split('-').reverse().join('/')}`;
+                }
             } else {
-                document.getElementById('judulTabel').innerHTML = `<i class="fa-solid fa-list-ul me-2"></i>Semua Riwayat Aktivitas`;
+                document.getElementById('judulTabel').innerHTML = `<i class="fa-solid fa-list-ul me-2"></i>Semua Riwayat Aktivitas Kontrol`;
             }
 
             renderTabelBerdasarkanHalaman();
@@ -424,7 +459,7 @@
             const indeksSelesai = Math.min(indeksMulai + JUMLAH_DATA_PER_HALAMAN, totalData);
 
             if (totalData === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="text-center p-3 text-muted">Tidak ditemukan log patroli.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center p-3 text-muted">Tidak ditemukan log data patroli pada rentang waktu ini.</td></tr>`;
                 document.getElementById('panelNavigasiHalaman').setAttribute('style', 'display: none !important;');
             } else {
                 for (let i = indeksMulai; i < indeksSelesai; i++) {
@@ -445,7 +480,6 @@
                         kolomFoto = `<img src="${urlGambarSesuai}" class="img-thumbnail-custom" onerror="this.onerror=null; this.src='https://placehold.co/45x45/f1f5f9/475569?text=Foto';">`;
                     }
 
-                    // TAMPILAN GEOTAGGING HORIZONTAL SUPAYA TIDAK MEMAKAN RUANG KEBOWAH
                     let kolomPeta = "";
                     if (item.lat && item.lng && item.lat !== "-") {
                         kolomPeta = `<span class="badge bg-light text-primary border border-primary me-2" style="font-size:10px; padding: 2px 5px;"><i class="fa-solid fa-location-dot me-1"></i>Tersedia</span>`;
@@ -528,7 +562,7 @@
 
             const btnPeta = document.getElementById('linkDetPeta');
             if (dataPilihan.lat && dataPilihan.lat !== "-") {
-                btnPeta.href = `https://www.google.com/maps/search/?api=1&query=${dataPilihan.lat},${dataPilihan.lng}`;
+                btnPeta.href = `https://maps.google.com/?q=${dataPilihan.lat},${dataPilihan.lng}`;
                 btnPeta.classList.remove('disabled');
             } else {
                 btnPeta.href = "#";
@@ -538,8 +572,10 @@
             komponenModalDetail.show();
         }
 
-        function resetTanggal() {
-            document.getElementById('filterTanggal').value = "";
+        function resetSemuaFilter() {
+            document.getElementById('filterTanggalStart').value = "";
+            document.getElementById('filterTanggalEnd').value = "";
+            document.getElementById('filterCari').value = "";
             halamanSaatIni = 1;
             jalankanFilterData();
         }
@@ -549,6 +585,7 @@
             let tbodyLama = tabelHtml.querySelector('tbody');
             tbodyLama.innerHTML = ""; 
 
+            // Tarik seluruh list data hasil sortir range tanggal ke dalam Excel
             dataTerfilterSaatIni.forEach((item) => {
                 let baris = `<tr>
                     <td>${item.timestamp}</td>
@@ -611,16 +648,18 @@
             let templateExcel = `
                 <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
                 <head>
-                    <!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>Data Laporan Patroli</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->
                     <meta charset="utf-8">
                 </head>
                 <body>${tabelHtml.outerHTML}</body>
                 </html>
             `;
 
-            let namaFile = 'Laporan_Patroli_Mall_23Semarang_' + (document.getElementById('filterTanggal').value || 'Semua_Hari') + '.xls';
-            let blob = new Blob([templateExcel], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+            // Dinamis nama file Excel berdasarkan rentang tanggal aktif saat didownload
+            const startStr = document.getElementById('filterTanggalStart').value || 'Awal';
+            const endStr = document.getElementById('filterTanggalEnd').value || 'Akhir';
+            let namaFile = `Laporan_Patroli_Mall_23Semarang_${startStr}_ke_${endStr}.xls`;
             
+            let blob = new Blob([templateExcel], { type: 'application/vnd.ms-excel;charset=utf-8;' });
             let linkDownload = document.createElement('a');
             linkDownload.href = URL.createObjectURL(blob);
             linkDownload.download = namaFile;
