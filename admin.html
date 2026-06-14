@@ -60,6 +60,14 @@
             border: 1px solid var(--border-gray);
             overflow: hidden;
         }
+        /* Style interaktif klik baris laporan */
+        .table-custom tbody tr {
+            cursor: pointer;
+            transition: background-color 0.15s ease;
+        }
+        .table-custom tbody tr:hover {
+            background-color: #f1f5f9 !important;
+        }
         .table-custom th {
             background-color: #f1f5f9;
             color: #475569;
@@ -87,14 +95,41 @@
             height: 60px;
             object-fit: cover;
             border-radius: 8px;
-            cursor: pointer;
             border: 2px solid var(--border-gray);
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            transition: transform 0.15s ease-in-out;
         }
-        .img-thumbnail-custom:hover {
-            transform: scale(1.08);
-            border-color: var(--blue-accent);
+
+        /* STYLE DETIL MODAL POP-UP */
+        .modal-detail-content {
+            border-radius: 20px;
+            border: none;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+        }
+        .modal-detail-header {
+            background-color: var(--navy-main);
+            color: white;
+            border-bottom: none;
+        }
+        .detail-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #64748b;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+        .detail-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: #0f172a;
+            margin-bottom: 12px;
+        }
+        .dev-watermark {
+            font-size: 11px;
+            color: #94a3b8;
+            text-align: center;
+            margin: 2rem 0;
         }
     </style>
 </head>
@@ -191,14 +226,50 @@
                 </table>
             </div>
         </div>
+
+        <div class="dev-watermark">
+            Developed by <strong>Alif Rizal</strong> • IT Department (alif.rizal@23semarang.id)
+        </div>
     </div>
 
-    <div class="modal fade" id="modalFoto" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content bg-dark border-0">
-                <div class="modal-body p-1 position-relative text-center">
-                    <button type="button" class="btn-close position-absolute top-0 end-0 m-3 bg-white p-2 rounded-circle" data-bs-dismiss="modal" aria-label="Close"></button>
-                    <img id="imgModalTarget" src="" class="img-fluid rounded" style="max-height: 80vh; object-fit: contain;" alt="Preview">
+    <div class="modal fade" id="modalDetailPatroli" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content modal-detail-content">
+                <div class="modal-header modal-detail-header p-3">
+                    <h6 class="modal-title fw-bold" id="modalTitleNama"><i class="fa-solid fa-user-shield me-2"></i>Detail Log Patroli</h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="row align-items-center">
+                        <div class="col-7">
+                            <div class="detail-label">Waktu Pengiriman</div>
+                            <div class="detail-value" id="detWaktu">-</div>
+
+                            <div class="detail-label">Zona Sektor Inspeksi</div>
+                            <div class="detail-value"><span id="detZona" class="badge bg-dark">-</span></div>
+
+                            <div class="detail-label">Kondisi Lapangan</div>
+                            <div class="detail-value"><span id="detKondisi" class="badge-kondisi">-</span></div>
+
+                            <div class="detail-label">Titik Koordinat GPS</div>
+                            <div class="detail-value" id="detGps">-</div>
+                        </div>
+                        <div class="col-5 text-center">
+                            <div class="detail-label">Lampiran Visual</div>
+                            <img src="" id="detFoto" class="img-fluid rounded border shadow-sm" style="max-height: 140px; object-fit: cover; width: 100%;">
+                        </div>
+                    </div>
+                    
+                    <hr class="text-muted my-3">
+                    
+                    <div class="mb-2">
+                        <div class="detail-label">Estimasi Alamat Geotagging</div>
+                        <div class="text-dark small fw-medium" id="detAlamat" style="line-height: 1.4;">-</div>
+                    </div>
+
+                    <div class="d-flex gap-2 mt-4">
+                        <a href="#" id="linkDetPeta" target="_blank" class="btn btn-primary w-100 py-2 rounded-3 small fw-bold"><i class="fa-solid fa-map-location-dot me-2"></i>Buka Lokasi di Google Maps</a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -209,8 +280,12 @@
         const API_URL_WEBAPP = "https://script.google.com/macros/s/AKfycbyJuzwTGe-bucxDG6Yvgp-GEEsk5RdUpjR7ZX-G6KL_PlkiAn6QhustBE5n2fWBVrmA/exec";
         
         let dataMasterPusat = [];
+        let dataTerfilterSaatIni = []; // Menyimpan salinan data terfilter untuk referensi indeks klik
+        let komponenModalDetail;
 
         document.addEventListener("DOMContentLoaded", function() {
+            komponenModalDetail = new bootstrap.Modal(document.getElementById('modalDetailPatroli'));
+
             const hariIni = new Date();
             const yyyy = hariIni.getFullYear();
             const mm = String(hariIni.getMonth() + 1).padStart(2, '0');
@@ -284,6 +359,7 @@
             }
 
             tbody.innerHTML = "";
+            dataTerfilterSaatIni = []; // Reset penampung data terfilter
             let counterTerfilter = 0;
             let setPetugasUnik = new Set();
             let setZonaUnik = new Set();
@@ -296,6 +372,10 @@
                         !item.zona.toLowerCase().includes(kataKunci) && 
                         !item.kondisi.toLowerCase().includes(kataKunci)) return;
 
+                    // Masukkan ke array referensi detail klik
+                    dataTerfilterSaatIni.push(item);
+                    let indeksData = dataTerfilterSaatIni.length - 1;
+
                     counterTerfilter++;
                     if(item.nama && item.nama !== "-") setPetugasUnik.add(item.nama);
                     if(item.zona && item.zona !== "-") setZonaUnik.add(item.zona);
@@ -305,29 +385,27 @@
                         kelasBadge = "bg-temuan";
                     }
 
-                    // --- PERBAIKAN TOTAL ENDPOINT DAN INTEGRASI FOTO ---
+                    let urlGambarSesuai = "https://placehold.co/60x60/f1f5f9/475569?text=No+Foto";
                     let kolomFoto = "<span class='text-muted small'>Tidak ada foto</span>";
+                    
                     if (item.urlFoto && item.urlFoto.includes("http")) {
-                        let urlGambarSesuai = item.urlFoto;
-                        
+                        urlGambarSesuai = item.urlFoto;
                         if (item.urlFoto.includes("drive.google.com")) {
                             let matchId = item.urlFoto.match(/\/d\/([a-zA-Z0-9-_]+)/) || item.urlFoto.match(/id=([a-zA-Z0-9-_]+)/);
                             if (matchId && matchId[1]) {
-                                // Menggunakan URL Google Docs Direct View yang resmi dan didukung penuh oleh browser
                                 urlGambarSesuai = `https://docs.google.com/uc?export=view&id=${matchId[1]}`;
                             }
                         }
-                        
-                        kolomFoto = `<img src="${urlGambarSesuai}" class="img-thumbnail-custom" onclick="bukaModalFoto('${urlGambarSesuai}')" onerror="this.onerror=null; this.src='https://placehold.co/60x60/f1f5f9/475569?text=Buka+Foto'; this.onclick=function(){ window.open('${item.urlFoto}', '_blank'); };" title="Klik untuk zoom foto">`;
+                        kolomFoto = `<img src="${urlGambarSesuai}" class="img-thumbnail-custom" onerror="this.onerror=null; this.src='https://placehold.co/60x60/f1f5f9/475569?text=Buka+Foto';">`;
                     }
 
-                    // --- PERBAIKAN TAUTAN GOOGLE MAPS ---
                     let kolomPeta = "<span class='text-muted small'>-</span>";
                     if (item.lat && item.lng && item.lat !== "-") {
-                        kolomPeta = `<a href="https://www.google.com/maps?q=${item.lat},${item.lng}" target="_blank" class="btn btn-outline-primary px-2 py-1 small mb-1" style="font-size:11px; display:inline-block; text-decoration:none;"><i class="fa-solid fa-map-pin me-1"></i>Peta</a>`;
+                        kolomPeta = `<span class="badge bg-light text-primary border border-primary" style="font-size:10px;"><i class="fa-solid fa-location-dot me-1"></i>Tersedia</span>`;
                     }
 
-                    let baris = `<tr>
+                    // Baris sekarang memicu fungsi bukaDetailPopupBerdasarkanIndeks ketika diklik
+                    let baris = `<tr onclick="bukaDetailPopupBerdasarkanIndeks(${indeksData})">
                         <td><small class="fw-medium">${item.timestamp}</small></td>
                         <td class="text-capitalize fw-semibold">${item.nama}</td>
                         <td><span class="badge bg-secondary text-white">${item.zona}</span></td>
@@ -359,15 +437,52 @@
             document.getElementById('btnExport').disabled = counterTerfilter === 0;
         }
 
+        // FUNGSI INTERAKTIF TERBARU UNTUK DISPLAY POP-UP DETAIL LAPORAN
+        function bukaDetailPopupBerdasarkanIndeks(indeks) {
+            const dataPilihan = dataTerfilterSaatIni[indeks];
+            if (!dataPilihan) return;
+
+            document.getElementById('modalTitleNama').innerHTML = `<i class="fa-solid fa-user-shield me-2"></i>Patroli: ${dataPilihan.nama}`;
+            document.getElementById('detWaktu').innerText = dataPilihan.timestamp;
+            document.getElementById('detZona').innerText = dataPilihan.zona;
+            
+            const badgeKondisi = document.getElementById('detKondisi');
+            badgeKondisi.innerText = dataPilihan.kondisi;
+            badgeKondisi.className = dataPilihan.kondisi.toLowerCase() === "aman" ? "badge-kondisi bg-aman" : "badge-kondisi bg-temuan";
+
+            const koordinatTeks = (dataPilihan.lat && dataPilihan.lat !== "-") ? `${dataPilihan.lat}, ${dataPilihan.lng}` : "Tidak Terlacak";
+            document.getElementById('detGps').innerText = koordinatTeks;
+            document.getElementById('detAlamat').innerText = dataPilihan.alamat || "Alamat tidak terjangkau geocode.";
+
+            // Parsing URL Gambar Dokumentasi
+            let urlGambarSesuai = "https://placehold.co/150?text=No+Image";
+            if (dataPilihan.urlFoto && dataPilihan.urlFoto.includes("http")) {
+                urlGambarSesuai = dataPilihan.urlFoto;
+                if (dataPilihan.urlFoto.includes("drive.google.com")) {
+                    let matchId = dataPilihan.urlFoto.match(/\/d\/([a-zA-Z0-9-_]+)/) || dataPilihan.urlFoto.match(/id=([a-zA-Z0-9-_]+)/);
+                    if (matchId && matchId[1]) {
+                        urlGambarSesuai = `https://docs.google.com/uc?export=view&id=${matchId[1]}`;
+                    }
+                }
+            }
+            document.getElementById('detFoto').src = urlGambarSesuai;
+
+            // Logika Pembukaan Tautan Maps Luar
+            const btnPeta = document.getElementById('linkDetPeta');
+            if (dataPilihan.lat && dataPilihan.lat !== "-") {
+                btnPeta.href = `https://www.google.com/maps/search/?api=1&query=${dataPilihan.lat},${dataPilihan.lng}`;
+                btnPeta.classList.remove('disabled');
+            } else {
+                btnPeta.href = "#";
+                btnPeta.add('disabled');
+            }
+
+            komponenModalDetail.show();
+        }
+
         function resetTanggal() {
             document.getElementById('filterTanggal').value = "";
             jalankanFilterData();
-        }
-
-        function bukaModalFoto(url) {
-            document.getElementById('imgModalTarget').src = url;
-            var myModal = new bootstrap.Modal(document.getElementById('modalFoto'));
-            myModal.show();
         }
 
         function eksporKeExcel() {
