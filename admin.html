@@ -75,6 +75,7 @@
 </head>
 <body>
 
+    <!-- NAVBAR -->
     <nav class="navbar navbar-expand-lg navbar-dark navbar-navy py-3">
         <div class="container-fluid px-4">
             <a class="navbar-brand fw-bold" href="#"><i class="fa-solid fa-chart-line me-2"></i>DIGITAL PATROL MONITORS</a>
@@ -82,6 +83,7 @@
         </div>
     </nav>
 
+    <!-- CONTAINER UTAMA -->
     <div class="container-fluid px-4 py-4">
         
         <div class="main-card-table p-4">
@@ -89,11 +91,13 @@
                 <h5 class="fw-bold m-0"><i class="fa-solid fa-clock-history me-2 text-primary"></i>Riwayat Log Patroli</h5>
             </div>
 
+            <!-- STATUS LOADING -->
             <div id="loadingStatus" class="text-center py-5">
                 <i class="fa-solid fa-circle-notch fa-spin fa-2xl text-primary mb-3"></i>
                 <p class="text-muted small">Sedang mengambil riwayat database...</p>
             </div>
 
+            <!-- TABEL DATA -->
             <div class="table-responsive">
                 <table class="table align-middle table-custom" id="tabelLogPatroli" style="display: none;">
                     <thead class="table-light">
@@ -107,10 +111,12 @@
                         </tr>
                     </thead>
                     <tbody id="bodyTabelPatroli">
-                        </tbody>
+                        <!-- Data otomatis terisi via JavaScript -->
+                    </tbody>
                 </table>
             </div>
 
+            <!-- PAGINATION FOOTER -->
             <div id="footerPagination" class="d-flex justify-content-between align-items-center mt-3" style="display: none !important;">
                 <span id="infoTextPaging" class="small text-muted">Menampilkan data...</span>
                 <div class="d-flex gap-1">
@@ -120,11 +126,13 @@
             </div>
         </div>
 
+        <!-- WATERMARK DEVELOPER -->
         <div class="dev-watermark">
             Developed by <strong>Alif Rizal</strong> • IT Department (alif.rizal@23semarang.id)
         </div>
     </div>
 
+    <!-- MODAL POP-UP DETAIL LAPORAN INTERAKTIF -->
     <div class="modal fade" id="modalDetailPatroli" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content modal-detail-content">
@@ -238,7 +246,6 @@
             document.getElementById('footerPagination').setAttribute("style", "display: flex !important;");
         }
 
-        // Penanganan klik data baris menggunakan metode pencarian index array aman
         function bukaDetailPopupByIndex(indexAsli) {
             const dataPilihan = masterDataPatroli[indexAsli];
             if (!dataPilihan) return;
