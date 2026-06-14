@@ -128,6 +128,11 @@
             text-align: center;
             margin: 2rem 0;
         }
+        /* Style Tambahan untuk Kontrol Halaman (Pagination) */
+        .pagination-info {
+            font-size: 0.85rem;
+            color: #64748b;
+        }
     </style>
 </head>
 <body>
@@ -222,6 +227,23 @@
                     <tbody id="bodyTabelPatroli"></tbody>
                 </table>
             </div>
+
+            <div id="panelNavigasiHalaman" class="p-3 bg-light border-top d-flex justify-content-between align-items-center" style="display: none !important;">
+                <div class="pagination-info" id="infoTeksHalaman">
+                    Menampilkan 0 sampai 0 dari 0 data
+                </div>
+                <nav>
+                    <ul class="pagination pagination-sm m-0">
+                        <li class="page-item" id="btnHalamanPrev">
+                            <a class="page-link" href="#" onclick="pindahKeHalamanSebelumnya(event)"><i class="fa-solid fa-chevron-left"></i></a>
+                        </li>
+                        <li class="page-item disabled"><a class="page-link text-dark fw-bold" id="labelHalamanAktif" href="#">1</a></li>
+                        <li class="page-item" id="btnHalamanNext">
+                            <a class="page-link" href="#" onclick="pindahKeHalamanBerikutnya(event)"><i class="fa-solid fa-chevron-right"></i></a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
         </div>
 
         <div class="dev-watermark">
@@ -229,7 +251,6 @@
         </div>
     </div>
 
-    <!-- MODAL POP UP DETAIL -->
     <div class="modal fade" id="modalDetailPatroli" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content modal-detail-content">
@@ -275,6 +296,10 @@
         let dataTerfilterSaatIni = []; 
         let komponenModalDetail;
 
+        // VARIABLE PAGINATION (PEMBATASAN DATA)
+        let halamanSaatIni = 1;
+        const JUMLAH_DATA_PER_HALAMAN = 10; // Tampilan dibatasi maksimal 10 data per lembar halaman
+
         document.addEventListener("DOMContentLoaded", function() {
             komponenModalDetail = new bootstrap.Modal(document.getElementById('modalDetailPatroli'));
 
@@ -286,8 +311,14 @@
             
             muatDataLaporanDashboard();
 
-            document.getElementById('filterTanggal').addEventListener('change', jalankanFilterData);
-            document.getElementById('filterCari').addEventListener('input', jalankanFilterData);
+            document.getElementById('filterTanggal').addEventListener('change', function() {
+                halamanSaatIni = 1; // Reset halaman ke 1 saat ganti tanggal
+                jalankanFilterData();
+            });
+            document.getElementById('filterCari').addEventListener('input', function() {
+                halamanSaatIni = 1; // Reset halaman ke 1 saat cari keyword
+                jalankanFilterData();
+            });
         });
 
         function muatDataLaporanDashboard() {
@@ -296,6 +327,7 @@
             var btnExp = document.getElementById('btnExport');
             var loading = document.getElementById('loadingStatus');
             var tabel = document.getElementById('tabelLogPatroli');
+            var panelNav = document.getElementById('panelNavigasiHalaman');
             
             btnRef.disabled = true;
             btnExp.disabled = true;
@@ -303,6 +335,7 @@
             loading.innerHTML = "<i class='fa-solid fa-spinner fa-spin fa-2xl mb-3 text-primary d-block'></i> Memproses sinkronisasi data dari API...";
             loading.style.display = "block";
             tabel.style.display = "none";
+            panelNav.setAttribute('style', 'display: none !important;');
 
             const URL_DENGAN_PARAMS = `${API_URL_WEBAPP}?aksi=ambilData&_=${new Date().getTime()}`;
 
@@ -325,6 +358,7 @@
                     dataMasterPusat = [];
                 }
                 
+                halamanSaatIni = 1;
                 jalankanFilterData();
                 btnRef.disabled = false;
                 iconRef.classList.remove('fa-spin');
@@ -340,7 +374,6 @@
         function jalankanFilterData() {
             const tglPilihan = document.getElementById('filterTanggal').value; 
             const kataKunci = document.getElementById('filterCari').value.toLowerCase().trim();
-            const tbody = document.getElementById('bodyTabelPatroli');
             
             let tglFormat = "";
             if (tglPilihan) {
@@ -348,12 +381,11 @@
                 tglFormat = `${sp[2]}/${sp[1]}/${sp[0]}`; 
             }
 
-            tbody.innerHTML = "";
             dataTerfilterSaatIni = []; 
-            let counterTerfilter = 0;
             let setPetugasUnik = new Set();
             let setZonaUnik = new Set();
 
+            // 1. Kumpulkan semua data yang lolos filter terlebih dahulu
             if (Array.isArray(dataMasterPusat)) {
                 dataMasterPusat.forEach(item => {
                     if (tglFormat && !item.timestamp.includes(tglFormat)) return;
@@ -363,11 +395,46 @@
                         !item.kondisi.toLowerCase().includes(kataKunci)) return;
 
                     dataTerfilterSaatIni.push(item);
-                    let indeksData = dataTerfilterSaatIni.length - 1;
-
-                    counterTerfilter++;
+                    
                     if(item.nama && item.nama !== "-") setPetugasUnik.add(item.nama);
                     if(item.zona && item.zona !== "-") setZonaUnik.add(item.zona);
+                });
+            }
+
+            // Update Statistik Angka Board Atas
+            document.getElementById('statTotalLog').innerText = dataTerfilterSaatIni.length;
+            document.getElementById('statPetugas').innerText = setPetugasUnik.size;
+            document.getElementById('statZona').innerText = setZonaUnik.size;
+
+            if (tglFormat) {
+                document.getElementById('judulTabel').innerHTML = `<i class="fa-solid fa-list-ul me-2"></i>Riwayat Aktivitas Patroli Tanggal ${tglFormat}`;
+            } else {
+                document.getElementById('judulTabel').innerHTML = `<i class="fa-solid fa-list-ul me-2"></i>Semua Riwayat Aktivitas Patroli`;
+            }
+
+            // 2. Tampilkan Potongan Data Berdasarkan Halaman yang Aktif (PAGINATION LOGIC)
+            renderTabelBerdasarkanHalaman();
+        }
+
+        function renderTabelBerdasarkanHalaman() {
+            const tbody = document.getElementById('bodyTabelPatroli');
+            tbody.innerHTML = "";
+
+            const totalData = dataTerfilterSaatIni.length;
+            const totalHalaman = Math.ceil(totalData / JUMLAH_DATA_PER_HALAMAN) || 1;
+
+            // Atur batas bawah dan batas atas array data yang mau diambil
+            const indeksMulai = (halamanSaatIni - 1) * JUMLAH_DATA_PER_HALAMAN;
+            const indeksSelesai = Math.min(indeksMulai + JUMLAH_DATA_PER_HALAMAN, totalData);
+
+            // Jika tidak ada data sama sekali
+            if (totalData === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center p-4 text-muted">Tidak ditemukan riwayat log patroli pada kriteria ini.</td></tr>`;
+                document.getElementById('panelNavigasiHalaman').setAttribute('style', 'display: none !important;');
+            } else {
+                // Tampilkan potongan data lembar halaman aktif
+                for (let i = indeksMulai; i < indeksSelesai; i++) {
+                    let item = dataTerfilterSaatIni[i];
 
                     let kelasBadge = "bg-aman";
                     if(item.kondisi.toLowerCase() !== "aman") {
@@ -393,7 +460,7 @@
                         kolomPeta = `<span class="badge bg-light text-primary border border-primary" style="font-size:10px;"><i class="fa-solid fa-location-dot me-1"></i>Tersedia</span>`;
                     }
 
-                    let baris = `<tr onclick="bukaDetailPopupBerdasarkanIndeks(${indeksData})">
+                    let baris = `<tr onclick="bukaDetailPopupBerdasarkanIndeks(${i})">
                         <td><small class="fw-medium">${item.timestamp}</small></td>
                         <td class="text-capitalize fw-semibold">${item.nama}</td>
                         <td><span class="badge bg-secondary text-white">${item.zona}</span></td>
@@ -407,26 +474,43 @@
                         </td>
                     </tr>`;
                     tbody.innerHTML += baris;
-                });
-            }
+                }
 
-            document.getElementById('statTotalLog').innerText = counterTerfilter;
-            document.getElementById('statPetugas').innerText = setPetugasUnik.size;
-            document.getElementById('statZona').innerText = setZonaUnik.size;
-
-            if (tglFormat) {
-                document.getElementById('judulTabel').innerHTML = `<i class="fa-solid fa-list-ul me-2"></i>Riwayat Aktivitas Patroli Tanggal ${tglFormat}`;
-            } else {
-                document.getElementById('judulTabel').innerHTML = `<i class="fa-solid fa-list-ul me-2"></i>Semua Riwayat Aktivitas Patroli`;
+                // Update teks info dan panel tombol navigasi halaman
+                document.getElementById('infoTeksHalaman').innerText = `Menampilkan ${indeksMulai + 1} sampai ${indeksSelesai} dari ${totalData} data`;
+                document.getElementById('labelHalamanAktif').innerText = `${halamanSaatIni} / ${totalHalaman}`;
+                
+                // Atur status aktif/nonaktif tombol navigasi halaman
+                document.getElementById('btnHalamanPrev').classList.toggle('disabled', halamanSaatIni === 1);
+                document.getElementById('btnHalamanNext').classList.toggle('disabled', halamanSaatIni === totalHalaman);
+                
+                document.getElementById('panelNavigasiHalaman').setAttribute('style', 'display: flex !important;');
             }
 
             document.getElementById('loadingStatus').style.display = "none";
             document.getElementById('tabelLogPatroli').style.display = "table";
-            document.getElementById('btnExport').disabled = counterTerfilter === 0;
+            document.getElementById('btnExport').disabled = totalData === 0;
         }
 
-        function bukaDetailPopupBerdasarkanIndeks(indeks) {
-            const dataPilihan = dataTerfilterSaatIni[indeks];
+        function pindahKeHalamanSebelumnya(e) {
+            e.preventDefault();
+            if (halamanSaatIni > 1) {
+                halamanSaatIni--;
+                renderTabelBerdasarkanHalaman();
+            }
+        }
+
+        function pindahKeHalamanBerikutnya(e) {
+            e.preventDefault();
+            const totalHalaman = Math.ceil(dataTerfilterSaatIni.length / JUMLAH_DATA_PER_HALAMAN);
+            if (halamanSaatIni < totalHalaman) {
+                halamanSaatIni++;
+                renderTabelBerdasarkanHalaman();
+            }
+        }
+
+        function bukaDetailPopupBerdasarkanIndeks(indeksGlobal) {
+            const dataPilihan = dataTerfilterSaatIni[indeksGlobal];
             if (!dataPilihan) return;
 
             document.getElementById('modalTitleNama').innerHTML = `<i class="fa-solid fa-user-shield me-2"></i>Patroli: ${dataPilihan.nama}`;
@@ -455,7 +539,7 @@
 
             const btnPeta = document.getElementById('linkDetPeta');
             if (dataPilihan.lat && dataPilihan.lat !== "-") {
-                btnPeta.href = `https://maps.google.com/?q=${dataPilihan.lat},${dataPilihan.lng}`;
+                btnPeta.href = `https://www.google.com/maps/search/?api=1&query=${dataPilihan.lat},${dataPilihan.lng}`;
                 btnPeta.classList.remove('disabled');
             } else {
                 btnPeta.href = "#";
@@ -467,27 +551,40 @@
 
         function resetTanggal() {
             document.getElementById('filterTanggal').value = "";
+            halamanSaatIni = 1;
             jalankanFilterData();
         }
 
         function eksporKeExcel() {
             let tabelHtml = document.getElementById('tabelLogPatroli').cloneNode(true);
+            let tbodyLama = tabelHtml.querySelector('tbody');
+            tbodyLama.innerHTML = ""; // Bersihkan isi baris halaman aktif yang terpotong
+
+            // UNTUK EXCEL: Kita masukkan SELURUH data terfilter saat ini, bukan cuma 10 baris di halaman aktif
+            dataTerfilterSaatIni.forEach((item) => {
+                let kelasBadge = item.kondisi.toLowerCase() === "aman" ? "bg-aman" : "bg-temuan";
+                let baris = `<tr>
+                    <td>${item.timestamp}</td>
+                    <td>${item.nama}</td>
+                    <td>${item.zona}</td>
+                    <td>${item.kondisi}</td>
+                    <td>-</td> <td><small>${item.alamat || '-'}</small></td>
+                </tr>`;
+                tbodyLama.innerHTML += baris;
+            });
+
             let barisTabel = tabelHtml.querySelectorAll('tr');
             
-            // 1. Modifikasi konten sel dan terapkan Inline Style profesional untuk Excel
             barisTabel.forEach((tr, indeksBaris) => {
                 let kolom = tr.querySelectorAll('td, th');
                 
                 if(kolom.length >= 6) {
-                    // Potong kolom "Lampiran" (Indeks ke-4) agar bersih
-                    tr.removeChild(kolom[4]);
+                    tr.removeChild(kolom[4]); // Potong kolom lampiran
                     
-                    // Ambil ulang data kolom pasca penghapusan (kolom Geotagging sekarang bergeser ke indeks ke-4)
                     let kolomBaru = tr.querySelectorAll('td, th');
                     let kolomGeotagging = kolomBaru[4];
 
                     if (indeksBaris === 0) {
-                        // KUSTOMISASI HEADER (Baris Pertama)
                         kolomBaru.forEach((th, idx) => {
                             th.style.backgroundColor = '#0a1128';
                             th.style.color = '#ffffff';
@@ -496,29 +593,25 @@
                             th.style.border = '1px solid #cbd5e1';
                             th.style.height = '30px';
                             
-                            // Atur lebar kolom ideal di Excel (via properti width atribut HTML)
-                            if(idx === 0) th.setAttribute('width', '150'); // Waktu
-                            if(idx === 1) th.setAttribute('width', '160'); // Nama
-                            if(idx === 2) th.setAttribute('width', '100'); // Zona
-                            if(idx === 3) th.setAttribute('width', '130'); // Kondisi
-                            if(idx === 4) th.setAttribute('width', '450'); // Geotagging
+                            if(idx === 0) th.setAttribute('width', '150');
+                            if(idx === 1) th.setAttribute('width', '160');
+                            if(idx === 2) th.setAttribute('width', '100');
+                            if(idx === 3) th.setAttribute('width', '130');
+                            if(idx === 4) th.setAttribute('width', '450');
                         });
                     } else {
-                        // KUSTOMISASI DATA (Baris ke-2 dst)
                         kolomBaru.forEach((td, idx) => {
                             td.style.border = '1px solid #cbd5e1';
                             td.style.fontSize = '11px';
                             td.style.height = '24px';
                             
-                            // Pengaturan Alinyemen Teks
                             if (idx === 0 || idx === 2 || idx === 3) {
-                                td.style.textAlign = 'center'; // Waktu, Zona, Kondisi di-tengah
+                                td.style.textAlign = 'center';
                             } else {
-                                td.style.textAlign = 'left'; // Nama & Alamat rata kiri
+                                td.style.textAlign = 'left';
                             }
                         });
 
-                        // Bersihkan data Geotagging dari komponen ikon web dashboard
                         let divPeta = kolomGeotagging.querySelector('small');
                         if(divPeta) {
                             kolomGeotagging.innerHTML = divPeta.innerText;
@@ -527,33 +620,15 @@
                 }
             });
 
-            // 2. Bungkus dokumen dengan meta-data XML Excel agar format warna & gridlines dibaca sempurna oleh Microsoft Excel
             let templateExcel = `
                 <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
                 <head>
-                    <!--[if gte mso 9]>
-                    <xml>
-                        <x:ExcelWorkbook>
-                            <x:ExcelWorksheets>
-                                <x:ExcelWorksheet>
-                                    <x:Name>Data Laporan Patroli</x:Name>
-                                    <x:WorksheetOptions>
-                                        <x:DisplayGridlines/>
-                                    </x:WorksheetOptions>
-                                </x:ExcelWorksheet>
-                            </x:ExcelWorksheets>
-                        </x:ExcelWorkbook>
-                    </xml>
-                    <![endif]-->
                     <meta charset="utf-8">
                 </head>
-                <body>
-                    ${tabelHtml.outerHTML}
-                </body>
+                <body>${tabelHtml.outerHTML}</body>
                 </html>
             `;
 
-            // 3. Proses download otomatis aman menggunakan Blob UTF-8
             let namaFile = 'Laporan_Patroli_Mall_23Semarang_' + (document.getElementById('filterTanggal').value || 'Semua_Hari') + '.xls';
             let blob = new Blob([templateExcel], { type: 'application/vnd.ms-excel;charset=utf-8;' });
             
