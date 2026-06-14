@@ -60,7 +60,6 @@
             border: 1px solid var(--border-gray);
             overflow: hidden;
         }
-        /* Style interaktif klik baris laporan */
         .table-custom tbody tr {
             cursor: pointer;
             transition: background-color 0.15s ease;
@@ -98,8 +97,6 @@
             border: 2px solid var(--border-gray);
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
-
-        /* STYLE DETIL MODAL POP-UP */
         .modal-detail-content {
             border-radius: 20px;
             border: none;
@@ -232,6 +229,7 @@
         </div>
     </div>
 
+    <!-- MODAL POP UP DETAIL -->
     <div class="modal fade" id="modalDetailPatroli" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content modal-detail-content">
@@ -244,13 +242,10 @@
                         <div class="col-7">
                             <div class="detail-label">Waktu Pengiriman</div>
                             <div class="detail-value" id="detWaktu">-</div>
-
                             <div class="detail-label">Zona Sektor Inspeksi</div>
                             <div class="detail-value"><span id="detZona" class="badge bg-dark">-</span></div>
-
                             <div class="detail-label">Kondisi Lapangan</div>
                             <div class="detail-value"><span id="detKondisi" class="badge-kondisi">-</span></div>
-
                             <div class="detail-label">Titik Koordinat GPS</div>
                             <div class="detail-value" id="detGps">-</div>
                         </div>
@@ -259,14 +254,11 @@
                             <img src="" id="detFoto" class="img-fluid rounded border shadow-sm" style="max-height: 140px; object-fit: cover; width: 100%;">
                         </div>
                     </div>
-                    
                     <hr class="text-muted my-3">
-                    
                     <div class="mb-2">
                         <div class="detail-label">Estimasi Alamat Geotagging</div>
                         <div class="text-dark small fw-medium" id="detAlamat" style="line-height: 1.4;">-</div>
                     </div>
-
                     <div class="d-flex gap-2 mt-4">
                         <a href="#" id="linkDetPeta" target="_blank" class="btn btn-primary w-100 py-2 rounded-3 small fw-bold"><i class="fa-solid fa-map-location-dot me-2"></i>Buka Lokasi di Google Maps</a>
                     </div>
@@ -318,9 +310,7 @@
                 method: "GET",
                 mode: "cors",
                 credentials: "omit",
-                headers: {
-                    "Content-Type": "text/plain"
-                }
+                headers: { "Content-Type": "text/plain" }
             })
             .then(res => {
                 if (!res.ok) throw new Error("Koneksi jaringan bermasalah.");
@@ -481,31 +471,95 @@
         }
 
         function eksporKeExcel() {
-            // 1. Kloning tabel asli agar manipulasi tidak merusak tampilan layar dashboard
             let tabelHtml = document.getElementById('tabelLogPatroli').cloneNode(true);
             let barisTabel = tabelHtml.querySelectorAll('tr');
             
-            barisTabel.forEach(tr => {
+            // 1. Modifikasi konten sel dan terapkan Inline Style profesional untuk Excel
+            barisTabel.forEach((tr, indeksBaris) => {
                 let kolom = tr.querySelectorAll('td, th');
                 
-                // Pastikan struktur kolom tabel lengkap sebelum dimanipulasi
                 if(kolom.length >= 6) {
-                    // POTONG KOLOM LAMPIRAN FOTO (Kolom urutan ke-5 / Indeks nomor 4)
+                    // Potong kolom "Lampiran" (Indeks ke-4) agar bersih
                     tr.removeChild(kolom[4]);
                     
-                    // Ekstrak teks alamat murni untuk kolom Geotagging
-                    let divPeta = kolom[5].querySelector('small');
-                    if(divPeta) {
-                        kolom[5].innerHTML = divPeta.innerText;
+                    // Ambil ulang data kolom pasca penghapusan (kolom Geotagging sekarang bergeser ke indeks ke-4)
+                    let kolomBaru = tr.querySelectorAll('td, th');
+                    let kolomGeotagging = kolomBaru[4];
+
+                    if (indeksBaris === 0) {
+                        // KUSTOMISASI HEADER (Baris Pertama)
+                        kolomBaru.forEach((th, idx) => {
+                            th.style.backgroundColor = '#0a1128';
+                            th.style.color = '#ffffff';
+                            th.style.fontWeight = 'bold';
+                            th.style.fontSize = '12px';
+                            th.style.border = '1px solid #cbd5e1';
+                            th.style.height = '30px';
+                            
+                            // Atur lebar kolom ideal di Excel (via properti width atribut HTML)
+                            if(idx === 0) th.setAttribute('width', '150'); // Waktu
+                            if(idx === 1) th.setAttribute('width', '160'); // Nama
+                            if(idx === 2) th.setAttribute('width', '100'); // Zona
+                            if(idx === 3) th.setAttribute('width', '130'); // Kondisi
+                            if(idx === 4) th.setAttribute('width', '450'); // Geotagging
+                        });
+                    } else {
+                        // KUSTOMISASI DATA (Baris ke-2 dst)
+                        kolomBaru.forEach((td, idx) => {
+                            td.style.border = '1px solid #cbd5e1';
+                            td.style.fontSize = '11px';
+                            td.style.height = '24px';
+                            
+                            // Pengaturan Alinyemen Teks
+                            if (idx === 0 || idx === 2 || idx === 3) {
+                                td.style.textAlign = 'center'; // Waktu, Zona, Kondisi di-tengah
+                            } else {
+                                td.style.textAlign = 'left'; // Nama & Alamat rata kiri
+                            }
+                        });
+
+                        // Bersihkan data Geotagging dari komponen ikon web dashboard
+                        let divPeta = kolomGeotagging.querySelector('small');
+                        if(divPeta) {
+                            kolomGeotagging.innerHTML = divPeta.innerText;
+                        }
                     }
                 }
             });
 
-            // 2. Proses pembentukan data blob excel dan trigger download otomatis
+            // 2. Bungkus dokumen dengan meta-data XML Excel agar format warna & gridlines dibaca sempurna oleh Microsoft Excel
+            let templateExcel = `
+                <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+                <head>
+                    <!--[if gte mso 9]>
+                    <xml>
+                        <x:ExcelWorkbook>
+                            <x:ExcelWorksheets>
+                                <x:ExcelWorksheet>
+                                    <x:Name>Data Laporan Patroli</x:Name>
+                                    <x:WorksheetOptions>
+                                        <x:DisplayGridlines/>
+                                    </x:WorksheetOptions>
+                                </x:ExcelWorksheet>
+                            </x:ExcelWorksheets>
+                        </x:ExcelWorkbook>
+                    </xml>
+                    <![endif]-->
+                    <meta charset="utf-8">
+                </head>
+                <body>
+                    ${tabelHtml.outerHTML}
+                </body>
+                </html>
+            `;
+
+            // 3. Proses download otomatis aman menggunakan Blob UTF-8
+            let namaFile = 'Laporan_Patroli_Mall_23Semarang_' + (document.getElementById('filterTanggal').value || 'Semua_Hari') + '.xls';
+            let blob = new Blob([templateExcel], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+            
             let linkDownload = document.createElement('a');
-            let dataData = tabelHtml.outerHTML.replace(/ /g, '%20');
-            linkDownload.href = 'data:application/vnd.ms-excel,' + dataData;
-            linkDownload.download = 'Laporan_Patroli_Mall_23Semarang_' + (document.getElementById('filterTanggal').value || 'Semua_Hari') + '.xls';
+            linkDownload.href = URL.createObjectURL(blob);
+            linkDownload.download = namaFile;
             document.body.appendChild(linkDownload);
             linkDownload.click();
             document.body.removeChild(linkDownload);
