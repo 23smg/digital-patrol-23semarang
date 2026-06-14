@@ -20,17 +20,18 @@
             font-family: 'Plus Jakarta Sans', sans-serif;
             background-color: var(--bg-light);
             color: #334155;
+            font-size: 13px; /* Memperkecil base font default global */
         }
         .navbar-custom {
             background-color: var(--navy-main);
             color: white;
-            padding: 1.5rem 2rem;
+            padding: 1rem 2rem; /* Diperkecil dari 1.5rem */
             box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
         }
         .stat-card {
             background: white;
-            border-radius: 16px;
-            padding: 1.5rem;
+            border-radius: 12px;
+            padding: 1rem; /* Lebih padat */
             border: 1px solid var(--border-gray);
             box-shadow: 0 1px 3px rgba(0,0,0,0.05);
             transition: transform 0.2s;
@@ -39,24 +40,24 @@
             transform: translateY(-2px);
         }
         .stat-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 12px;
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.25rem;
+            font-size: 1.1rem;
         }
         .filter-section {
             background: white;
-            border-radius: 16px;
-            padding: 1.5rem;
+            border-radius: 12px;
+            padding: 1rem;
             border: 1px solid var(--border-gray);
-            margin-bottom: 1.5rem;
+            margin-bottom: 1rem;
         }
         .table-container {
             background: white;
-            border-radius: 16px;
+            border-radius: 12px;
             border: 1px solid var(--border-gray);
             overflow: hidden;
         }
@@ -67,35 +68,38 @@
         .table-custom tbody tr:hover {
             background-color: #f1f5f9 !important;
         }
+        /* OPTIMASI UKURAN DAN PADAT DATA PADA TABEL */
         .table-custom th {
             background-color: #f1f5f9;
             color: #475569;
             font-weight: 600;
             text-transform: uppercase;
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             letter-spacing: 0.05em;
-            padding: 1rem;
+            padding: 0.6rem 0.7rem; /* Diperketat */
         }
         .table-custom td {
-            padding: 1rem;
+            padding: 0.4rem 0.7rem; /* Diperketat signifikan menghilangkan space kosong berlebih */
             vertical-align: middle;
             border-bottom: 1px solid var(--border-gray);
+            font-size: 12.5px;
         }
         .badge-kondisi {
-            padding: 0.35rem 0.75rem;
+            padding: 0.25rem 0.6rem;
             border-radius: 9999px;
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             font-weight: 600;
         }
         .bg-aman { background-color: #dcfce7; color: #166534; }
         .bg-temuan { background-color: #fee2e2; color: #991b1b; }
+        
+        /* Thumbnail Foto Diperkecil */
         .img-thumbnail-custom {
-            width: 60px;
-            height: 60px;
+            width: 45px;
+            height: 45px;
             object-fit: cover;
-            border-radius: 8px;
-            border: 2px solid var(--border-gray);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border-radius: 6px;
+            border: 1px solid var(--border-gray);
         }
         .modal-detail-content {
             border-radius: 20px;
@@ -126,29 +130,29 @@
             font-size: 11px;
             color: #94a3b8;
             text-align: center;
-            margin: 2rem 0;
+            margin: 1.5rem 0;
         }
-        /* Style Tambahan untuk Kontrol Halaman (Pagination) */
         .pagination-info {
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             color: #64748b;
         }
     </style>
 </head>
 <body>
 
-    <nav class="navbar-custom mb-4">
-        <h4 class="m-0 fw-bold">MONITORING DASHBOARD PATROLI</h4>
-        <small class="text-white-50">Pusat Kendali Data Lapangan Real-Time • Mall 23Semarang</small>
+    <nav class="navbar-custom mb-3">
+        <h5 class="m-0 fw-bold">MONITORING DASHBOARD PATROLI</h5>
+        <small class="text-white-50" style="font-size: 11px;">Pusat Kendali Data Lapangan Real-Time • Mall 23Semarang</small>
     </nav>
 
-    <div class="container-fluid px-4">
-        <div class="row g-4 mb-4">
+    <div class="container-fluid px-3">
+        <!-- STATISTIK UTAMA -->
+        <div class="row g-3 mb-3">
             <div class="col-md-4">
                 <div class="stat-card d-flex align-items-center justify-content-between">
                     <div>
-                        <h2 class="fw-bold m-0" id="statTotalLog">0</h2>
-                        <small class="text-muted">Total Log Terfilter</small>
+                        <h4 class="fw-bold m-0" id="statTotalLog">0</h4>
+                        <small class="text-muted" style="font-size: 11px;">Total Log Terfilter</small>
                     </div>
                     <div class="stat-icon bg-primary bg-opacity-10 text-primary">
                         <i class="fa-solid fa-clipboard-check"></i>
@@ -158,8 +162,8 @@
             <div class="col-md-4">
                 <div class="stat-card d-flex align-items-center justify-content-between">
                     <div>
-                        <h2 class="fw-bold m-0" id="statPetugas">0</h2>
-                        <small class="text-muted">Petugas Aktif</small>
+                        <h4 class="fw-bold m-0" id="statPetugas">0</h4>
+                        <small class="text-muted" style="font-size: 11px;">Petugas Aktif</small>
                     </div>
                     <div class="stat-icon bg-success bg-opacity-10 text-success">
                         <i class="fa-solid fa-user-shield"></i>
@@ -169,8 +173,8 @@
             <div class="col-md-4">
                 <div class="stat-card d-flex align-items-center justify-content-between">
                     <div>
-                        <h2 class="fw-bold m-0" id="statZona">0</h2>
-                        <small class="text-muted">Zona Terinspeksi</small>
+                        <h4 class="fw-bold m-0" id="statZona">0</h4>
+                        <small class="text-muted" style="font-size: 11px;">Zona Terinspeksi</small>
                     </div>
                     <div class="stat-icon bg-warning bg-opacity-10 text-warning">
                         <i class="fa-solid fa-map-location-dot"></i>
@@ -179,67 +183,65 @@
             </div>
         </div>
 
+        <!-- FILTER SELECTION -->
         <div class="filter-section">
-            <h6 class="fw-bold mb-3 text-primary"><i class="fa-solid fa-filter me-2"></i>Saring Data Kontrol Lapangan</h6>
-            <div class="row g-3">
+            <div class="row g-2">
                 <div class="col-md-3">
-                    <label class="form-label small fw-medium">Pilih Hari / Tanggal:</label>
-                    <input type="date" id="filterTanggal" class="form-control">
+                    <input type="date" id="filterTanggal" class="form-control form-control-sm">
                 </div>
-                <div class="col-md-5">
-                    <label class="form-label small fw-medium">Cari Nama / Zona / Kondisi:</label>
-                    <div class="input-group">
+                <div class="col-md-6">
+                    <div class="input-group input-group-sm">
                         <span class="input-group-text bg-white border-end-0 text-muted"><i class="fa-solid fa-magnifying-glass"></i></span>
-                        <input type="text" id="filterCari" class="form-control border-start-0" placeholder="Ketik kata kunci pencarian...">
+                        <input type="text" id="filterCari" class="form-control border-start-0" placeholder="Cari Nama / Zona / Kondisi...">
                     </div>
                 </div>
-                <div class="col-md-4 d-flex align-items-end gap-2">
-                    <button class="btn btn-outline-secondary w-100" onclick="resetTanggal()">Tampilkan Semua Tanggal</button>
+                <div class="col-md-3">
+                    <button class="btn btn-outline-secondary btn-sm w-100" onclick="resetTanggal()">Semua Tanggal</button>
                 </div>
             </div>
         </div>
 
-        <div class="table-container mb-4">
-            <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
-                <h6 class="fw-bold m-0 text-navy-main" id="judulTabel"><i class="fa-solid fa-list-ul me-2"></i>Riwayat Aktivitas Patroli Terkini</h6>
+        <!-- TABEL KONTEN UTAMA -->
+        <div class="table-container mb-3">
+            <div class="px-3 py-2 border-bottom d-flex justify-content-between align-items-center bg-white">
+                <span class="fw-bold text-navy-main" id="judulTabel" style="font-size: 13px;"><i class="fa-solid fa-list-ul me-2"></i>Riwayat Aktivitas</span>
                 <div class="d-flex gap-2">
-                    <button class="btn btn-outline-success btn-sm" id="btnExport" onclick="eksporKeExcel()"><i class="fa-solid fa-file-excel me-1"></i> Tarik Data Excel</button>
-                    <button class="btn btn-primary btn-sm" id="btnRefresh" onclick="muatDataLaporanDashboard()"><i class="fa-solid fa-arrow-rotate-right me-1" id="iconRefresh"></i> Refresh Data</button>
+                    <button class="btn btn-outline-success btn-sm" style="font-size: 11px;" id="btnExport" onclick="eksporKeExcel()"><i class="fa-solid fa-file-excel me-1"></i> Tarik Data Excel</button>
+                    <button class="btn btn-primary btn-sm" style="font-size: 11px;" id="btnRefresh" onclick="muatDataLaporanDashboard()"><i class="fa-solid fa-arrow-rotate-right me-1" id="iconRefresh"></i> Refresh Data</button>
                 </div>
             </div>
             
-            <div id="loadingStatus" class="p-5 text-center fw-medium text-muted">
-                <i class="fa-solid fa-spinner fa-spin fa-2xl mb-3 text-primary d-block"></i> Sedang menghubungkan ke server API Google Sheets...
+            <div id="loadingStatus" class="p-4 text-center fw-medium text-muted">
+                <i class="fa-solid fa-spinner fa-spin fa-xl mb-2 text-primary d-block"></i> Menghubungkan ke API Google Sheets...
             </div>
 
             <div class="table-responsive">
-                <table class="table table-custom m-0" id="tabelLogPatroli" style="display: none;">
+                <table class="table table-custom m-0 align-middle" id="tabelLogPatroli" style="display: none;">
                     <thead>
                         <tr>
-                            <th>Waktu Log</th>
-                            <th>Nama Personel</th>
-                            <th>Zona Area</th>
-                            <th>Kondisi Sektor</th>
-                            <th>Lampiran</th>
-                            <th>Geotagging</th>
+                            <th style="width: 14%;">Waktu Log</th>
+                            <th style="width: 16%;">Nama Personel</th>
+                            <th style="width: 10%;">Zona Area</th>
+                            <th style="width: 12%;">Kondisi Sektor</th>
+                            <th style="width: 10%;">Lampiran</th>
+                            <th style="width: 38%;">Geotagging</th>
                         </tr>
                     </thead>
                     <tbody id="bodyTabelPatroli"></tbody>
                 </table>
             </div>
 
-            <div id="panelNavigasiHalaman" class="p-3 bg-light border-top d-flex justify-content-between align-items-center" style="display: none !important;">
-                <div class="pagination-info" id="infoTeksHalaman">
-                    Menampilkan 0 sampai 0 dari 0 data
-                </div>
+            <!-- FOOTER NAVIGASI HALAMAN (PAGINATION PANEL) -->
+            <div id="panelNavigasiHalaman" class="px-3 py-2 bg-light border-top d-flex justify-content-between align-items-center" style="display: none !important;">
+                <div class="pagination-info" id="infoTeksHalaman">Menampilkan 0-0 dari 0 data</div>
                 <nav>
                     <ul class="pagination pagination-sm m-0">
                         <li class="page-item" id="btnHalamanPrev">
-                            <a class="page-link" href="#" onclick="pindahKeHalamanSebelumnya(event)"><i class="fa-solid fa-chevron-left"></i></a>
+                            <a class="page-link py-1 px-2" href="#" onclick="pindahKeHalamanSebelumnya(event)"><i class="fa-solid fa-chevron-left" style="font-size: 10px;"></i></a>
                         </li>
-                        <li class="page-item disabled"><a class="page-link text-dark fw-bold" id="labelHalamanAktif" href="#">1</a></li>
+                        <li class="page-item disabled"><a class="page-link py-1 px-2 text-dark fw-bold" id="labelHalamanAktif" href="#" style="font-size: 11px;">1</a></li>
                         <li class="page-item" id="btnHalamanNext">
-                            <a class="page-link" href="#" onclick="pindahKeHalamanBerikutnya(event)"><i class="fa-solid fa-chevron-right"></i></a>
+                            <a class="page-link py-1 px-2" href="#" onclick="pindahKeHalamanBerikutnya(event)"><i class="fa-solid fa-chevron-right" style="font-size: 10px;"></i></a>
                         </li>
                     </ul>
                 </nav>
@@ -251,6 +253,7 @@
         </div>
     </div>
 
+    <!-- MODAL POP UP DETAIL -->
     <div class="modal fade" id="modalDetailPatroli" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content modal-detail-content">
@@ -295,10 +298,8 @@
         let dataMasterPusat = [];
         let dataTerfilterSaatIni = []; 
         let komponenModalDetail;
-
-        // VARIABLE PAGINATION (PEMBATASAN DATA)
         let halamanSaatIni = 1;
-        const JUMLAH_DATA_PER_HALAMAN = 10; // Tampilan dibatasi maksimal 10 data per lembar halaman
+        const JUMLAH_DATA_PER_HALAMAN = 10;
 
         document.addEventListener("DOMContentLoaded", function() {
             komponenModalDetail = new bootstrap.Modal(document.getElementById('modalDetailPatroli'));
@@ -312,11 +313,11 @@
             muatDataLaporanDashboard();
 
             document.getElementById('filterTanggal').addEventListener('change', function() {
-                halamanSaatIni = 1; // Reset halaman ke 1 saat ganti tanggal
+                halamanSaatIni = 1;
                 jalankanFilterData();
             });
             document.getElementById('filterCari').addEventListener('input', function() {
-                halamanSaatIni = 1; // Reset halaman ke 1 saat cari keyword
+                halamanSaatIni = 1;
                 jalankanFilterData();
             });
         });
@@ -332,7 +333,6 @@
             btnRef.disabled = true;
             btnExp.disabled = true;
             iconRef.classList.add('fa-spin'); 
-            loading.innerHTML = "<i class='fa-solid fa-spinner fa-spin fa-2xl mb-3 text-primary d-block'></i> Memproses sinkronisasi data dari API...";
             loading.style.display = "block";
             tabel.style.display = "none";
             panelNav.setAttribute('style', 'display: none !important;');
@@ -364,7 +364,7 @@
                 iconRef.classList.remove('fa-spin');
             })
             .catch(err => {
-                loading.innerHTML = "<span class='text-danger'><i class='fa-solid fa-triangle-exclamation d-block fa-2xl mb-2'></i> Gagal memproses sinkronisasi data dari API. Silakan refresh berkala.</span>";
+                loading.innerHTML = "<span class='text-danger'><i class='fa-solid fa-triangle-exclamation d-block fa-xl mb-1'></i> Sinkronisasi Gagal.</span>";
                 btnRef.disabled = false;
                 iconRef.classList.remove('fa-spin');
                 console.error("Fetch Error: ", err);
@@ -385,7 +385,6 @@
             let setPetugasUnik = new Set();
             let setZonaUnik = new Set();
 
-            // 1. Kumpulkan semua data yang lolos filter terlebih dahulu
             if (Array.isArray(dataMasterPusat)) {
                 dataMasterPusat.forEach(item => {
                     if (tglFormat && !item.timestamp.includes(tglFormat)) return;
@@ -401,18 +400,16 @@
                 });
             }
 
-            // Update Statistik Angka Board Atas
             document.getElementById('statTotalLog').innerText = dataTerfilterSaatIni.length;
             document.getElementById('statPetugas').innerText = setPetugasUnik.size;
             document.getElementById('statZona').innerText = setZonaUnik.size;
 
             if (tglFormat) {
-                document.getElementById('judulTabel').innerHTML = `<i class="fa-solid fa-list-ul me-2"></i>Riwayat Aktivitas Patroli Tanggal ${tglFormat}`;
+                document.getElementById('judulTabel').innerHTML = `<i class="fa-solid fa-list-ul me-2"></i>Riwayat Aktivitas Kontrol Tanggal ${tglFormat}`;
             } else {
-                document.getElementById('judulTabel').innerHTML = `<i class="fa-solid fa-list-ul me-2"></i>Semua Riwayat Aktivitas Patroli`;
+                document.getElementById('judulTabel').innerHTML = `<i class="fa-solid fa-list-ul me-2"></i>Semua Riwayat Aktivitas`;
             }
 
-            // 2. Tampilkan Potongan Data Berdasarkan Halaman yang Aktif (PAGINATION LOGIC)
             renderTabelBerdasarkanHalaman();
         }
 
@@ -423,26 +420,19 @@
             const totalData = dataTerfilterSaatIni.length;
             const totalHalaman = Math.ceil(totalData / JUMLAH_DATA_PER_HALAMAN) || 1;
 
-            // Atur batas bawah dan batas atas array data yang mau diambil
             const indeksMulai = (halamanSaatIni - 1) * JUMLAH_DATA_PER_HALAMAN;
             const indeksSelesai = Math.min(indeksMulai + JUMLAH_DATA_PER_HALAMAN, totalData);
 
-            // Jika tidak ada data sama sekali
             if (totalData === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="text-center p-4 text-muted">Tidak ditemukan riwayat log patroli pada kriteria ini.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center p-3 text-muted">Tidak ditemukan log patroli.</td></tr>`;
                 document.getElementById('panelNavigasiHalaman').setAttribute('style', 'display: none !important;');
             } else {
-                // Tampilkan potongan data lembar halaman aktif
                 for (let i = indeksMulai; i < indeksSelesai; i++) {
                     let item = dataTerfilterSaatIni[i];
+                    let kelasBadge = item.kondisi.toLowerCase() === "aman" ? "bg-aman" : "bg-temuan";
 
-                    let kelasBadge = "bg-aman";
-                    if(item.kondisi.toLowerCase() !== "aman") {
-                        kelasBadge = "bg-temuan";
-                    }
-
-                    let urlGambarSesuai = "https://placehold.co/60x60/f1f5f9/475569?text=No+Foto";
-                    let kolomFoto = "<span class='text-muted small'>Tidak ada foto</span>";
+                    let urlGambarSesuai = "https://placehold.co/45x45/f1f5f9/475569?text=No+Foto";
+                    let kolomFoto = "<span class='text-muted' style='font-size:11px;'>Tidak ada foto</span>";
                     
                     if (item.urlFoto && item.urlFoto.includes("http")) {
                         urlGambarSesuai = item.urlFoto;
@@ -452,35 +442,34 @@
                                 urlGambarSesuai = `https://docs.google.com/uc?export=view&id=${matchId[1]}`;
                             }
                         }
-                        kolomFoto = `<img src="${urlGambarSesuai}" class="img-thumbnail-custom" onerror="this.onerror=null; this.src='https://placehold.co/60x60/f1f5f9/475569?text=Buka+Foto';">`;
+                        kolomFoto = `<img src="${urlGambarSesuai}" class="img-thumbnail-custom" onerror="this.onerror=null; this.src='https://placehold.co/45x45/f1f5f9/475569?text=Foto';">`;
                     }
 
-                    let kolomPeta = "<span class='text-muted small'>-</span>";
+                    // TAMPILAN GEOTAGGING HORIZONTAL SUPAYA TIDAK MEMAKAN RUANG KEBOWAH
+                    let kolomPeta = "";
                     if (item.lat && item.lng && item.lat !== "-") {
-                        kolomPeta = `<span class="badge bg-light text-primary border border-primary" style="font-size:10px;"><i class="fa-solid fa-location-dot me-1"></i>Tersedia</span>`;
+                        kolomPeta = `<span class="badge bg-light text-primary border border-primary me-2" style="font-size:10px; padding: 2px 5px;"><i class="fa-solid fa-location-dot me-1"></i>Tersedia</span>`;
                     }
 
                     let baris = `<tr onclick="bukaDetailPopupBerdasarkanIndeks(${i})">
                         <td><small class="fw-medium">${item.timestamp}</small></td>
-                        <td class="text-capitalize fw-semibold">${item.nama}</td>
-                        <td><span class="badge bg-secondary text-white">${item.zona}</span></td>
+                        <td class="text-capitalize fw-bold">${item.nama}</td>
+                        <td><span class="badge bg-secondary text-white" style="font-size:10px; padding: 3px 6px;">${item.zona}</span></td>
                         <td><span class="badge-kondisi ${kelasBadge}">${item.kondisi}</span></td>
                         <td>${kolomFoto}</td>
                         <td>
-                            <div class="d-flex flex-column align-items-start">
+                            <div class="d-flex align-items-center flex-wrap">
                                 ${kolomPeta}
-                                <small class="text-muted text-wrap" style="font-size:10px; max-width:200px; display:block; line-height:1.2;">${item.alamat || '-'}</small>
+                                <span class="text-muted text-truncate" style="font-size:11.5px; max-width:340px;">${item.alamat || '-'}</span>
                             </div>
                         </td>
                     </tr>`;
                     tbody.innerHTML += baris;
                 }
 
-                // Update teks info dan panel tombol navigasi halaman
-                document.getElementById('infoTeksHalaman').innerText = `Menampilkan ${indeksMulai + 1} sampai ${indeksSelesai} dari ${totalData} data`;
+                document.getElementById('infoTeksHalaman').innerText = `Menampilkan ${indeksMulai + 1}-${indeksSelesai} dari ${totalData} data`;
                 document.getElementById('labelHalamanAktif').innerText = `${halamanSaatIni} / ${totalHalaman}`;
                 
-                // Atur status aktif/nonaktif tombol navigasi halaman
                 document.getElementById('btnHalamanPrev').classList.toggle('disabled', halamanSaatIni === 1);
                 document.getElementById('btnHalamanNext').classList.toggle('disabled', halamanSaatIni === totalHalaman);
                 
@@ -558,17 +547,16 @@
         function eksporKeExcel() {
             let tabelHtml = document.getElementById('tabelLogPatroli').cloneNode(true);
             let tbodyLama = tabelHtml.querySelector('tbody');
-            tbodyLama.innerHTML = ""; // Bersihkan isi baris halaman aktif yang terpotong
+            tbodyLama.innerHTML = ""; 
 
-            // UNTUK EXCEL: Kita masukkan SELURUH data terfilter saat ini, bukan cuma 10 baris di halaman aktif
             dataTerfilterSaatIni.forEach((item) => {
-                let kelasBadge = item.kondisi.toLowerCase() === "aman" ? "bg-aman" : "bg-temuan";
                 let baris = `<tr>
                     <td>${item.timestamp}</td>
                     <td>${item.nama}</td>
                     <td>${item.zona}</td>
                     <td>${item.kondisi}</td>
-                    <td>-</td> <td><small>${item.alamat || '-'}</small></td>
+                    <td>-</td> 
+                    <td><small>${item.alamat || '-'}</small></td>
                 </tr>`;
                 tbodyLama.innerHTML += baris;
             });
@@ -579,7 +567,7 @@
                 let kolom = tr.querySelectorAll('td, th');
                 
                 if(kolom.length >= 6) {
-                    tr.removeChild(kolom[4]); // Potong kolom lampiran
+                    tr.removeChild(kolom[4]); 
                     
                     let kolomBaru = tr.querySelectorAll('td, th');
                     let kolomGeotagging = kolomBaru[4];
@@ -612,7 +600,7 @@
                             }
                         });
 
-                        let divPeta = kolomGeotagging.querySelector('small');
+                        let divPeta = kolomGeotagging.querySelector('small, span');
                         if(divPeta) {
                             kolomGeotagging.innerHTML = divPeta.innerText;
                         }
@@ -623,6 +611,7 @@
             let templateExcel = `
                 <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
                 <head>
+                    <!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>Data Laporan Patroli</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->
                     <meta charset="utf-8">
                 </head>
                 <body>${tabelHtml.outerHTML}</body>
