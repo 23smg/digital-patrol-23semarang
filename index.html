@@ -3,89 +3,225 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Form Laporan Patroli - Mall 23Semarang</title>
+    <title>Digital Patrol Log - Mall 23Semarang</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
     <style>
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: #f1f5f9;
-            color: #334155;
+            background-color: #f4f6f9;
+            color: #1e293b;
+            padding: 1rem 0;
         }
-        .card-form {
+        .main-card {
             background: white;
-            border-radius: 20px;
-            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05);
-            border: 1px solid #e2e8f0;
-        }
-        .btn-submit {
-            background-color: #0066cc;
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.06);
             border: none;
-            font-weight: 600;
+            max-width: 480px;
+            margin: 0 auto;
         }
-        .btn-submit:hover {
-            background-color: #0052a3;
+        .card-header-navy {
+            background-color: #0b132b;
+            color: white;
+            padding: 2.5rem 1.5rem;
+            text-align: center;
+            border-bottom: 4px solid #0056b3;
+        }
+        .card-header-navy h4 {
+            font-weight: 700;
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
+            font-size: 1.4rem;
+        }
+        .card-header-navy p {
+            font-size: 0.85rem;
+            opacity: 0.7;
+            margin: 0;
+        }
+        .card-body-content {
+            padding: 2rem 1.5rem;
+        }
+        .form-label-custom {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #334155;
+            display: block;
+            text-align: center;
+            margin-bottom: 0.6rem;
+        }
+        .form-select-custom, .form-control-custom {
+            border-radius: 12px;
+            padding: 0.75rem 1rem;
+            border: 1px solid #e2e8f0;
+            background-color: #f8fafc;
+            text-align: center;
+            text-align-last: center;
+            color: #64748b;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+        }
+        .form-select-custom:focus {
+            border-color: #0b132b;
+            box-shadow: none;
+            background-color: white;
+        }
+        .btn-camera {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 0.75rem;
+            width: 100%;
+            color: #0056b3;
+            font-weight: 600;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            cursor: pointer;
+        }
+        .btn-camera:hover {
+            background-color: #f1f5f9;
+        }
+        .status-gps-box {
+            background-color: #edf7ed;
+            color: #1e4620;
+            border-radius: 12px;
+            padding: 0.75rem;
+            text-align: center;
+            font-size: 0.9rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            border: 1px solid #d3eafd;
+        }
+        .status-gps-box.loading {
+            background-color: #fff8ec;
+            color: #b78103;
+            border-color: #fff1d6;
+        }
+        .btn-submit-navy {
+            background-color: #0b132b;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 0.9rem;
+            font-weight: 600;
+            font-size: 1rem;
+            letter-spacing: 0.5px;
+            transition: background 0.2s;
+        }
+        .btn-submit-navy:hover {
+            background-color: #1c2541;
+            color: white;
+        }
+        .btn-refresh-circle {
+            background-color: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #334155;
+            transition: all 0.2s;
+        }
+        .btn-refresh-circle:hover {
+            background-color: #f8fafc;
+        }
+        /* Menyembunyikan input file bawaan HTML agar bisa diganti tombol kamera aesthetic */
+        #fileFoto {
+            display: none;
+        }
+        .preview-img-container {
+            text-align: center;
+            margin-top: 0.5rem;
+        }
+        .preview-img-tag {
+            max-height: 120px;
+            border-radius: 8px;
+            border: 2px dashed #cbd5e1;
+            padding: 4px;
         }
     </style>
 </head>
 <body>
 
-    <div class="container py-5">
-        <div class="row justify-content-center">
-            <div class="col-md-5">
-                <div class="card-form p-4">
-                    <div class="text-center mb-4">
-                        <div class="bg-primary bg-opacity-10 text-primary d-inline-block p-3 rounded-circle mb-2">
-                            <i class="fa-solid fa-user-shield fa-2xl"></i>
-                        </div>
-                        <h4 class="fw-bold m-0 text-dark">FORM PATROLI SATPAM</h4>
-                        <small class="text-muted">Mall 23Semarang</small>
+    <div class="container">
+        <div class="main-card">
+            <div class="card-header-navy">
+                <h4>DIGITAL PATROL LOG</h4>
+                <p>Sistem Pelaporan Area Kerja • Mall 23Semarang</p>
+            </div>
+
+            <div class="card-body-content">
+                <form id="formPatroli">
+                    
+                    <div class="mb-4">
+                        <label class="form-label-custom">Nama Petugas</label>
+                        <select id="namaPetugas" class="form-select form-select-custom" required>
+                            <option value="">Pilih Nama Personel</option>
+                        </select>
                     </div>
 
-                    <form id="formPatroli">
-                        <div class="mb-3">
-                            <label class="form-label small fw-semibold">Nama Personel:</label>
-                            <select id="namaPetugas" class="form-select" required>
-                                <option value="">-- Pilih Nama Anda --</option>
-                            </select>
-                        </div>
+                    <div class="mb-4">
+                        <label class="form-label-custom">Zona Inspeksi</label>
+                        <select id="zonaArea" class="form-select form-select-custom" required>
+                            <option value="">Pilih Titik Sektor</option>
+                        </select>
+                    </div>
 
-                        <div class="mb-3">
-                            <label class="form-label small fw-semibold">Zona / Sektor:</label>
-                            <select id="zonaArea" class="form-select" required>
-                                <option value="">-- Pilih Area Inspeksi --</option>
-                            </select>
-                        </div>
+                    <div class="mb-4">
+                        <label class="form-label-custom">Kondisi Sektor</label>
+                        <select id="kondisiSektor" class="form-select form-select-custom" required>
+                            <option value="">Pilih Kondisi Sektor</option>
+                        </select>
+                    </div>
 
-                        <div class="mb-3">
-                            <label class="form-label small fw-semibold">Kondisi Lapangan:</label>
-                            <select id="kondisiSektor" class="form-select" required>
-                                <option value="">-- Pilih Kondisi --</option>
-                            </select>
-                        </div>
-
-                        <div class="mb-4">
-                            <label class="form-label small fw-semibold">Lampiran Foto Lapangan:</label>
-                            <input type="file" id="fileFoto" class="form-control" accept="image/*" capture="environment" required>
-                            <div class="form-text" style="font-size: 11px;">Kamera akan terbuka otomatis di smartphone petugas.</div>
-                        </div>
-
-                        <button type="submit" id="btnSubmit" class="btn btn-primary btn-submit w-100 py-2.5 text-white">
-                            <i class="fa-solid fa-paper-plane me-2"></i>KIRIM LAPORAN REAL-TIME
+                    <div class="mb-4">
+                        <label class="form-label-custom">Dokumentasi Visual</label>
+                        <button type="button" class="btn-camera" onclick="picuInputKameraHP()">
+                            <i class="fa-solid fa-camera text-primary"></i> <span id="textTombolKamera">Buka Kamera Perangkat</span>
                         </button>
-                    </form>
-                </div>
+                        <input type="file" id="fileFoto" accept="image/*" capture="environment" onchange="prosesPratinjauFoto(this)">
+                        <div class="preview-img-container d-none" id="boxPreviewFoto">
+                            <img src="" id="imgTargetPreview" class="preview-img-tag">
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <div id="gpsStatusBox" class="status-gps-box loading">
+                            <i id="gpsIcon" class="fa-solid fa-circle-notch fa-spin"></i> 
+                            <span id="gpsTextStatus">Menghubungkan Otorisasi GPS...</span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn-refresh-circle" onclick="location.reload()" title="Reset Form">
+                            <i class="fa-solid fa-rotate"></i>
+                        </button>
+                        <button type="submit" id="btnSubmit" class="btn btn-submit-navy w-100" disabled>
+                            Kirim Log Laporan
+                        </button>
+                    </div>
+
+                </form>
             </div>
         </div>
     </div>
 
     <script>
-        // Jembatan URL API yang mengarah langsung ke Google Apps Script Anda
+        // Endpoint URL Google Apps Script Anda
         const API_URL_WEBAPP = "https://script.google.com/macros/s/AKfycbyJuzwTGe-bucxDG6Yvgp-GEEsk5RdUpjR7ZX-G6KL_PlkiAn6QhustBE5n2fWBVrmA/exec";
 
-        // Memuat opsi dropdown dinamis (Nama, Zona, Kondisi) dari Google Sheets saat form dibuka
         document.addEventListener("DOMContentLoaded", function() {
+            // Ambil data Dropdown dinamis dari GAS
             fetch(`${API_URL_WEBAPP}?aksi=ambilDropdown`)
             .then(res => res.json())
             .then(data => {
@@ -93,40 +229,82 @@
                 const selectZona = document.getElementById('zonaArea');
                 const selectKondisi = document.getElementById('kondisiSektor');
                 
-                // Memasukkan data dari sheet "Petugas" ke elemen Form HTML
                 if(data.daftarNama) data.daftarNama.forEach(n => selectNama.innerHTML += `<option value="${n}">${n}</option>`);
                 if(data.daftarZona) data.daftarZona.forEach(z => selectZona.innerHTML += `<option value="${z}">${z}</option>`);
                 if(data.daftarKondisi) data.daftarKondisi.forEach(k => selectKondisi.innerHTML += `<option value="${k}">${k}</option>`);
             })
             .catch(err => {
-                alert("Gagal memuat daftar petugas/zona dari server API.");
+                console.log("Gagal sinkronisasi dropdown");
             });
             
-            // Mengunci titik koordinat GPS secara otomatis (Geotagging)
+            // Jalankan pelacakan GPS
+            aktifkanSistemGeotaggingGPS();
+        });
+
+        function picuInputKameraHP() {
+            document.getElementById('fileFoto').click();
+        }
+
+        function prosesPratinjauFoto(input) {
+            const file = input.files[0];
+            if (file) {
+                document.getElementById('textTombolKamera').innerText = "Foto Berhasil Dilampirkan";
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('imgTargetPreview').src = e.target.result;
+                    document.getElementById('boxPreviewFoto').classList.remove('d-none');
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function aktifkanSistemGeotaggingGPS() {
+            const box = document.getElementById('gpsStatusBox');
+            const icon = document.getElementById('gpsIcon');
+            const text = document.getElementById('gpsTextStatus');
+            const btnKirim = document.getElementById('btnSubmit');
+
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(pos => {
                     window.latCoordinate = pos.coords.latitude;
                     window.lngCoordinate = pos.coords.longitude;
+                    
+                    // Ubah box menjadi hijau jika sukses persis seperti gambar lampiran
+                    box.classList.remove('loading');
+                    icon.className = "fa-solid fa-location-dot text-success";
+                    text.innerText = "Lokasi GPS Berhasil Diotorisasi";
+                    btnKirim.disabled = false; // Aktifkan tombol kirim jika koordinat aman
                 }, err => {
-                    console.log("Izin GPS ditolak oleh pengguna.");
+                    box.className = "status-gps-box text-danger bg-danger bg-opacity-10 border-danger";
+                    icon.className = "fa-solid fa-triangle-exclamation";
+                    text.innerText = "Izin GPS Diperlukan Lapangan!";
+                    btnKirim.disabled = false; // Tetap izinkan kirim dengan fallback "-"
                 }, { enableHighAccuracy: true });
+            } else {
+                text.innerText = "Gps Tidak Didukung Browser";
             }
-        });
+        }
 
-        // Manajemen pengiriman form data ke fungsi doPost(e) di GAS Anda
+        // Pengiriman payload form ke Google Apps Script
         document.getElementById('formPatroli').addEventListener('submit', function(e) {
             e.preventDefault();
             const tombol = document.getElementById('btnSubmit');
             tombol.disabled = true;
-            tombol.innerHTML = `<i class="fa-solid fa-spinner fa-spin me-2"></i>Sedang Mengirim Laporan...`;
+            tombol.innerText = "Sedang Mengirim...";
 
             const fileKomponen = document.getElementById('fileFoto').files[0];
-            const pembacaFile = new FileReader();
             
+            if(!fileKomponen) {
+                alert("Wajib mengambil foto dokumentasi terlebih dahulu!");
+                tombol.disabled = false;
+                tombol.innerText = "Kirim Log Laporan";
+                return;
+            }
+
+            const pembacaFile = new FileReader();
             pembacaFile.onload = function(event) {
                 const base64FormatData = event.target.result.split(',')[1];
                 
-                // Format payload data disesuaikan dengan kebutuhan fungsi simpanDataPatroli(data) di GAS
                 const paketKirim = {
                     aksi: "simpanData",
                     payload: {
@@ -140,7 +318,6 @@
                     }
                 };
 
-                // Mengirimkan data via POST metode REST API
                 fetch(API_URL_WEBAPP, {
                     method: "POST",
                     body: JSON.stringify(paketKirim)
@@ -152,13 +329,13 @@
                         location.reload();
                     } else {
                         tombol.disabled = false;
-                        tombol.innerHTML = `<i class="fa-solid fa-paper-plane me-2"></i>KIRIM LAPORAN REAL-TIME`;
+                        tombol.innerText = "Kirim Log Laporan";
                     }
                 })
                 .catch(err => {
-                    alert("Koneksi gagal atau bermasalah!");
+                    alert("Koneksi internet bermasalah!");
                     tombol.disabled = false;
-                    tombol.innerHTML = `<i class="fa-solid fa-paper-plane me-2"></i>KIRIM LAPORAN REAL-TIME`;
+                    tombol.innerText = "Kirim Log Laporan";
                 });
             };
             pembacaFile.readAsDataURL(fileKomponen);
