@@ -24,7 +24,6 @@
             box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
             overflow: hidden;
         }
-        /* Style interaktif saat baris tabel disorot/diklik */
         .table-custom tbody tr {
             cursor: pointer;
             transition: background-color 0.15s ease;
@@ -41,8 +40,6 @@
             border-radius: 8px;
             border: 1px solid #cbd5e1;
         }
-        
-        /* STYLE DETAIL MODAL POP-UP */
         .modal-detail-content {
             border-radius: 20px;
             border: none;
@@ -68,14 +65,6 @@
             color: #0f172a;
             margin-bottom: 12px;
         }
-        .img-detail-view {
-            width: 100%;
-            max-height: 280px;
-            object-fit: contain;
-            background-color: #f8fafc;
-            border-radius: 12px;
-            border: 1px solid #e2e8f0;
-        }
         .dev-watermark {
             font-size: 11px;
             color: #94a3b8;
@@ -86,7 +75,6 @@
 </head>
 <body>
 
-    <!-- NAVBAR -->
     <nav class="navbar navbar-expand-lg navbar-dark navbar-navy py-3">
         <div class="container-fluid px-4">
             <a class="navbar-brand fw-bold" href="#"><i class="fa-solid fa-chart-line me-2"></i>DIGITAL PATROL MONITORS</a>
@@ -94,23 +82,18 @@
         </div>
     </nav>
 
-    <!-- CONTAINER UTAMA -->
     <div class="container-fluid px-4 py-4">
         
-        <!-- CARD UTAMA TABEL -->
         <div class="main-card-table p-4">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h5 class="fw-bold m-0"><i class="fa-solid fa-clock-history me-2 text-primary"></i>Riwayat Log Patroli</h5>
-                <button id="btnExport" class="btn btn-sm btn-outline-success fw-semibold" onclick="eksporKeExcel()"><i class="fa-solid fa-file-excel me-1"></i>Excel</button>
             </div>
 
-            <!-- STATUS LOADING -->
             <div id="loadingStatus" class="text-center py-5">
                 <i class="fa-solid fa-circle-notch fa-spin fa-2xl text-primary mb-3"></i>
                 <p class="text-muted small">Sedang mengambil riwayat database...</p>
             </div>
 
-            <!-- TABEL DATA -->
             <div class="table-responsive">
                 <table class="table align-middle table-custom" id="tabelLogPatroli" style="display: none;">
                     <thead class="table-light">
@@ -124,12 +107,10 @@
                         </tr>
                     </thead>
                     <tbody id="bodyTabelPatroli">
-                        <!-- Baris Data Masuk Di Sini Melalui JavaScript -->
-                    </tbody>
+                        </tbody>
                 </table>
             </div>
 
-            <!-- SINKRONISASI PAGINATION -->
             <div id="footerPagination" class="d-flex justify-content-between align-items-center mt-3" style="display: none !important;">
                 <span id="infoTextPaging" class="small text-muted">Menampilkan data...</span>
                 <div class="d-flex gap-1">
@@ -139,29 +120,26 @@
             </div>
         </div>
 
-        <!-- WATERMARK DEVELOPER INTERNAL -->
         <div class="dev-watermark">
             Developed by <strong>Alif Rizal</strong> • IT Department (alif.rizal@23semarang.id)
         </div>
     </div>
 
-    <!-- MODAL POP-UP DETAIL LAPORAN INTERAKTIF -->
     <div class="modal fade" id="modalDetailPatroli" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content modal-detail-content">
                 <div class="modal-header modal-detail-header p-3">
-                    <h6 class="modal-title fw-bold" id="modalTitleNama"><i class="fa-solid fa-shield me-2"></i>Detail Patroli Personel</h6>
+                    <h6 class="modal-title fw-bold" id="modalTitleNama"><i class="fa-solid fa-user-shield me-2"></i>Detail Patroli Personel</h6>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-4">
-                    <div class="row">
-                        <!-- Sisi Kiri: Informasi Teknis -->
+                    <div class="row align-items-center">
                         <div class="col-7">
                             <div class="detail-label">Waktu Pengiriman</div>
                             <div class="detail-value" id="detWaktu">-</div>
 
                             <div class="detail-label">Zona Sektor Inspeksi</div>
-                            <div class="detail-value"><span id="detZona" class="badge bg-secondary">-</span></div>
+                            <div class="detail-value"><span id="detZona" class="badge bg-dark">-</span></div>
 
                             <div class="detail-label">Kondisi Lapangan</div>
                             <div class="detail-value"><span id="detKondisi">-</span></div>
@@ -169,37 +147,32 @@
                             <div class="detail-label">Titik Koordinat GPS</div>
                             <div class="detail-value" id="detGps">-</div>
                         </div>
-                        <!-- Sisi Kanan: Foto Mini / Status -->
                         <div class="col-5 text-center">
                             <div class="detail-label">Lampiran Visual</div>
-                            <img src="" id="detFoto" class="img-fluid rounded border mb-2" style="max-height: 100px; object-fit: cover; width: 100%;">
+                            <img src="" id="detFoto" class="img-fluid rounded border shadow-sm" style="max-height: 140px; object-fit: cover; width: 100%;">
                         </div>
                     </div>
                     
-                    <hr class="text-muted my-2">
+                    <hr class="text-muted my-3">
                     
-                    <div class="mb-3">
+                    <div class="mb-2">
                         <div class="detail-label">Estimasi Alamat Geotagging</div>
-                        <div class="text-muted small fw-medium" id="detAlamat" style="line-height: 1.3;">-</div>
+                        <div class="text-dark small fw-medium" id="detAlamat" style="line-height: 1.4;">-</div>
                     </div>
 
-                    <!-- Tombol Navigasi Eksternal -->
                     <div class="d-flex gap-2 mt-4">
-                        <a href="#" id="linkDetPeta" target="_blank" class="btn btn-primary w-50 py-2 rounded-3 small fw-bold"><i class="fa-solid fa-map-location-dot me-2"></i>Buka Peta</a>
-                        <a href="#" id="linkDetDrive" target="_blank" class="btn btn-outline-secondary w-50 py-2 rounded-3 small fw-bold"><i class="fa-solid fa-cloud me-2"></i>File Drive</a>
+                        <a href="#" id="linkDetPeta" target="_blank" class="btn btn-primary w-100 py-2 rounded-3 small fw-bold"><i class="fa-solid fa-map-location-dot me-2"></i>Buka Lokasi di Google Maps</a>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- UTILITIES SCRIPTS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         const API_URL = "https://script.google.com/macros/s/AKfycbyJuzwTGe-bucxDG6Yvgp-GEEsk5RdUpjR7ZX-G6KL_PlkiAn6QhustBE5n2fWBVrmA/exec";
         
         let masterDataPatroli = [];
-        let dataHasilSaringan = [];
         let barisPerHalaman = 10;
         let halamanSaatIni = 1;
         let komponenModal;
@@ -214,11 +187,11 @@
             .then(res => res.json())
             .then(data => {
                 masterDataPatroli = data;
-                dataHasilSaringan = [...masterDataPatroli];
                 renderDataKeTabel();
             })
             .catch(err => {
                 document.getElementById('loadingStatus').innerHTML = `<p class="text-danger fw-bold">Gagal sinkronisasi dengan database central.</p>`;
+                console.error(err);
             });
         }
 
@@ -226,23 +199,25 @@
             const tbody = document.getElementById('bodyTabelPatroli');
             tbody.innerHTML = "";
 
-            const totalData = dataHasilSaringan.length;
-            if (totalData === 0) return;
+            const totalData = masterDataPatroli.length;
+            if (totalData === 0) {
+                document.getElementById('loadingStatus').innerHTML = `<p class="text-muted small">Belum ada data laporan masuk bulan ini.</p>`;
+                return;
+            }
 
             let indexMulai = (halamanSaatIni - 1) * barisPerHalaman;
             let indexSelesai = Math.min(indexMulai + barisPerHalaman, totalData);
-            const dataHalamanIni = dataHasilSaringan.slice(indexMulai, indexSelesai);
+            const dataHalamanIni = masterDataPatroli.slice(indexMulai, indexSelesai);
 
-            dataHalamanIni.forEach(item => {
+            dataHalamanIni.forEach((item, indexDalamHalaman) => {
+                let indexAsli = indexMulai + indexDalamHalaman;
                 let kelasBadge = item.kondisi.toLowerCase() === "aman" ? "bg-aman" : "bg-temuan";
-                
                 let kolomFoto = `<img src="${item.urlFoto || 'https://placehold.co/50'}" class="img-thumbnail-table" onerror="this.src='https://placehold.co/50?text=Foto'">`;
                 let kolomPeta = (item.lat && item.lat !== "-") ? `${item.lat}, ${item.lng}` : "-";
 
-                // Menambahkan pemicu event klik 'bukaDetailPopup' pada tag TR (Baris Tabel)
-                let baris = `<tr onclick='bukaDetailPopup(${JSON.stringify(item)})'>
+                let baris = `<tr onclick="bukaDetailPopupByIndex(${indexAsli})">
                     <td><small class="fw-semibold">${item.timestamp}</small></td>
-                    <td class="fw-bold text-dark text-capitalize">${item.nama}</td>
+                    <td class="fw-bold text-dark">${item.nama}</td>
                     <td><span class="badge bg-dark">${item.zona}</span></td>
                     <td><span class="${kelasBadge}">${item.kondisi}</span></td>
                     <td>${kolomFoto}</td>
@@ -263,35 +238,33 @@
             document.getElementById('footerPagination').setAttribute("style", "display: flex !important;");
         }
 
-        // FUNGSI INTERAKTIF BARU: PARSING DATA KE DALAM ELEMENT MODAL
-        function bukaDetailPopup(objekData) {
-            document.getElementById('modalTitleNama').innerHTML = `<i class="fa-solid fa-user-shield me-2"></i>Patroli: ${objekData.nama}`;
-            document.getElementById('detWaktu').innerText = objekData.timestamp;
-            document.getElementById('detZona').innerText = objekData.zona;
+        // Penanganan klik data baris menggunakan metode pencarian index array aman
+        function bukaDetailPopupByIndex(indexAsli) {
+            const dataPilihan = masterDataPatroli[indexAsli];
+            if (!dataPilihan) return;
+
+            document.getElementById('modalTitleNama').innerHTML = `<i class="fa-solid fa-user-shield me-2"></i>Patroli: ${dataPilihan.nama}`;
+            document.getElementById('detWaktu').innerText = dataPilihan.timestamp;
+            document.getElementById('detZona').innerText = dataPilihan.zona;
             
             const badgeKondisi = document.getElementById('detKondisi');
-            badgeKondisi.innerText = objekData.kondisi;
-            badgeKondisi.className = objekData.kondisi.toLowerCase() === "aman" ? "bg-aman" : "bg-temuan";
+            badgeKondisi.innerText = dataPilihan.kondisi;
+            badgeKondisi.className = dataPilihan.kondisi.toLowerCase() === "aman" ? "bg-aman" : "bg-temuan";
 
-            document.getElementById('detGps').innerText = (objekData.lat && objekData.lat !== "-") ? `${objekData.lat}, ${objekData.lng}` : "Tidak Terlacak";
-            document.getElementById('detAlamat').innerText = objekData.alamat || "Alamat tidak terjangkau geocode.";
-            
-            const fotoKomponen = document.getElementById('detFoto');
-            fotoKomponen.src = objekData.urlFoto || "https://placehold.co/150?text=No+Image";
+            const koordinatTeks = (dataPilihan.lat && dataPilihan.lat !== "-") ? `${dataPilihan.lat}, ${dataPilihan.lng}` : "Tidak Terlacak";
+            document.getElementById('detGps').innerText = koordinatTeks;
+            document.getElementById('detAlamat').innerText = dataPilihan.alamat || "Alamat tidak terjangkau geocode.";
+            document.getElementById('detFoto').src = dataPilihan.urlFoto || "https://placehold.co/150?text=No+Image";
 
-            // Pasang Link Eksternal Maps dan Google Drive
             const btnPeta = document.getElementById('linkDetPeta');
-            if (objekData.lat && objekData.lat !== "-") {
-                btnPeta.href = `https://www.google.com/maps?q=${objekData.lat},${objekData.lng}`;
+            if (dataPilihan.lat && dataPilihan.lat !== "-") {
+                btnPeta.href = `https://www.google.com/maps/search/?api=1&query=${dataPilihan.lat},${dataPilihan.lng}`;
                 btnPeta.classList.remove('disabled');
             } else {
                 btnPeta.href = "#";
                 btnPeta.classList.add('disabled');
             }
-            
-            document.getElementById('linkDetDrive').href = objekData.urlAsliDrive || "#";
 
-            // Jalankan Pop-up ke Monitor Screen
             komponenModal.show();
         }
 
