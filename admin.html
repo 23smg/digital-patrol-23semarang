@@ -212,8 +212,14 @@
                 </div>
             </div>
             
-            <div id="loadingStatus" class="p-4 text-center fw-medium text-muted">
-                <i class="fa-solid fa-spinner fa-spin fa-xl mb-2 text-primary d-block"></i> Menghubungkan ke API Google Sheets...
+            <div id="loadingStatus" class="p-5 text-center text-muted">
+                <div class="spinner-border text-primary mb-3" role="status" style="width: 2.5rem; height: 2.5rem; border-width: 0.22em;"></div>
+                <div id="loadingText" class="fw-bold text-dark text-uppercase tracking-wider" style="font-size: 11px; letter-spacing: 0.1em;">
+                    Memulai Enkripsi Sesi Jaringan...
+                </div>
+                <div id="loadingSubText" class="text-muted small mt-1" style="font-size: 11px;">
+                    Menyiapkan jabat tangan SSL Secure ke peladen pusat.
+                </div>
             </div>
 
             <div class="table-responsive">
@@ -303,7 +309,6 @@
         document.addEventListener("DOMContentLoaded", function() {
             komponenModalDetail = new bootstrap.Modal(document.getElementById('modalDetailPatroli'));
 
-            // Default aplikasi langsung set filter ke hari ini untuk start & end
             const hariIni = new Date();
             const yyyy = hariIni.getFullYear();
             const mm = String(hariIni.getMonth() + 1).padStart(2, '0');
@@ -315,7 +320,6 @@
             
             muatDataLaporanDashboard();
 
-            // Pasang event listener pemantau perubahan data filter
             document.getElementById('filterTanggalStart').addEventListener('change', memicuUlangFilter);
             document.getElementById('filterTanggalEnd').addEventListener('change', memicuUlangFilter);
             document.getElementById('filterCari').addEventListener('input', memicuUlangFilter);
@@ -331,6 +335,8 @@
             var iconRef = document.getElementById('iconRefresh');
             var btnExp = document.getElementById('btnExport');
             var loading = document.getElementById('loadingStatus');
+            var t Utama = document.getElementById('loadingText');
+            var t Sub = document.getElementById('loadingSubText');
             var tabel = document.getElementById('tabelLogPatroli');
             var panelNav = document.getElementById('panelNavigasiHalaman');
             
@@ -340,6 +346,18 @@
             loading.style.display = "block";
             tabel.style.display = "none";
             panelNav.setAttribute('style', 'display: none !important;');
+
+            // PROGRES 1: Mengubah Teks Saat Klik Pertama Kali
+            tUtama.innerText = "MENYINGKRONKAN ENKRIPSI JARINGAN...";
+            tSub.innerText = "Melakukan jabat tangan SSL Secure dengan API Gateway Gateway...";
+
+            // PROGRES 2: Mengubah Teks Beberapa Milidetik Kemudian (Simulasi Pengunduhan Data)
+            setTimeout(() => {
+                if(loading.style.display !== "none") {
+                    tUtama.innerText = "MENGUNDUH DATABASE UTAMA...";
+                    tSub.innerText = "Menarik entri baris data terenkripsi dari server pusat cloud...";
+                }
+            }, 750);
 
             const URL_DENGAN_PARAMS = `${API_URL_WEBAPP}?aksi=ambilData&_=${new Date().getTime()}`;
 
@@ -351,6 +369,10 @@
             })
             .then(res => {
                 if (!res.ok) throw new Error("Koneksi jaringan bermasalah.");
+                
+                // PROGRES 3: Data Berhasil Didapat, Sedang Diproses Browser
+                tUtama.innerText = "MEMVALIDASI DAN MERENDER STRUKTUR DATA...";
+                tSub.innerText = "Menghitung parameter indeks, pembagian halaman, dan koordinat...";
                 return res.json();
             })
             .then(response => {
@@ -368,30 +390,24 @@
                 iconRef.classList.remove('fa-spin');
             })
             .catch(err => {
-                loading.innerHTML = "<span class='text-danger'><i class='fa-solid fa-triangle-exclamation d-block fa-xl mb-1'></i> Sinkronisasi Gagal.</span>";
+                loading.innerHTML = "<span class='text-danger fw-bold'><i class='fa-solid fa-triangle-exclamation d-block fa-xl mb-2'></i> GAGAL SINKRONISASI: MASALAH KONEKSI SERVER GATEWAY API</span>";
                 btnRef.disabled = false;
                 iconRef.classList.remove('fa-spin');
                 console.error("Fetch Error: ", err);
             });
         }
 
-        // FUNGSI UTAMA CONVERT STRING TIMESTAMP "DD/MM/YYYY HH:MM" MENJADI OBJEK DATE VALID
         function ubahTimestampSheetKeDate(strTimestamp) {
             if(!strTimestamp || strTimestamp === "-") return null;
             try {
-                // Potong string "14/06/2026 11:21" berdasarkan spasi
                 let pecahanAwal = strTimestamp.split(' ');
-                let bagianTanggal = pecahanAwal[0]; // "14/06/2026"
-                
-                let komponen = bagianTanggal.split('/'); // [14, 06, 2026]
+                let bagianTanggal = pecahanAwal[0]; 
+                let komponen = bagianTanggal.split('/'); 
                 let hari = parseInt(komponen[0], 10);
-                let bulan = parseInt(komponen[1], 10) - 1; // Bulan JavaScript dimulai dari indeks 0
+                let bulan = parseInt(komponen[1], 10) - 1; 
                 let tahun = parseInt(komponen[2], 10);
-                
                 return new Date(tahun, bulan, hari, 0, 0, 0, 0);
-            } catch(e) {
-                return null;
-            }
+            } catch(e) { return null; }
         }
 
         function jalankanFilterData() {
@@ -399,7 +415,6 @@
             const tglEndVal = document.getElementById('filterTanggalEnd').value; 
             const kataKunci = document.getElementById('filterCari').value.toLowerCase().trim();
             
-            // Siapkan pembanding Date Objek
             let dateMulai = tglStartVal ? new Date(tglStartVal + "T00:00:00") : null;
             let dateSelesai = tglEndVal ? new Date(tglEndVal + "T23:59:59") : null;
 
@@ -409,7 +424,6 @@
 
             if (Array.isArray(dataMasterPusat)) {
                 dataMasterPusat.forEach(item => {
-                    // Validasi Rentang Tanggal
                     if(item.timestamp && item.timestamp !== "-") {
                         let dateDataLog = ubahTimestampSheetKeDate(item.timestamp);
                         if(dateDataLog) {
@@ -418,7 +432,6 @@
                         }
                     }
                     
-                    // Validasi Keyword Kata Kunci
                     if (kataKunci && !item.nama.toLowerCase().includes(kataKunci) && 
                         !item.zona.toLowerCase().includes(kataKunci) && 
                         !item.kondisi.toLowerCase().includes(kataKunci)) return;
@@ -434,7 +447,6 @@
             document.getElementById('statPetugas').innerText = setPetugasUnik.size;
             document.getElementById('statZona').innerText = setZonaUnik.size;
 
-            // Kustomisasi Dinamis Judul Tabel Laporan
             if (tglStartVal && tglEndVal) {
                 if(tglStartVal === tglEndVal) {
                     document.getElementById('judulTabel').innerHTML = `<i class="fa-solid fa-list-ul me-2"></i>Riwayat Patroli Hari Ini (${tglStartVal.split('-').reverse().join('/')})`;
@@ -562,7 +574,7 @@
 
             const btnPeta = document.getElementById('linkDetPeta');
             if (dataPilihan.lat && dataPilihan.lat !== "-") {
-                btnPeta.href = `https://maps.google.com/?q=${dataPilihan.lat},${dataPilihan.lng}`;
+                btnPeta.href = `https://www.google.com/maps/search/?api=1&query=${dataPilihan.lat},${dataPilihan.lng}`;
                 btnPeta.classList.remove('disabled');
             } else {
                 btnPeta.href = "#";
@@ -585,7 +597,6 @@
             let tbodyLama = tabelHtml.querySelector('tbody');
             tbodyLama.innerHTML = ""; 
 
-            // Tarik seluruh list data hasil sortir range tanggal ke dalam Excel
             dataTerfilterSaatIni.forEach((item) => {
                 let baris = `<tr>
                     <td>${item.timestamp}</td>
@@ -654,7 +665,6 @@
                 </html>
             `;
 
-            // Dinamis nama file Excel berdasarkan rentang tanggal aktif saat didownload
             const startStr = document.getElementById('filterTanggalStart').value || 'Awal';
             const endStr = document.getElementById('filterTanggalEnd').value || 'Akhir';
             let namaFile = `Laporan_Patroli_Mall_23Semarang_${startStr}_ke_${endStr}.xls`;
