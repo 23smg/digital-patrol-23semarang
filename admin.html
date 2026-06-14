@@ -280,7 +280,7 @@
         const API_URL_WEBAPP = "https://script.google.com/macros/s/AKfycbyJuzwTGe-bucxDG6Yvgp-GEEsk5RdUpjR7ZX-G6KL_PlkiAn6QhustBE5n2fWBVrmA/exec";
         
         let dataMasterPusat = [];
-        let dataTerfilterSaatIni = []; // Menyimpan salinan data terfilter untuk referensi indeks klik
+        let dataTerfilterSaatIni = []; 
         let komponenModalDetail;
 
         document.addEventListener("DOMContentLoaded", function() {
@@ -359,7 +359,7 @@
             }
 
             tbody.innerHTML = "";
-            dataTerfilterSaatIni = []; // Reset penampung data terfilter
+            dataTerfilterSaatIni = []; 
             let counterTerfilter = 0;
             let setPetugasUnik = new Set();
             let setZonaUnik = new Set();
@@ -372,7 +372,6 @@
                         !item.zona.toLowerCase().includes(kataKunci) && 
                         !item.kondisi.toLowerCase().includes(kataKunci)) return;
 
-                    // Masukkan ke array referensi detail klik
                     dataTerfilterSaatIni.push(item);
                     let indeksData = dataTerfilterSaatIni.length - 1;
 
@@ -404,7 +403,6 @@
                         kolomPeta = `<span class="badge bg-light text-primary border border-primary" style="font-size:10px;"><i class="fa-solid fa-location-dot me-1"></i>Tersedia</span>`;
                     }
 
-                    // Baris sekarang memicu fungsi bukaDetailPopupBerdasarkanIndeks ketika diklik
                     let baris = `<tr onclick="bukaDetailPopupBerdasarkanIndeks(${indeksData})">
                         <td><small class="fw-medium">${item.timestamp}</small></td>
                         <td class="text-capitalize fw-semibold">${item.nama}</td>
@@ -437,7 +435,6 @@
             document.getElementById('btnExport').disabled = counterTerfilter === 0;
         }
 
-        // FUNGSI INTERAKTIF TERBARU UNTUK DISPLAY POP-UP DETAIL LAPORAN
         function bukaDetailPopupBerdasarkanIndeks(indeks) {
             const dataPilihan = dataTerfilterSaatIni[indeks];
             if (!dataPilihan) return;
@@ -454,7 +451,6 @@
             document.getElementById('detGps').innerText = koordinatTeks;
             document.getElementById('detAlamat').innerText = dataPilihan.alamat || "Alamat tidak terjangkau geocode.";
 
-            // Parsing URL Gambar Dokumentasi
             let urlGambarSesuai = "https://placehold.co/150?text=No+Image";
             if (dataPilihan.urlFoto && dataPilihan.urlFoto.includes("http")) {
                 urlGambarSesuai = dataPilihan.urlFoto;
@@ -467,14 +463,13 @@
             }
             document.getElementById('detFoto').src = urlGambarSesuai;
 
-            // Logika Pembukaan Tautan Maps Luar
             const btnPeta = document.getElementById('linkDetPeta');
             if (dataPilihan.lat && dataPilihan.lat !== "-") {
-                btnPeta.href = `https://www.google.com/maps/search/?api=1&query=${dataPilihan.lat},${dataPilihan.lng}`;
+                btnPeta.href = `https://maps.google.com/?q=${dataPilihan.lat},${dataPilihan.lng}`;
                 btnPeta.classList.remove('disabled');
             } else {
                 btnPeta.href = "#";
-                btnPeta.add('disabled');
+                btnPeta.classList.add('disabled');
             }
 
             komponenModalDetail.show();
@@ -486,16 +481,27 @@
         }
 
         function eksporKeExcel() {
+            // 1. Kloning tabel asli agar manipulasi tidak merusak tampilan layar dashboard
             let tabelHtml = document.getElementById('tabelLogPatroli').cloneNode(true);
             let barisTabel = tabelHtml.querySelectorAll('tr');
+            
             barisTabel.forEach(tr => {
                 let kolom = tr.querySelectorAll('td, th');
+                
+                // Pastikan struktur kolom tabel lengkap sebelum dimanipulasi
                 if(kolom.length >= 6) {
+                    // POTONG KOLOM LAMPIRAN FOTO (Kolom urutan ke-5 / Indeks nomor 4)
+                    tr.removeChild(kolom[4]);
+                    
+                    // Ekstrak teks alamat murni untuk kolom Geotagging
                     let divPeta = kolom[5].querySelector('small');
-                    if(divPeta) kolom[5].innerHTML = divPeta.innerText;
+                    if(divPeta) {
+                        kolom[5].innerHTML = divPeta.innerText;
+                    }
                 }
             });
 
+            // 2. Proses pembentukan data blob excel dan trigger download otomatis
             let linkDownload = document.createElement('a');
             let dataData = tabelHtml.outerHTML.replace(/ /g, '%20');
             linkDownload.href = 'data:application/vnd.ms-excel,' + dataData;
