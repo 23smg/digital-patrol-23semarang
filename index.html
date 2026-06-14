@@ -243,6 +243,7 @@
     <script>
         const API_URL_WEBAPP = "https://script.google.com/macros/s/AKfycbyJuzwTGe-bucxDG6Yvgp-GEEsk5RdUpjR7ZX-G6KL_PlkiAn6QhustBE5n2fWBVrmA/exec";
         let GAMBAR_TERKOMPRES_BASE64 = ""; 
+        let STATUS_GPS_VALID = false; // Penanda status validitas GPS lapangan
 
         document.addEventListener("DOMContentLoaded", function() {
             fetch(`${API_URL_WEBAPP}?aksi=ambilDropdown`)
@@ -267,7 +268,6 @@
             document.getElementById('fileFoto').click();
         }
 
-        // FUNGSI UTAMA: MENGECILKAN GAMBAR SECARA INSTAN DI BACKGROUND HP PETUGAS
         function prosesPratinjauFoto(input) {
             const file = input.files[0];
             if (file) {
@@ -278,12 +278,10 @@
                     const img = new Image();
                     img.src = e.target.result;
                     img.onload = function() {
-                        // Inisialisasi Canvas HTML5
                         const canvas = document.createElement('canvas');
                         let width = img.width;
                         let height = img.height;
 
-                        // Batasi resolusi maksimal lebar/tinggi di 1024 pixel (Sangat pas untuk dokumentasi)
                         const MAX_WIDTH_HEIGHT = 1024;
                         if (width > height) {
                             if (width > MAX_WIDTH_HEIGHT) {
@@ -300,14 +298,11 @@
                         canvas.width = width;
                         canvas.height = height;
 
-                        // Gambar ulang objek ke dalam canvas dengan dimensi baru
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, width, height);
 
-                        // Kompres kualitas menjadi 70% (Mengecilkan ukuran file secara drastis)
                         GAMBAR_TERKOMPRES_BASE64 = canvas.toDataURL('image/jpeg', 0.7).split(',')[1];
 
-                        // Tampilkan hasil kompresi ke pratinjau halaman petugas
                         document.getElementById('imgTargetPreview').src = canvas.toDataURL('image/jpeg', 0.7);
                         document.getElementById('boxPreviewFoto').classList.remove('d-none');
                         document.getElementById('textTombolKamera').innerText = "Foto Berhasil Dilampirkan (Optimized)";
@@ -328,18 +323,22 @@
                     window.latCoordinate = pos.coords.latitude;
                     window.lngCoordinate = pos.coords.longitude;
                     
-                    box.classList.remove('loading');
+                    STATUS_GPS_VALID = true; // Set koordinat sah terkunci
+                    box.className = "status-gps-box"; // kembalikan ke style dasar hijau
                     icon.className = "fa-solid fa-location-dot text-success";
                     text.innerText = "Lokasi GPS Berhasil Diotorisasi";
                     btnKirim.disabled = false;
                 }, err => {
+                    STATUS_GPS_VALID = false; // GPS Gagal didapatkan
                     box.className = "status-gps-box text-danger bg-danger bg-opacity-10 border-danger";
                     icon.className = "fa-solid fa-triangle-exclamation";
                     text.innerText = "Izin GPS Diperlukan Lapangan!";
-                    btnKirim.disabled = false;
+                    btnKirim.disabled = false; // Tombol tetap menyala agar memicu SweetAlert saat di-klik
                 }, { enableHighAccuracy: true });
             } else {
+                STATUS_GPS_VALID = false;
                 text.innerText = "Gps Tidak Didukung Browser";
+                btnKirim.disabled = false;
             }
         }
 
@@ -348,6 +347,22 @@
             const tombol = document.getElementById('btnSubmit');
             const fileKomponen = document.getElementById('fileFoto').files[0];
             
+            // PROTEKSI UTAMA: CEK VALIDITAS GPS SEBELUM PROSES
+            if (!STATUS_GPS_VALID || !window.latCoordinate || !window.lngCoordinate) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Akses Kirim Ditolak!',
+                    text: 'Sistem mendeteksi GPS Anda nonaktif atau izin lokasi diblokir. Harap aktifkan GPS perangkat Anda dan berikan izin lokasi pada browser untuk dapat mengirim laporan.',
+                    confirmButtonColor: '#d33',
+                    confirmButtonText: 'Aktifkan GPS & Refresh',
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        location.reload(); // Refresh halaman untuk meminta ulang izin GPS
+                    }
+                });
+                return;
+            }
+
             if(!fileKomponen || !GAMBAR_TERKOMPRES_BASE64) {
                 Swal.fire({
                     icon: 'warning',
@@ -370,7 +385,6 @@
                 }
             });
 
-            // LANGSUNG KIRIM DATA YANG SUDAH RINGAN (TANPA MENUNGGU FILEREADER LAGI)
             const paketKirim = {
                 aksi: "simpanData",
                 payload: {
@@ -378,9 +392,9 @@
                     zona: document.getElementById('zonaArea').value,
                     kondisi: document.getElementById('kondisiSektor').value,
                     fotoBase64: GAMBAR_TERKOMPRES_BASE64,
-                    fotoMime: "image/jpeg", // Standarisasi output kompresi ke jpeg ringan
-                    lat: window.latCoordinate || "-",
-                    lng: window.lngCoordinate || "-"
+                    fotoMime: "image/jpeg",
+                    lat: window.latCoordinate,
+                    lng: window.lngCoordinate
                 }
             };
 
