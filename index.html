@@ -1,303 +1,407 @@
+<!-- 
+======================================================
+  DIGITAL PATROL LOG SYSTEM v2.1
+  Developed by: Alif Rizal (IT Department)
+  Contact     : alif.rizal@23semarang.id
+  Property of : Mall 23Semarang © 2026
+======================================================
+-->
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Admin Patroli - Mall 23Semarang</title>
+    <title>Digital Patrol Log - Mall 23Semarang</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
     <style>
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: #f8fafc;
+            background-color: #f4f6f9;
             color: #1e293b;
+            padding: 1rem 0;
         }
-        .navbar-navy {
+        .main-card {
+            background: white;
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.06);
+            border: none;
+            max-width: 480px;
+            margin: 0 auto;
+        }
+        .card-header-navy {
             background-color: #0b132b;
+            color: white;
+            padding: 2.5rem 1.5rem;
+            text-align: center;
             border-bottom: 4px solid #0056b3;
         }
-        .main-card-table {
-            background: white;
-            border-radius: 16px;
+        .card-header-navy h4 {
+            font-weight: 700;
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
+            font-size: 1.4rem;
+        }
+        .card-header-navy p {
+            font-size: 0.85rem;
+            opacity: 0.7;
+            margin: 0;
+        }
+        .card-body-content {
+            padding: 2rem 1.5rem;
+        }
+        .form-label-custom {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #334155;
+            display: block;
+            text-align: center;
+            margin-bottom: 0.6rem;
+        }
+        .form-select-custom, .form-control-custom {
+            border-radius: 12px;
+            padding: 0.75rem 1rem;
             border: 1px solid #e2e8f0;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
-            overflow: hidden;
+            background-color: #f8fafc;
+            text-align: center;
+            text-align-last: center;
+            color: #64748b;
+            font-size: 0.95rem;
+            transition: all 0.2s;
         }
-        /* Style interaktif saat baris tabel disorot/diklik */
-        .table-custom tbody tr {
+        .form-select-custom:focus {
+            border-color: #0b132b;
+            box-shadow: none;
+            background-color: white;
+        }
+        .btn-camera {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 0.75rem;
+            width: 100%;
+            color: #0056b3;
+            font-weight: 600;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
             cursor: pointer;
-            transition: background-color 0.15s ease;
         }
-        .table-custom tbody tr:hover {
-            background-color: #f1f5f9 !important;
+        .btn-camera:hover {
+            background-color: #f1f5f9;
         }
-        .bg-aman { background-color: #e2fbe8; color: #0d5a2b; font-weight: 600; padding: 0.35rem 0.75rem; border-radius: 8px; }
-        .bg-temuan { background-color: #ffebe9; color: #a81c1c; font-weight: 600; padding: 0.35rem 0.75rem; border-radius: 8px; }
-        .img-thumbnail-table {
-            width: 50px;
-            height: 50px;
-            object-fit: cover;
+        .status-gps-box {
+            background-color: #edf7ed;
+            color: #1e4620;
+            border-radius: 12px;
+            padding: 0.75rem;
+            text-align: center;
+            font-size: 0.9rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            border: 1px solid #d3eafd;
+        }
+        .status-gps-box.loading {
+            background-color: #fff8ec;
+            color: #b78103;
+            border-color: #fff1d6;
+        }
+        .btn-submit-navy {
+            background-color: #0b132b;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 0.9rem;
+            font-weight: 600;
+            font-size: 1rem;
+            letter-spacing: 0.5px;
+            transition: background 0.2s;
+        }
+        .btn-submit-navy:hover {
+            background-color: #1c2541;
+            color: white;
+        }
+        .btn-refresh-circle {
+            background-color: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #334155;
+            transition: all 0.2s;
+        }
+        .btn-refresh-circle:hover {
+            background-color: #f8fafc;
+        }
+        #fileFoto {
+            display: none;
+        }
+        .preview-img-container {
+            text-align: center;
+            margin-top: 0.5rem;
+        }
+        .preview-img-tag {
+            max-height: 120px;
             border-radius: 8px;
-            border: 1px solid #cbd5e1;
+            border: 2px dashed #cbd5e1;
+            padding: 4px;
         }
         
-        /* STYLE DETAIL MODAL POP-UP */
-        .modal-detail-content {
+        /* WATERMARK FOOTER STYLE */
+        .dev-watermark {
+            text-align: center;
+            font-size: 11px;
+            color: #94a3b8;
+            margin-top: 1.5rem;
+            line-height: 1.4;
+        }
+        .dev-watermark a {
+            color: #64748b;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .modal-success-content {
             border-radius: 20px;
             border: none;
             overflow: hidden;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
         }
-        .modal-detail-header {
-            background-color: #0b132b;
-            color: white;
-            border-bottom: none;
+        .success-icon-animation {
+            font-size: 4rem;
+            color: #2ec4b6;
+            animation: scaleUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
         }
-        .detail-label {
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: #64748b;
-            font-weight: 600;
-            margin-bottom: 2px;
-        }
-        .detail-value {
-            font-size: 14px;
-            font-weight: 600;
-            color: #0f172a;
-            margin-bottom: 12px;
-        }
-        .img-detail-view {
-            width: 100%;
-            max-height: 280px;
-            object-fit: contain;
-            background-color: #f8fafc;
-            border-radius: 12px;
-            border: 1px solid #e2e8f0;
-        }
-        .dev-watermark {
-            font-size: 11px;
-            color: #94a3b8;
-            text-align: center;
-            margin: 2rem 0;
+        @keyframes scaleUp {
+            0% { transform: scale(0.3); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
         }
     </style>
 </head>
 <body>
 
-    <!-- NAVBAR -->
-    <nav class="navbar navbar-expand-lg navbar-dark navbar-navy py-3">
-        <div class="container-fluid px-4">
-            <a class="navbar-brand fw-bold" href="#"><i class="fa-solid fa-chart-line me-2"></i>DIGITAL PATROL MONITORS</a>
-            <span class="navbar-text text-white-50 small d-none d-sm-inline">LOG CONTROL CENTER MALL 23SEMARANG</span>
-        </div>
-    </nav>
-
-    <!-- CONTAINER UTAMA -->
-    <div class="container-fluid px-4 py-4">
-        
-        <!-- CARD UTAMA TABEL -->
-        <div class="main-card-table p-4">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="fw-bold m-0"><i class="fa-solid fa-clock-history me-2 text-primary"></i>Riwayat Log Patroli</h5>
-                <button id="btnExport" class="btn btn-sm btn-outline-success fw-semibold" onclick="eksporKeExcel()"><i class="fa-solid fa-file-excel me-1"></i>Excel</button>
+    <div class="container">
+        <div class="main-card">
+            <!-- HEADER NAVY -->
+            <div class="card-header-navy">
+                <h4>DIGITAL PATROL LOG</h4>
+                <p>Sistem Pelaporan Area Kerja • Mall 23Semarang</p>
             </div>
 
-            <!-- STATUS LOADING -->
-            <div id="loadingStatus" class="text-center py-5">
-                <i class="fa-solid fa-circle-notch fa-spin fa-2xl text-primary mb-3"></i>
-                <p class="text-muted small">Sedang mengambil riwayat database...</p>
-            </div>
+            <!-- FORM ISI CONTENT -->
+            <div class="card-body-content">
+                <form id="formPatroli">
+                    
+                    <div class="mb-4">
+                        <label class="form-label-custom">Nama Petugas</label>
+                        <select id="namaPetugas" class="form-select form-select-custom" required>
+                            <option value="">Pilih Nama Personel</option>
+                        </select>
+                    </div>
 
-            <!-- TABEL DATA -->
-            <div class="table-responsive">
-                <table class="table align-middle table-custom" id="tabelLogPatroli" style="display: none;">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Waktu Log</th>
-                            <th>Nama Personel</th>
-                            <th>Zona Area</th>
-                            <th>Kondisi Sektor</th>
-                            <th>Dokumentasi</th>
-                            <th>Koordinat / Alamat</th>
-                        </tr>
-                    </thead>
-                    <tbody id="bodyTabelPatroli">
-                        <!-- Baris Data Masuk Di Sini Melalui JavaScript -->
-                    </tbody>
-                </table>
-            </div>
+                    <div class="mb-4">
+                        <label class="form-label-custom">Zona Inspeksi</label>
+                        <select id="zonaArea" class="form-select form-select-custom" required>
+                            <option value="">Pilih Titik Sektor</option>
+                        </select>
+                    </div>
 
-            <!-- SINKRONISASI PAGINATION -->
-            <div id="footerPagination" class="d-flex justify-content-between align-items-center mt-3" style="display: none !important;">
-                <span id="infoTextPaging" class="small text-muted">Menampilkan data...</span>
-                <div class="d-flex gap-1">
-                    <button id="btnHalamanPrev" class="btn btn-sm btn-light border" onclick="pindahHalaman(-1)">Sebelumnya</button>
-                    <button id="btnHalamanNext" class="btn btn-sm btn-light border" onclick="pindahHalaman(1)">Berikutnya</button>
-                </div>
-            </div>
-        </div>
+                    <div class="mb-4">
+                        <label class="form-label-custom">Kondisi Sektor</label>
+                        <select id="kondisiSektor" class="form-select form-select-custom" required>
+                            <option value="">Pilih Kondisi Sektor</option>
+                        </select>
+                    </div>
 
-        <!-- WATERMARK DEVELOPER INTERNAL -->
-        <div class="dev-watermark">
-            Developed by <strong>Alif Rizal</strong> • IT Department (alif.rizal@23semarang.id)
-        </div>
-    </div>
-
-    <!-- MODAL POP-UP DETAIL LAPORAN INTERAKTIF -->
-    <div class="modal fade" id="modalDetailPatroli" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content modal-detail-content">
-                <div class="modal-header modal-detail-header p-3">
-                    <h6 class="modal-title fw-bold" id="modalTitleNama"><i class="fa-solid fa-shield me-2"></i>Detail Patroli Personel</h6>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body p-4">
-                    <div class="row">
-                        <!-- Sisi Kiri: Informasi Teknis -->
-                        <div class="col-7">
-                            <div class="detail-label">Waktu Pengiriman</div>
-                            <div class="detail-value" id="detWaktu">-</div>
-
-                            <div class="detail-label">Zona Sektor Inspeksi</div>
-                            <div class="detail-value"><span id="detZona" class="badge bg-secondary">-</span></div>
-
-                            <div class="detail-label">Kondisi Lapangan</div>
-                            <div class="detail-value"><span id="detKondisi">-</span></div>
-
-                            <div class="detail-label">Titik Koordinat GPS</div>
-                            <div class="detail-value" id="detGps">-</div>
-                        </div>
-                        <!-- Sisi Kanan: Foto Mini / Status -->
-                        <div class="col-5 text-center">
-                            <div class="detail-label">Lampiran Visual</div>
-                            <img src="" id="detFoto" class="img-fluid rounded border mb-2" style="max-height: 100px; object-fit: cover; width: 100%;">
+                    <div class="mb-4">
+                        <label class="form-label-custom">Dokumentasi Visual</label>
+                        <button type="button" class="btn-camera" onclick="picuInputKameraHP()">
+                            <i class="fa-solid fa-camera text-primary"></i> <span id="textTombolKamera">Buka Kamera Perangkat</span>
+                        </button>
+                        <input type="file" id="fileFoto" accept="image/*" capture="environment" onchange="prosesPratinjauFoto(this)">
+                        <div class="preview-img-container d-none" id="boxPreviewFoto">
+                            <img src="" id="imgTargetPreview" class="preview-img-tag">
                         </div>
                     </div>
-                    
-                    <hr class="text-muted my-2">
-                    
-                    <div class="mb-3">
-                        <div class="detail-label">Estimasi Alamat Geotagging</div>
-                        <div class="text-muted small fw-medium" id="detAlamat" style="line-height: 1.3;">-</div>
+
+                    <div class="mb-4">
+                        <div id="gpsStatusBox" class="status-gps-box loading">
+                            <i id="gpsIcon" class="fa-solid fa-circle-notch fa-spin"></i> 
+                            <span id="gpsTextStatus">Menghubungkan Otorisasi GPS...</span>
+                        </div>
                     </div>
 
-                    <!-- Tombol Navigasi Eksternal -->
-                    <div class="d-flex gap-2 mt-4">
-                        <a href="#" id="linkDetPeta" target="_blank" class="btn btn-primary w-50 py-2 rounded-3 small fw-bold"><i class="fa-solid fa-map-location-dot me-2"></i>Buka Peta</a>
-                        <a href="#" id="linkDetDrive" target="_blank" class="btn btn-outline-secondary w-50 py-2 rounded-3 small fw-bold"><i class="fa-solid fa-cloud me-2"></i>File Drive</a>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn-refresh-circle" onclick="location.reload()" title="Reset Form">
+                            <i class="fa-solid fa-rotate"></i>
+                        </button>
+                        <button type="submit" id="btnSubmit" class="btn btn-submit-navy w-100" disabled>
+                            Kirim Log Laporan
+                        </button>
                     </div>
+
+                </form>
+                
+                <!-- WATERMARK DEVELOPER -->
+                <div class="dev-watermark">
+                    <div>Developed by <strong>Alif Rizal</strong> • IT Department</div>
+                    <div><i class="fa-regular fa-envelope me-1"></i><a href="mailto:alif.rizal@23semarang.id">alif.rizal@23semarang.id</a></div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- UTILITIES SCRIPTS -->
+    <!-- MODAL POP-UP NOTIFIKASI SUKSES MODERN -->
+    <div class="modal fade" id="modalSukses" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content modal-success-content p-4 text-center">
+                <div class="mb-3">
+                    <i class="fa-solid fa-circle-check success-icon-animation"></i>
+                </div>
+                <h5 class="fw-bold text-dark mb-1">Laporan Terkirim!</h5>
+                <p class="text-muted small mb-4">Data log patroli berhasil dicatat ke sistem pusat secara real-time.</p>
+                <button type="button" class="btn btn-dark w-100 py-2 rounded-3 fw-semibold" onclick="selesaiDanReload()">
+                    Selesai & Lanjutkan
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbyJuzwTGe-bucxDG6Yvgp-GEEsk5RdUpjR7ZX-G6KL_PlkiAn6QhustBE5n2fWBVrmA/exec";
-        
-        let masterDataPatroli = [];
-        let dataHasilSaringan = [];
-        let barisPerHalaman = 10;
-        let halamanSaatIni = 1;
-        let komponenModal;
+        const API_URL_WEBAPP = "https://script.google.com/macros/s/AKfycbyJuzwTGe-bucxDG6Yvgp-GEEsk5RdUpjR7ZX-G6KL_PlkiAn6QhustBE5n2fWBVrmA/exec";
+        let modalKontrol;
 
         document.addEventListener("DOMContentLoaded", function() {
-            komponenModal = new bootstrap.Modal(document.getElementById('modalDetailPatroli'));
-            muatDataDariServer();
-        });
+            modalKontrol = new bootstrap.Modal(document.getElementById('modalSukses'));
 
-        function muatDataDariServer() {
-            fetch(`${API_URL}?aksi=ambilRiwayat`)
+            fetch(`${API_URL_WEBAPP}?aksi=ambilDropdown`)
             .then(res => res.json())
             .then(data => {
-                masterDataPatroli = data;
-                dataHasilSaringan = [...masterDataPatroli];
-                renderDataKeTabel();
+                const selectNama = document.getElementById('namaPetugas');
+                const selectZona = document.getElementById('zonaArea');
+                const selectKondisi = document.getElementById('kondisiSektor');
+                
+                if(data.daftarNama) data.daftarNama.forEach(n => selectNama.innerHTML += `<option value="${n}">${n}</option>`);
+                if(data.daftarZona) data.daftarZona.forEach(z => selectZona.innerHTML += `<option value="${z}">${z}</option>`);
+                if(data.daftarKondisi) data.daftarKondisi.forEach(k => selectKondisi.innerHTML += `<option value="${k}">${k}</option>`);
             })
             .catch(err => {
-                document.getElementById('loadingStatus').innerHTML = `<p class="text-danger fw-bold">Gagal sinkronisasi dengan database central.</p>`;
+                console.log("Gagal sinkronisasi dropdown");
             });
+            
+            aktifkanSistemGeotaggingGPS();
+        });
+
+        function picuInputKameraHP() {
+            document.getElementById('fileFoto').click();
         }
 
-        function renderDataKeTabel() {
-            const tbody = document.getElementById('bodyTabelPatroli');
-            tbody.innerHTML = "";
-
-            const totalData = dataHasilSaringan.length;
-            if (totalData === 0) return;
-
-            let indexMulai = (halamanSaatIni - 1) * barisPerHalaman;
-            let indexSelesai = Math.min(indexMulai + barisPerHalaman, totalData);
-            const dataHalamanIni = dataHasilSaringan.slice(indexMulai, indexSelesai);
-
-            dataHalamanIni.forEach(item => {
-                let kelasBadge = item.kondisi.toLowerCase() === "aman" ? "bg-aman" : "bg-temuan";
-                
-                let kolomFoto = `<img src="${item.urlFoto || 'https://placehold.co/50'}" class="img-thumbnail-table" onerror="this.src='https://placehold.co/50?text=Foto'">`;
-                let kolomPeta = (item.lat && item.lat !== "-") ? `${item.lat}, ${item.lng}` : "-";
-
-                // Menambahkan pemicu event klik 'bukaDetailPopup' pada tag TR (Baris Tabel)
-                let baris = `<tr onclick='bukaDetailPopup(${JSON.stringify(item)})'>
-                    <td><small class="fw-semibold">${item.timestamp}</small></td>
-                    <td class="fw-bold text-dark text-capitalize">${item.nama}</td>
-                    <td><span class="badge bg-dark">${item.zona}</span></td>
-                    <td><span class="${kelasBadge}">${item.kondisi}</span></td>
-                    <td>${kolomFoto}</td>
-                    <td>
-                        <div class="small fw-medium">${kolomPeta}</div>
-                        <small class="text-muted d-block text-truncate" style="max-width: 180px;">${item.alamat || '-'}</small>
-                    </td>
-                </tr>`;
-                tbody.innerHTML += baris;
-            });
-
-            document.getElementById('infoTextPaging').innerText = `Menampilkan data ${indexMulai + 1} - ${indexSelesai} dari ${totalData}`;
-            document.getElementById('btnHalamanPrev').classList.toggle('disabled', halamanSaatIni === 1);
-            document.getElementById('btnHalamanNext').classList.toggle('disabled', indexSelesai >= totalData);
-
-            document.getElementById('loadingStatus').style.display = "none";
-            document.getElementById('tabelLogPatroli').style.display = "table";
-            document.getElementById('footerPagination').setAttribute("style", "display: flex !important;");
-        }
-
-        // FUNGSI INTERAKTIF BARU: PARSING DATA KE DALAM ELEMENT MODAL
-        function bukaDetailPopup(objekData) {
-            document.getElementById('modalTitleNama').innerHTML = `<i class="fa-solid fa-user-shield me-2"></i>Patroli: ${objekData.nama}`;
-            document.getElementById('detWaktu').innerText = objekData.timestamp;
-            document.getElementById('detZona').innerText = objekData.zona;
-            
-            const badgeKondisi = document.getElementById('detKondisi');
-            badgeKondisi.innerText = objekData.kondisi;
-            badgeKondisi.className = objekData.kondisi.toLowerCase() === "aman" ? "bg-aman" : "bg-temuan";
-
-            document.getElementById('detGps').innerText = (objekData.lat && objekData.lat !== "-") ? `${objekData.lat}, ${objekData.lng}` : "Tidak Terlacak";
-            document.getElementById('detAlamat').innerText = objekData.alamat || "Alamat tidak terjangkau geocode.";
-            
-            const fotoKomponen = document.getElementById('detFoto');
-            fotoKomponen.src = objekData.urlFoto || "https://placehold.co/150?text=No+Image";
-
-            // Pasang Link Eksternal Maps dan Google Drive
-            const btnPeta = document.getElementById('linkDetPeta');
-            if (objekData.lat && objekData.lat !== "-") {
-                btnPeta.href = `https://www.google.com/maps?q=${objekData.lat},${objekData.lng}`;
-                btnPeta.classList.remove('disabled');
-            } else {
-                btnPeta.href = "#";
-                btnPeta.classList.add('disabled');
+        function prosesPratinjauFoto(input) {
+            const file = input.files[0];
+            if (file) {
+                document.getElementById('textTombolKamera').innerText = "Foto Berhasil Dilampirkan";
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('imgTargetPreview').src = e.target.result;
+                    document.getElementById('boxPreviewFoto').classList.remove('d-none');
+                }
+                reader.readAsDataURL(file);
             }
-            
-            document.getElementById('linkDetDrive').href = objekData.urlAsliDrive || "#";
-
-            // Jalankan Pop-up ke Monitor Screen
-            komponenModal.show();
         }
 
-        function pindahHalaman(arah) {
-            halamanSaatIni += arah;
-            renderDataKeTabel();
+        function aktifkanSistemGeotaggingGPS() {
+            const box = document.getElementById('gpsStatusBox');
+            const icon = document.getElementById('gpsIcon');
+            const text = document.getElementById('gpsTextStatus');
+            const btnKirim = document.getElementById('btnSubmit');
+
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(pos => {
+                    window.latCoordinate = pos.coords.latitude;
+                    window.lngCoordinate = pos.coords.longitude;
+                    
+                    box.classList.remove('loading');
+                    icon.className = "fa-solid fa-location-dot text-success";
+                    text.innerText = "Lokasi GPS Berhasil Diotorisasi";
+                    btnKirim.disabled = false;
+                }, err => {
+                    box.className = "status-gps-box text-danger bg-danger bg-opacity-10 border-danger";
+                    icon.className = "fa-solid fa-triangle-exclamation";
+                    text.innerText = "Izin GPS Diperlukan Lapangan!";
+                    btnKirim.disabled = false;
+                }, { enableHighAccuracy: true });
+            } else {
+                text.innerText = "Gps Tidak Didukung Browser";
+            }
+        }
+
+        document.getElementById('formPatroli').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const tombol = document.getElementById('btnSubmit');
+            tombol.disabled = true;
+            tombol.innerHTML = `<i class="fa-solid fa-spinner fa-spin me-2"></i>Mengirim...`;
+
+            const fileKomponen = document.getElementById('fileFoto').files[0];
+            
+            if(!fileKomponen) {
+                alert("Wajib mengambil foto dokumentasi terlebih dahulu!");
+                tombol.disabled = false;
+                tombol.innerHTML = "Kirim Log Laporan";
+                return;
+            }
+
+            const pembacaFile = new FileReader();
+            pembacaFile.onload = function(event) {
+                const base64FormatData = event.target.result.split(',')[1];
+                
+                const paketKirim = {
+                    aksi: "simpanData",
+                    payload: {
+                        nama: document.getElementById('namaPetugas').value,
+                        zona: document.getElementById('zonaArea').value,
+                        kondisi: document.getElementById('kondisiSektor').value,
+                        fotoBase64: base64FormatData,
+                        fotoMime: fileKomponen.type,
+                        lat: window.latCoordinate || "-",
+                        lng: window.lngCoordinate || "-"
+                    }
+                };
+
+                fetch(API_URL_WEBAPP, {
+                    method: "POST",
+                    body: JSON.stringify(paketKirim)
+                })
+                .then(res => res.json())
+                .then(hasil => {
+                    if(hasil.status === "SUCCESS") {
+                        modalKontrol.show();
+                    } else {
+                        alert("Gagal: " + hasil.message);
+                        tombol.disabled = false;
+                        tombol.innerHTML = "Kirim Log Laporan";
+                    }
+                })
+                .catch(err => {
+                    alert("Koneksi internet bermasalah!");
+                    tombol.disabled = false;
+                    tombol.innerHTML = "Kirim Log Laporan";
+                });
+            };
+            pembacaFile.readAsDataURL(fileKomponen);
+        });
+
+        function selesaiDanReload() {
+            location.reload();
         }
     </script>
 </body>
