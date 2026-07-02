@@ -70,11 +70,11 @@
             background-color: white;
         }
         
-        /* STYLE KHUSUS: Fitur Pencarian Nama Kebal Saringan HP */
-        .wadah-pencarian-nama {
+        /* STYLE DROPDOWN KUSTOM ANTI EMULATOR HP */
+        .wadah-pencarian-kustom {
             position: relative;
         }
-        .box-hasil-nama {
+        .box-hasil-kustom {
             position: absolute;
             top: 100%;
             left: 0;
@@ -89,7 +89,7 @@
             box-shadow: 0 10px 25px rgba(0,0,0,0.1);
             margin-top: 4px;
         }
-        .item-list-nama {
+        .item-list-kustom {
             padding: 0.75rem 1rem;
             font-size: 0.95rem;
             color: #334155;
@@ -97,11 +97,11 @@
             text-align: center;
             border-bottom: 1px solid #f1f5f9;
         }
-        .item-list-nama:hover {
+        .item-list-kustom:hover {
             background-color: #0b132b;
             color: white;
         }
-        .item-list-nama.tidak-ada {
+        .item-list-kustom.tidak-ada {
             color: #94a3b8;
             font-style: italic;
         }
@@ -216,17 +216,16 @@
             <div class="card-body-content">
                 <form id="formPatroli">
                     
-                    <div class="mb-4 wadah-pencarian-nama">
+                    <div class="mb-4 wadah-pencarian-kustom">
                         <label class="form-label-custom">Nama Petugas (Ketik Untuk Mencari)</label>
-                        <input type="text" id="namaPetugasInput" class="form-control form-control-custom w-100" placeholder="Cari nama personel di sini..." required autocomplete="off" oninput="jalankanFilterNamaLive(this.value)" onfocus="tampilkanBoxNama()">
-                        <div id="boxHasilNama" class="box-hasil-navy box-hasil-brand box-hasil-pencarian"></div>
+                        <input type="text" id="namaPetugasInput" class="form-control form-control-custom w-100" placeholder="Cari nama personel di sini..." required autocomplete="off" oninput="filterNamaLive(this.value)" onfocus="tampilkanBoxNama()">
+                        <div id="boxHasilNama" class="box-hasil-kustom"></div>
                     </div>
 
-                    <div class="mb-4">
-                        <label class="form-label-custom">Zona Inspeksi</label>
-                        <select id="zonaArea" class="form-select form-select-custom" required>
-                            <option value="">Pilih Titik Sektor</option>
-                        </select>
+                    <div class="mb-4 wadah-pencarian-kustom">
+                        <label class="form-label-custom">Zona Inspeksi (Ketik Untuk Mencari)</label>
+                        <input type="text" id="zonaAreaInput" class="form-control form-control-custom w-100" placeholder="Cari titik sektor/area di sini..." required autocomplete="off" oninput="filterZonaLive(this.value)" onfocus="tampilkanBoxZona()">
+                        <div id="boxHasilZona" class="box-hasil-kustom"></div>
                     </div>
 
                     <div class="mb-4">
@@ -280,22 +279,27 @@
         const API_URL_WEBAPP = "https://script.google.com/macros/s/AKfycbyJuzwTGe-bucxDG6Yvgp-GEEsk5RdUpjR7ZX-G6KL_PlkiAn6QhustBE5n2fWBVrmA/exec";
         let GAMBAR_TERKOMPRES_BASE64 = ""; 
         let STATUS_GPS_VALID = false; 
-        let DAFTAR_NAMA_MASTER = []; // Wadah penyimpan 50 personel dari spreadsheet
+        let DAFTAR_NAMA_MASTER = []; 
+        let DAFTAR_ZONA_MASTER = []; 
 
         document.addEventListener("DOMContentLoaded", function() {
             fetch(`${API_URL_WEBAPP}?aksi=ambilDropdown`)
             .then(res => res.json())
             .then(data => {
-                const selectZona = document.getElementById('zonaArea');
                 const selectKondisi = document.getElementById('kondisiSektor');
                 
-                // Simpan daftar nama lokal untuk di-filter secara real-time
+                // Simpan data Nama ke memori lokal browser
                 if(data.daftarNama) {
                     DAFTAR_NAMA_MASTER = data.daftarNama;
-                    buatUlangKomponenListNama(DAFTAR_NAMA_MASTER);
+                    buatUlangListNama(DAFTAR_NAMA_MASTER);
                 }
                 
-                if(data.daftarZona) data.daftarZona.forEach(z => selectZona.innerHTML += `<option value="${z}">${z}</option>`);
+                // Simpan data Zona ke memori lokal browser
+                if(data.daftarZona) {
+                    DAFTAR_ZONA_MASTER = data.daftarZona;
+                    buatUlangListZona(DAFTAR_ZONA_MASTER);
+                }
+                
                 if(data.daftarKondisi) data.daftarKondisi.forEach(k => selectKondisi.innerHTML += `<option value="${k}">${k}</option>`);
             })
             .catch(err => {
@@ -304,54 +308,92 @@
             
             aktifkanSistemGeotaggingGPS();
 
-            // Klik di area kosong luar form akan menutup jendela rekomendasi nama
+            // Klik di luar form untuk menutup kotak saran pencarian otomatis
             document.addEventListener("click", function(e) {
-                if (!e.target.closest('.wadah-pencarian-nama')) {
+                if (!e.target.closest('.wadah-pencarian-kustom')) {
                     document.getElementById("boxHasilNama").style.display = "none";
+                    document.getElementById("boxHasilZona").style.display = "none";
                 }
             });
         });
 
-        // FUNGSI LOGIKA MEKANISME PENCARIAN LIVE KUSTOM
-        function buatUlangKomponenListNama(arrayNama) {
+        // ================= LOGIKA UTAMA LIVE SEARCH NAMA =================
+        function buatUlangListNama(arrayNama) {
             const bNama = document.getElementById("boxHasilNama");
             bNama.innerHTML = "";
-            bNama.className = "box-hasil-nama"; // Paksa apply style penyeimbang
-
             if(arrayNama.length === 0) {
-                bNama.innerHTML = `<div class="item-list-nama tidak-ada">Nama personel tidak ditemukan...</div>`;
+                bNama.innerHTML = `<div class="item-list-kustom tidak-ada">Nama tidak ditemukan...</div>`;
                 return;
             }
-
             arrayNama.forEach(nama => {
-                const divItem = document.createElement("div");
-                divItem.className = "item-list-nama";
-                divItem.innerText = nama;
-                divItem.onclick = function() {
+                const div = document.createElement("div");
+                div.className = "item-list-kustom";
+                div.innerText = nama;
+                div.onclick = function() {
                     document.getElementById("namaPetugasInput").value = nama;
                     bNama.style.display = "none";
                 };
-                bNama.appendChild(divItem);
+                bNama.appendChild(div);
             });
         }
 
-        function jalankanFilterNamaLive(kataKunci) {
+        function filterNamaLive(kataKunci) {
             const kKunciLower = kataKunci.toLowerCase().trim();
             const hasilSaringan = DAFTAR_NAMA_MASTER.filter(nama => nama.toLowerCase().includes(kKunciLower));
-            buatUlangKomponenListNama(hasilSaringan);
+            buatUlangListNama(hasilSaringan);
             document.getElementById("boxHasilNama").style.display = "block";
         }
 
         function tampilkanBoxNama() {
+            document.getElementById("boxHasilZona").style.display = "none"; // Tutup box sebelah
             const inp = document.getElementById("namaPetugasInput");
             if(inp.value !== "") {
-                jalankanFilterNamaLive(inp.value);
+                filterNamaLive(inp.value);
             } else {
-                buatUlangKomponenListNama(DAFTAR_NAMA_MASTER);
+                buatUlangListNama(DAFTAR_NAMA_MASTER);
                 document.getElementById("boxHasilNama").style.display = "block";
             }
         }
 
+        // ================= LOGIKA UTAMA LIVE SEARCH ZONA =================
+        function buatUlangListZona(arrayZona) {
+            const bZona = document.getElementById("boxHasilZona");
+            bZona.innerHTML = "";
+            if(arrayZona.length === 0) {
+                bZona.innerHTML = `<div class="item-list-kustom tidak-ada">Zona tidak ditemukan...</div>`;
+                return;
+            }
+            arrayZona.forEach(zona => {
+                const div = document.createElement("div");
+                div.className = "item-list-kustom";
+                div.innerText = zona;
+                div.onclick = function() {
+                    document.getElementById("zonaAreaInput").value = zona;
+                    bZona.style.display = "none";
+                };
+                bZona.appendChild(div);
+            });
+        }
+
+        function filterZonaLive(kataKunci) {
+            const kKunciLower = kataKunci.toLowerCase().trim();
+            const hasilSaringan = DAFTAR_ZONA_MASTER.filter(zona => zona.toLowerCase().includes(kKunciLower));
+            buatUlangListZona(hasilSaringan);
+            document.getElementById("boxHasilZona").style.display = "block";
+        }
+
+        function tampilkanBoxZona() {
+            document.getElementById("boxHasilNama").style.display = "none"; // Tutup box sebelah
+            const inp = document.getElementById("zonaAreaInput");
+            if(inp.value !== "") {
+                filterZonaLive(inp.value);
+            } else {
+                buatUlangListZona(DAFTAR_ZONA_MASTER);
+                document.getElementById("boxHasilZona").style.display = "block";
+            }
+        }
+
+        // ================= FITUR SISTEM PENDUKUNG =================
         function picuInputKameraHP() {
             document.getElementById('fileFoto').click();
         }
@@ -360,37 +402,22 @@
             const file = input.files[0];
             if (file) {
                 document.getElementById('textTombolKamera').innerText = "Memproses Gambar...";
-                
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     const img = new Image();
                     img.src = e.target.result;
                     img.onload = function() {
                         const canvas = document.createElement('canvas');
-                        let width = img.width;
-                        let height = img.height;
-
+                        let width = img.width; let height = img.height;
                         const MAX_WIDTH_HEIGHT = 1024;
                         if (width > height) {
-                            if (width > MAX_WIDTH_HEIGHT) {
-                                height *= MAX_WIDTH_HEIGHT / width;
-                                width = MAX_WIDTH_HEIGHT;
-                            }
+                            if (width > MAX_WIDTH_HEIGHT) { height *= MAX_WIDTH_HEIGHT / width; width = MAX_WIDTH_HEIGHT; }
                         } else {
-                            if (height > MAX_WIDTH_HEIGHT) {
-                                width *= MAX_WIDTH_HEIGHT / height;
-                                height = MAX_WIDTH_HEIGHT;
-                            }
+                            if (height > MAX_WIDTH_HEIGHT) { width *= MAX_WIDTH_HEIGHT / height; height = MAX_WIDTH_HEIGHT; }
                         }
-
-                        canvas.width = width;
-                        canvas.height = height;
-
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0, width, height);
-
+                        canvas.width = width; canvas.height = height;
+                        const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, width, height);
                         GAMBAR_TERKOMPRES_BASE64 = canvas.toDataURL('image/jpeg', 0.7).split(',')[1];
-
                         document.getElementById('imgTargetPreview').src = canvas.toDataURL('image/jpeg', 0.7);
                         document.getElementById('boxPreviewFoto').classList.remove('d-none');
                         document.getElementById('textTombolKamera').innerText = "Foto Berhasil Dilampirkan (Optimized)";
@@ -410,7 +437,6 @@
                 navigator.geolocation.getCurrentPosition(pos => {
                     window.latCoordinate = pos.coords.latitude;
                     window.lngCoordinate = pos.coords.longitude;
-                    
                     STATUS_GPS_VALID = true; 
                     box.className = "status-gps-box"; 
                     icon.className = "fa-solid fa-location-dot text-success";
@@ -424,72 +450,47 @@
                     btnKirim.disabled = false; 
                 }, { enableHighAccuracy: true });
             } else {
-                STATUS_GPS_VALID = false;
-                text.innerText = "Gps Tidak Didukung Browser";
-                btnKirim.disabled = false;
+                STATUS_GPS_VALID = false; text.innerText = "Gps Tidak Didukung Browser"; btnKirim.disabled = false;
             }
         }
 
+        // ================= VALIDASI VALIDASI FORM SUBMIT =================
         document.getElementById('formPatroli').addEventListener('submit', function(e) {
             e.preventDefault();
-            const tombol = document.getElementById('btnSubmit');
-            const fileKomponen = document.getElementById('fileFoto').files[0];
             const nilaiNamaKetik = document.getElementById('namaPetugasInput').value.trim();
+            const nilaiZonaKetik = document.getElementById('zonaAreaInput').value.trim();
+            const fileKomponen = document.getElementById('fileFoto').files[0];
 
-            // VALIDASI: Melarang kiriman data jika mengetik teks asal di luar daftar resmi spreadsheet
+            // 1. Validasi Nama Petugas Resmi
             if(DAFTAR_NAMA_MASTER.length > 0 && !DAFTAR_NAMA_MASTER.includes(nilaiNamaKetik)) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Personel Tidak Valid',
-                    text: 'Nama yang Anda masukkan tidak terdaftar pada database pusat. Harap ketik ulang dan ketuk nama resmi Anda yang muncul pada kotak pilihan.',
-                    confirmButtonColor: '#0b132b',
-                    confirmButtonText: 'Perbaiki Nama'
-                });
+                Swal.fire({ icon: 'warning', title: 'Personel Tidak Valid', text: 'Nama Anda tidak terdaftar di database. Harap ketik dan ketuk nama resmi Anda yang muncul.', confirmButtonColor: '#0b132b' });
+                return;
+            }
+
+            // 2. Validasi Zona Lokasi Resmi
+            if(DAFTAR_ZONA_MASTER.length > 0 && !DAFTAR_ZONA_MASTER.includes(nilaiZonaKetik)) {
+                Swal.fire({ icon: 'warning', title: 'Zona Tidak Valid', text: 'Nama Zona/Sektor tidak cocok dengan database Mall 23Semarang. Harap pilih area resmi yang tertera.', confirmButtonColor: '#0b132b' });
                 return;
             }
             
             if (!STATUS_GPS_VALID || !window.latCoordinate || !window.lngCoordinate) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Akses Kirim Ditolak!',
-                    text: 'Sistem mendeteksi GPS Anda nonaktif atau izin lokasi diblokir. Harap aktifkan GPS perangkat Anda dan berikan izin lokasi pada browser untuk dapat mengirim laporan.',
-                    confirmButtonColor: '#d33',
-                    confirmButtonText: 'Aktifkan GPS & Refresh',
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        location.reload(); 
-                    }
-                });
+                Swal.fire({ icon: 'error', title: 'Akses Kirim Ditolak!', text: 'Aktifkan GPS perangkat Anda dan berikan izin lokasi browser.', confirmButtonColor: '#d33', confirmButtonText: 'Aktifkan GPS & Refresh' })
+                .then((result) => { if (result.isConfirmed) location.reload(); });
                 return;
             }
 
             if(!fileKomponen || !GAMBAR_TERKOMPRES_BASE64) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Dokumentasi Wajib',
-                    text: 'Anda harus mengambil atau melampirkan foto bukti fisik area sebelum mengirimkan laporan log patroli.',
-                    confirmButtonColor: '#0b132b',
-                    confirmButtonText: 'Mengerti'
-                });
+                Swal.fire({ icon: 'warning', title: 'Dokumentasi Wajib', text: 'Anda wajib melampirkan foto bukti fisik area sebelum mengirim laporan.', confirmButtonColor: '#0b132b' });
                 return;
             }
 
-            Swal.fire({
-                title: 'Mengamankan Data Laporan',
-                text: 'Menyinkronkan data GPS dan laporan log ke server pusat...',
-                allowOutsideClick: false,
-                allowEscapeKey: false,
-                showConfirmButton: false,
-                didOpen: () => {
-                    Swal.showLoading();
-                }
-            });
+            Swal.fire({ title: 'Mengamankan Data Laporan', text: 'Menyinkronkan data GPS dan laporan log ke server pusat...', allowOutsideClick: false, allowEscapeKey: false, showConfirmButton: false, didOpen: () => { Swal.showLoading(); } });
 
             const paketKirim = {
                 aksi: "simpanData",
                 payload: {
                     nama: nilaiNamaKetik,
-                    zona: document.getElementById('zonaArea').value,
+                    zona: nilaiZonaKetik,
                     kondisi: document.getElementById('kondisiSektor').value,
                     fotoBase64: GAMBAR_TERKOMPRES_BASE64,
                     fotoMime: "image/jpeg",
@@ -498,43 +499,18 @@
                 }
             };
 
-            fetch(API_URL_WEBAPP, {
-                method: "POST",
-                body: JSON.stringify(paketKirim)
-            })
+            fetch(API_URL_WEBAPP, { method: "POST", body: JSON.stringify(paketKirim) })
             .then(res => res.json())
             .then(hasil => {
                 if(hasil.status === "SUCCESS") {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Laporan Disinkronisasi',
-                        text: 'Log patroli lapangan Anda berhasil dicatat secara real-time pada Control Center Mall 23Semarang.',
-                        confirmButtonColor: '#0b132b',
-                        confirmButtonText: 'Selesai & Lanjutkan',
-                        allowOutsideClick: false
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            location.reload();
-                        }
-                    });
+                    Swal.fire({ icon: 'success', title: 'Laporan Disinkronisasi', text: 'Log patroli lapangan Anda berhasil dicatat secara real-time.', confirmButtonColor: '#0b132b', allowOutsideClick: false })
+                    .then((result) => { if (result.isConfirmed) location.reload(); });
                 } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Sinkronisasi Gagal',
-                        text: 'Server menolak laporan data: ' + hasil.message,
-                        confirmButtonColor: '#d33',
-                        confirmButtonText: 'Coba Lagi'
-                    });
+                    Swal.fire({ icon: 'error', title: 'Sinkronisasi Gagal', text: 'Server menolak laporan data: ' + hasil.message, confirmButtonColor: '#d33' });
                 }
             })
             .catch(err => {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Gangguan Jaringan',
-                    text: 'Gagal menghubungi server utama. Pastikan koneksi seluler perangkat Anda stabil di area sektor inspeksi.',
-                    confirmButtonColor: '#d33',
-                    confirmButtonText: 'Periksa Koneksi'
-                });
+                Swal.fire({ icon: 'error', title: 'Gangguan Jaringan', text: 'Gagal menghubungi server utama. Periksa kembali sinyal internet Anda.', confirmButtonColor: '#d33' });
             });
         });
     </script>
