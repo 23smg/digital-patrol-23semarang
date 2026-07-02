@@ -194,7 +194,7 @@
                     <label class="text-muted mb-1" style="font-size: 11px; font-weight: 500;">Kata Kunci Pencarian:</label>
                     <div class="input-group input-group-sm">
                         <span class="input-group-text bg-white border-end-0 text-muted"><i class="fa-solid fa-magnifying-glass"></i></span>
-                        <input type="text" id="filterCari" class="form-control border-start-0" placeholder="Cari Nama / Zona / Kondisi...">
+                        <input type="text" id="filterCari" class="form-control border-start-0" placeholder="Cari Nama / Zona / Catatan / Kondisi...">
                     </div>
                 </div>
                 <div class="col-md-2">
@@ -220,12 +220,13 @@
                 <table class="table table-custom m-0 align-middle" id="tabelLogPatroli">
                     <thead>
                         <tr>
-                            <th style="width: 14%;">Waktu Log</th>
-                            <th style="width: 16%;">Nama Personel</th>
+                            <th style="width: 12%;">Waktu Log</th>
+                            <th style="width: 14%;">Nama Personel</th>
                             <th style="width: 10%;">Zona Area</th>
-                            <th style="width: 12%;">Kondisi Sektor</th>
-                            <th style="width: 10%;">Lampiran</th>
-                            <th style="width: 38%;">Geotagging</th>
+                            <th style="width: 11%;">Kondisi Sektor</th>
+                            <th style="width: 18%;">Catatan / Temuan</th>
+                            <th style="width: 8%;">Lampiran</th>
+                            <th style="width: 27%;">Geotagging</th>
                         </tr>
                     </thead>
                     <tbody id="bodyTabelPatroli"></tbody>
@@ -277,7 +278,11 @@
                             <img src="" id="detFoto" class="img-fluid rounded border shadow-sm" style="max-height: 140px; object-fit: cover; width: 100%;">
                         </div>
                     </div>
-                    <hr class="text-muted my-3">
+                    <hr class="text-muted my-2">
+                    <div class="mb-3">
+                        <div class="detail-label">Catatan / Temuan Lapangan</div>
+                        <div class="p-2 border rounded bg-light text-dark small fw-medium" id="detCatatan" style="min-height: 40px; white-space: pre-line;">-</div>
+                    </div>
                     <div class="mb-2">
                         <div class="detail-label">Estimasi Alamat Geotagging</div>
                         <div class="text-dark small fw-medium" id="detAlamat" style="line-height: 1.4;">-</div>
@@ -361,7 +366,7 @@
                 btnRef.disabled = false;
                 iconRef.classList.remove('fa-spin');
                 loading.style.display = "none";
-            }       )
+            })
             .catch(err => {
                 loading.innerHTML = "<span class='text-danger'><i class='fa-solid fa-triangle-exclamation me-1'></i> Sinkronisasi Gagal.</span>";
                 btnRef.disabled = false;
@@ -409,8 +414,10 @@
                         }
                     }
                     
+                    let teksCatatan = (item.catatan || "").toLowerCase();
                     if (kataKunci && !item.nama.toLowerCase().includes(kataKunci) && 
                         !item.zona.toLowerCase().includes(kataKunci) && 
+                        !teksCatatan.includes(kataKunci) &&
                         !item.kondisi.toLowerCase().includes(kataKunci)) return;
 
                     dataTerfilterSaatIni.push(item);
@@ -448,7 +455,7 @@
             const indeksSelesai = Math.min(indeksMulai + JUMLAH_DATA_PER_HALAMAN, totalData);
 
             if (totalData === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="text-center p-4 text-muted">Tidak ditemukan log data patroli pada rentang waktu ini.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center p-4 text-muted">Tidak ditemukan log data patroli pada rentang waktu ini.</td></tr>`;
                 document.getElementById('infoTeksHalaman').innerText = "Menampilkan 0-0 dari 0 data";
                 document.getElementById('labelHalamanAktif').innerText = "1 / 1";
                 document.getElementById('btnHalamanPrev').classList.add('disabled');
@@ -482,11 +489,12 @@
                         <td class="text-capitalize fw-bold">${item.nama}</td>
                         <td><span class="badge bg-secondary text-white" style="font-size:10px; padding: 3px 6px;">${item.zona}</span></td>
                         <td><span class="badge-kondisi ${kelasBadge}">${item.kondisi}</span></td>
+                        <td><span class="text-dark d-inline-block text-truncate" style="max-width: 220px;">${item.catatan || '-'}</span></td>
                         <td>${kolomFoto}</td>
                         <td>
                             <div class="d-flex align-items-center flex-wrap">
                                 ${kolomPeta}
-                                <span class="text-muted text-truncate" style="font-size:11.5px; max-width:340px;">${item.alamat || '-'}</span>
+                                <span class="text-muted text-truncate" style="font-size:11.5px; max-width:250px;">${item.alamat || '-'}</span>
                             </div>
                         </td>
                     </tr>`;
@@ -527,6 +535,7 @@
             document.getElementById('modalTitleNama').innerHTML = `<i class="fa-solid fa-user-shield me-2"></i>Patroli: ${dataPilihan.nama}`;
             document.getElementById('detWaktu').innerText = dataPilihan.timestamp;
             document.getElementById('detZona').innerText = dataPilihan.zona;
+            document.getElementById('detCatatan').innerText = dataPilihan.catatan || "Tidak ada catatan tambahan.";
             
             const badgeKondisi = document.getElementById('detKondisi');
             badgeKondisi.innerText = dataPilihan.kondisi;
@@ -579,6 +588,7 @@
                     <td>${item.nama}</td>
                     <td>${item.zona}</td>
                     <td>${item.kondisi}</td>
+                    <td>${item.catatan || '-'}</td>
                     <td>-</td> 
                     <td><small>${item.alamat || '-'}</small></td>
                 </tr>`;
@@ -590,11 +600,12 @@
             barisTabel.forEach((tr, indeksBaris) => {
                 let kolom = tr.querySelectorAll('td, th');
                 
-                if(kolom.length >= 6) {
-                    tr.removeChild(kolom[4]); 
+                if(kolom.length >= 7) {
+                    // Hapus kolom ke-5 (Lampiran/Foto) agar rapi di Excel
+                    tr.removeChild(kolom[5]); 
                     
                     let kolomBaru = tr.querySelectorAll('td, th');
-                    let kolomGeotagging = kolomBaru[4];
+                    let kolomGeotagging = kolomBaru[5];
 
                     if (indeksBaris === 0) {
                         kolomBaru.forEach((th, idx) => {
@@ -609,7 +620,8 @@
                             if(idx === 1) th.setAttribute('width', '160');
                             if(idx === 2) th.setAttribute('width', '100');
                             if(idx === 3) th.setAttribute('width', '130');
-                            if(idx === 4) th.setAttribute('width', '450');
+                            if(idx === 4) th.setAttribute('width', '250');
+                            if(idx === 5) th.setAttribute('width', '450');
                         });
                     } else {
                         kolomBaru.forEach((td, idx) => {
