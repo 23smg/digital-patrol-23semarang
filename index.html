@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght=400;500;600;700&display=swap">
     <style>
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
@@ -60,15 +60,52 @@
             background-color: #f8fafc;
             text-align: center;
             text-align-last: center;
-            color: #64748b;
+            color: #1e293b;
             font-size: 0.95rem;
             transition: all 0.2s;
         }
-        .form-select-custom:focus {
+        .form-select-custom:focus, .form-control-custom:focus {
             border-color: #0b132b;
             box-shadow: none;
             background-color: white;
         }
+        
+        /* STYLE KHUSUS: Fitur Pencarian Nama Kebal Saringan HP */
+        .wadah-pencarian-nama {
+            position: relative;
+        }
+        .box-hasil-nama {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #0b132b;
+            border-radius: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1050;
+            display: none;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            margin-top: 4px;
+        }
+        .item-list-nama {
+            padding: 0.75rem 1rem;
+            font-size: 0.95rem;
+            color: #334155;
+            cursor: pointer;
+            text-align: center;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .item-list-nama:hover {
+            background-color: #0b132b;
+            color: white;
+        }
+        .item-list-nama.tidak-ada {
+            color: #94a3b8;
+            font-style: italic;
+        }
+
         .btn-camera {
             background-color: #f8fafc;
             border: 1px solid #e2e8f0;
@@ -179,11 +216,10 @@
             <div class="card-body-content">
                 <form id="formPatroli">
                     
-                    <div class="mb-4">
-                        <label class="form-label-custom">Nama Petugas</label>
-                        <select id="namaPetugas" class="form-select form-select-custom" required>
-                            <option value="">Pilih Nama Personel</option>
-                        </select>
+                    <div class="mb-4 wadah-pencarian-nama">
+                        <label class="form-label-custom">Nama Petugas (Ketik Untuk Mencari)</label>
+                        <input type="text" id="namaPetugasInput" class="form-control form-control-custom w-100" placeholder="Cari nama personel di sini..." required autocomplete="off" oninput="jalankanFilterNamaLive(this.value)" onfocus="tampilkanBoxNama()">
+                        <div id="boxHasilNama" class="box-hasil-navy box-hasil-brand box-hasil-pencarian"></div>
                     </div>
 
                     <div class="mb-4">
@@ -243,17 +279,22 @@
     <script>
         const API_URL_WEBAPP = "https://script.google.com/macros/s/AKfycbyJuzwTGe-bucxDG6Yvgp-GEEsk5RdUpjR7ZX-G6KL_PlkiAn6QhustBE5n2fWBVrmA/exec";
         let GAMBAR_TERKOMPRES_BASE64 = ""; 
-        let STATUS_GPS_VALID = false; // Penanda status validitas GPS lapangan
+        let STATUS_GPS_VALID = false; 
+        let DAFTAR_NAMA_MASTER = []; // Wadah penyimpan 50 personel dari spreadsheet
 
         document.addEventListener("DOMContentLoaded", function() {
             fetch(`${API_URL_WEBAPP}?aksi=ambilDropdown`)
             .then(res => res.json())
             .then(data => {
-                const selectNama = document.getElementById('namaPetugas');
                 const selectZona = document.getElementById('zonaArea');
                 const selectKondisi = document.getElementById('kondisiSektor');
                 
-                if(data.daftarNama) data.daftarNama.forEach(n => selectNama.innerHTML += `<option value="${n}">${n}</option>`);
+                // Simpan daftar nama lokal untuk di-filter secara real-time
+                if(data.daftarNama) {
+                    DAFTAR_NAMA_MASTER = data.daftarNama;
+                    buatUlangKomponenListNama(DAFTAR_NAMA_MASTER);
+                }
+                
                 if(data.daftarZona) data.daftarZona.forEach(z => selectZona.innerHTML += `<option value="${z}">${z}</option>`);
                 if(data.daftarKondisi) data.daftarKondisi.forEach(k => selectKondisi.innerHTML += `<option value="${k}">${k}</option>`);
             })
@@ -262,7 +303,54 @@
             });
             
             aktifkanSistemGeotaggingGPS();
+
+            // Klik di area kosong luar form akan menutup jendela rekomendasi nama
+            document.addEventListener("click", function(e) {
+                if (!e.target.closest('.wadah-pencarian-nama')) {
+                    document.getElementById("boxHasilNama").style.display = "none";
+                }
+            });
         });
+
+        // FUNGSI LOGIKA MEKANISME PENCARIAN LIVE KUSTOM
+        function buatUlangKomponenListNama(arrayNama) {
+            const bNama = document.getElementById("boxHasilNama");
+            bNama.innerHTML = "";
+            bNama.className = "box-hasil-nama"; // Paksa apply style penyeimbang
+
+            if(arrayNama.length === 0) {
+                bNama.innerHTML = `<div class="item-list-nama tidak-ada">Nama personel tidak ditemukan...</div>`;
+                return;
+            }
+
+            arrayNama.forEach(nama => {
+                const divItem = document.createElement("div");
+                divItem.className = "item-list-nama";
+                divItem.innerText = nama;
+                divItem.onclick = function() {
+                    document.getElementById("namaPetugasInput").value = nama;
+                    bNama.style.display = "none";
+                };
+                bNama.appendChild(divItem);
+            });
+        }
+
+        function jalankanFilterNamaLive(kataKunci) {
+            const kKunciLower = kataKunci.toLowerCase().trim();
+            const hasilSaringan = DAFTAR_NAMA_MASTER.filter(nama => nama.toLowerCase().includes(kKunciLower));
+            buatUlangKomponenListNama(hasilSaringan);
+            document.getElementById("boxHasilNama").style.display = "block";
+        }
+
+        function tampilkanBoxNama() {
+            const inp = document.getElementById("namaPetugasInput");
+            if(inp.value !== "") {
+                jalankanFilterNamaLive(inp.value);
+            } else {
+                buatUlangKomponenListNama(DAFTAR_NAMA_MASTER);
+                document.getElementById("boxHasilNama").style.display = "block";
+            }
+        }
 
         function picuInputKameraHP() {
             document.getElementById('fileFoto').click();
@@ -323,17 +411,17 @@
                     window.latCoordinate = pos.coords.latitude;
                     window.lngCoordinate = pos.coords.longitude;
                     
-                    STATUS_GPS_VALID = true; // Set koordinat sah terkunci
-                    box.className = "status-gps-box"; // kembalikan ke style dasar hijau
+                    STATUS_GPS_VALID = true; 
+                    box.className = "status-gps-box"; 
                     icon.className = "fa-solid fa-location-dot text-success";
                     text.innerText = "Lokasi GPS Berhasil Diotorisasi";
                     btnKirim.disabled = false;
                 }, err => {
-                    STATUS_GPS_VALID = false; // GPS Gagal didapatkan
+                    STATUS_GPS_VALID = false; 
                     box.className = "status-gps-box text-danger bg-danger bg-opacity-10 border-danger";
                     icon.className = "fa-solid fa-triangle-exclamation";
                     text.innerText = "Izin GPS Diperlukan Lapangan!";
-                    btnKirim.disabled = false; // Tombol tetap menyala agar memicu SweetAlert saat di-klik
+                    btnKirim.disabled = false; 
                 }, { enableHighAccuracy: true });
             } else {
                 STATUS_GPS_VALID = false;
@@ -346,8 +434,20 @@
             e.preventDefault();
             const tombol = document.getElementById('btnSubmit');
             const fileKomponen = document.getElementById('fileFoto').files[0];
+            const nilaiNamaKetik = document.getElementById('namaPetugasInput').value.trim();
+
+            // VALIDASI: Melarang kiriman data jika mengetik teks asal di luar daftar resmi spreadsheet
+            if(DAFTAR_NAMA_MASTER.length > 0 && !DAFTAR_NAMA_MASTER.includes(nilaiNamaKetik)) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Personel Tidak Valid',
+                    text: 'Nama yang Anda masukkan tidak terdaftar pada database pusat. Harap ketik ulang dan ketuk nama resmi Anda yang muncul pada kotak pilihan.',
+                    confirmButtonColor: '#0b132b',
+                    confirmButtonText: 'Perbaiki Nama'
+                });
+                return;
+            }
             
-            // PROTEKSI UTAMA: CEK VALIDITAS GPS SEBELUM PROSES
             if (!STATUS_GPS_VALID || !window.latCoordinate || !window.lngCoordinate) {
                 Swal.fire({
                     icon: 'error',
@@ -357,7 +457,7 @@
                     confirmButtonText: 'Aktifkan GPS & Refresh',
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        location.reload(); // Refresh halaman untuk meminta ulang izin GPS
+                        location.reload(); 
                     }
                 });
                 return;
@@ -388,7 +488,7 @@
             const paketKirim = {
                 aksi: "simpanData",
                 payload: {
-                    nama: document.getElementById('namaPetugas').value,
+                    nama: nilaiNamaKetik,
                     zona: document.getElementById('zonaArea').value,
                     kondisi: document.getElementById('kondisiSektor').value,
                     fotoBase64: GAMBAR_TERKOMPRES_BASE64,
