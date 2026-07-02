@@ -236,6 +236,11 @@
                     </div>
 
                     <div class="mb-4">
+                        <label class="form-label-custom">Catatan / Temuan Lapangan</label>
+                        <textarea id="catatanPetugas" class="form-control form-control-custom w-100" rows="3" placeholder="Tulis rincian kondisi atau temuan jika ada... (Opsional)" style="text-align: left; text-align-last: left; border-radius: 12px; resize: none;"></textarea>
+                    </div>
+
+                    <div class="mb-4">
                         <label class="form-label-custom">Dokumentasi Visual</label>
                         <button type="button" class="btn-camera" onclick="picuInputKameraHP()">
                             <i class="fa-solid fa-camera text-primary"></i> <span id="textTombolKamera">Buka Kamera Perangkat</span>
@@ -288,13 +293,11 @@
             .then(data => {
                 const selectKondisi = document.getElementById('kondisiSektor');
                 
-                // Simpan data Nama ke memori lokal browser
                 if(data.daftarNama) {
                     DAFTAR_NAMA_MASTER = data.daftarNama;
                     buatUlangListNama(DAFTAR_NAMA_MASTER);
                 }
                 
-                // Simpan data Zona ke memori lokal browser
                 if(data.daftarZona) {
                     DAFTAR_ZONA_MASTER = data.daftarZona;
                     buatUlangListZona(DAFTAR_ZONA_MASTER);
@@ -308,7 +311,6 @@
             
             aktifkanSistemGeotaggingGPS();
 
-            // Klik di luar form untuk menutup kotak saran pencarian otomatis
             document.addEventListener("click", function(e) {
                 if (!e.target.closest('.wadah-pencarian-kustom')) {
                     document.getElementById("boxHasilNama").style.display = "none";
@@ -317,7 +319,7 @@
             });
         });
 
-        // ================= LOGIKA UTAMA LIVE SEARCH NAMA =================
+        // ================= SEARCH LOGIC NAMA =================
         function buatUlangListNama(arrayNama) {
             const bNama = document.getElementById("boxHasilNama");
             bNama.innerHTML = "";
@@ -345,7 +347,7 @@
         }
 
         function tampilkanBoxNama() {
-            document.getElementById("boxHasilZona").style.display = "none"; // Tutup box sebelah
+            document.getElementById("boxHasilZona").style.display = "none";
             const inp = document.getElementById("namaPetugasInput");
             if(inp.value !== "") {
                 filterNamaLive(inp.value);
@@ -355,7 +357,7 @@
             }
         }
 
-        // ================= LOGIKA UTAMA LIVE SEARCH ZONA =================
+        // ================= SEARCH LOGIC ZONA =================
         function buatUlangListZona(arrayZona) {
             const bZona = document.getElementById("boxHasilZona");
             bZona.innerHTML = "";
@@ -383,7 +385,7 @@
         }
 
         function tampilkanBoxZona() {
-            document.getElementById("boxHasilNama").style.display = "none"; // Tutup box sebelah
+            document.getElementById("boxHasilNama").style.display = "none";
             const inp = document.getElementById("zonaAreaInput");
             if(inp.value !== "") {
                 filterZonaLive(inp.value);
@@ -393,7 +395,7 @@
             }
         }
 
-        // ================= FITUR SISTEM PENDUKUNG =================
+        // ================= MEDIA & GEOLOCATION SYSTEMS =================
         function picuInputKameraHP() {
             document.getElementById('fileFoto').click();
         }
@@ -454,22 +456,21 @@
             }
         }
 
-        // ================= VALIDASI VALIDASI FORM SUBMIT =================
+        // ================= SUBMIT FORM & SINKRONISASI API =================
         document.getElementById('formPatroli').addEventListener('submit', function(e) {
             e.preventDefault();
             const nilaiNamaKetik = document.getElementById('namaPetugasInput').value.trim();
             const nilaiZonaKetik = document.getElementById('zonaAreaInput').value.trim();
+            const nilaiCatatan = document.getElementById('catatanPetugas').value.trim();
             const fileKomponen = document.getElementById('fileFoto').files[0];
 
-            // 1. Validasi Nama Petugas Resmi
             if(DAFTAR_NAMA_MASTER.length > 0 && !DAFTAR_NAMA_MASTER.includes(nilaiNamaKetik)) {
-                Swal.fire({ icon: 'warning', title: 'Personel Tidak Valid', text: 'Nama Anda tidak terdaftar di database. Harap ketik dan ketuk nama resmi Anda yang muncul.', confirmButtonColor: '#0b132b' });
+                Swal.fire({ icon: 'warning', title: 'Personel Tidak Valid', text: 'Nama Anda tidak terdaftar di database.', confirmButtonColor: '#0b132b' });
                 return;
             }
 
-            // 2. Validasi Zona Lokasi Resmi
             if(DAFTAR_ZONA_MASTER.length > 0 && !DAFTAR_ZONA_MASTER.includes(nilaiZonaKetik)) {
-                Swal.fire({ icon: 'warning', title: 'Zona Tidak Valid', text: 'Nama Zona/Sektor tidak cocok dengan database Mall 23Semarang. Harap pilih area resmi yang tertera.', confirmButtonColor: '#0b132b' });
+                Swal.fire({ icon: 'warning', title: 'Zona Tidak Valid', text: 'Nama Zona/Sektor tidak cocok dengan database Mall 23Semarang.', confirmButtonColor: '#0b132b' });
                 return;
             }
             
@@ -492,6 +493,7 @@
                     nama: nilaiNamaKetik,
                     zona: nilaiZonaKetik,
                     kondisi: document.getElementById('kondisiSektor').value,
+                    catatan: nilaiCatatan, // DATA BARU YANG DIKIRIM KE GOOGLE SCRIPT
                     fotoBase64: GAMBAR_TERKOMPRES_BASE64,
                     fotoMime: "image/jpeg",
                     lat: window.latCoordinate,
