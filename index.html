@@ -457,12 +457,12 @@
             if(inp.value !== "") { filterZonaLive(inp.value); } else { buatUlangListZona(DAFTAR_ZONA_MASTER); document.getElementById("boxHasilZona").style.display = "block"; }
         }
 
-        // ================= INSTANT CAMERA COMPRESSION =================
+        // ================= KILAT & ULTRA COMPRESSION =================
         function picuInputKameraHP() { document.getElementById('fileFoto').click(); }
         function prosesPratinjauFoto(input) {
             const file = input.files[0];
             if (file) {
-                document.getElementById('textTombolKamera').innerText = "Memproses Gambar...";
+                document.getElementById('textTombolKamera').innerText = "Membaca Kamera...";
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     const img = new Image();
@@ -470,17 +470,19 @@
                     img.onload = function() {
                         const canvas = document.createElement('canvas');
                         let width = img.width; let height = img.height;
-                        const MAX_WIDTH_HEIGHT = 800; // Diturunkan sedikit dari 1024 ke 800 agar upload jauh lebih kilat tanpa merusak kualitas visual laporan
+                        
+                        // Maksimal lebar/tinggi diubah ke 700px (Sangat ringan untuk internet seluler)
+                        const MAX_WIDTH_HEIGHT = 700; 
                         if (width > height) { if (width > MAX_WIDTH_HEIGHT) { height *= MAX_WIDTH_HEIGHT / width; width = MAX_WIDTH_HEIGHT; } }
                         else { if (height > MAX_WIDTH_HEIGHT) { width *= MAX_WIDTH_HEIGHT / height; height = MAX_WIDTH_HEIGHT; } }
                         canvas.width = width; canvas.height = height;
                         const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, width, height);
                         
-                        // Kompresi instan langsung disimpan ke variabel global saat foto dipilih
-                        GAMBAR_TERKOMPRES_BASE64 = canvas.toDataURL('image/jpeg', 0.6).split(',')[1];
-                        document.getElementById('imgTargetPreview').src = canvas.toDataURL('image/jpeg', 0.6);
+                        // Kualitas diturunkan ke 0.4 (Ukuran file menyusut tajam di bawah 150KB, unggah instan!)
+                        GAMBAR_TERKOMPRES_BASE64 = canvas.toDataURL('image/jpeg', 0.4).split(',')[1];
+                        document.getElementById('imgTargetPreview').src = canvas.toDataURL('image/jpeg', 0.4);
                         document.getElementById('boxPreviewFoto').classList.remove('d-none');
-                        document.getElementById('textTombolKamera').innerText = "📷 Foto Berhasil Dikunci (Siap Kirim)";
+                        document.getElementById('textTombolKamera').innerText = "📷 Dokumentasi Terkunci (Siap)";
                     }
                 }
                 reader.readAsDataURL(file);
@@ -502,7 +504,7 @@
             } else { STATUS_GPS_VALID = false; text.innerText = "Gps Tidak Didukung Browser"; btnKirim.disabled = false; }
         }
 
-        // ================= BACKGROUND ASYNCHRONOUS SUBMISSION =================
+        // ================= SECURE SECONDS SUBMISSION =================
         document.getElementById('formPatroli').addEventListener('submit', function(e) {
             e.preventDefault();
             const nilaiNamaKetik = document.getElementById('namaPetugasInput').value.trim();
@@ -527,20 +529,16 @@
             let catatanAkhir = rekapanChecklist.stringGabunganCatatan;
             if (catatanTambahanManual !== "") { catatanAkhir += " | Catatan: " + catatanTambahanManual; }
 
-            // ⚡ LANGKAH PERCEPATAN UTAMA: TAMPILKAN POPUP SUKSES INSTAN KE PETUGAS
-            Swal.fire({
-                icon: 'success',
-                title: 'Laporan Diterima',
-                text: 'Data dikirim di latar belakang. Anda dapat melanjutkan patroli ke zona berikutnya.',
-                confirmButtonColor: '#0b132b',
-                allowOutsideClick: false
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    location.reload(); // Form langsung bersih & siap digunakan kembali oleh rekan/titik berikutnya
-                }
+            // Menampilkan loading indikator interaktif yang profesional agar user tahu data sedang berpindah
+            Swal.fire({ 
+                title: 'Mengirim Laporan...', 
+                text: 'Menyinkronkan data log dan foto ke server pusat...', 
+                allowOutsideClick: false, 
+                allowEscapeKey: false, 
+                showConfirmButton: false, 
+                didOpen: () => { Swal.showLoading(); } 
             });
 
-            // Paket data dikirim secara background asynchronous (tidak menahan layar HP petugas)
             const paketKirim = {
                 aksi: "simpanData",
                 payload: {
@@ -555,9 +553,26 @@
                 }
             };
 
-            // Fetch berjalan di latar belakang (Background Process)
-            fetch(API_URL_WEBAPP, { method: "POST", mode: "no-cors", body: JSON.stringify(paketKirim) })
-            .catch(err => { console.log("Background Sync Terkendala Jaringan, Mencoba Mengirim Ulang..."); });
+            // Menggunakan FETCH standar yang aman untuk transmisi data Base64
+            fetch(API_URL_WEBAPP, { method: "POST", body: JSON.stringify(paketKirim) })
+            .then(res => res.json())
+            .then(hasil => {
+                if(hasil.status === "SUCCESS") {
+                    Swal.fire({ 
+                        icon: 'success', 
+                        title: 'Log Berhasil Dicatat', 
+                        text: 'Laporan patroli real-time Anda telah aman disinkronisasi.', 
+                        confirmButtonColor: '#0b132b', 
+                        allowOutsideClick: false 
+                    })
+                    .then((result) => { if (result.isConfirmed) location.reload(); });
+                } else {
+                    Swal.fire({ icon: 'error', title: 'Gagal Menyimpan', text: 'Respon server: ' + hasil.message, confirmButtonColor: '#d33' });
+                }
+            })
+            .catch(err => {
+                Swal.fire({ icon: 'error', title: 'Gangguan Sinyal', text: 'Gagal terhubung ke server utama. Pastikan koneksi internet Anda aktif.', confirmButtonColor: '#d33' });
+            });
         });
     </script>
 </body>
