@@ -140,18 +140,6 @@
         .table-checklist tr:last-child td {
             border-bottom: none;
         }
-        .input-remark {
-            width: 100%;
-            padding: 6px 8px;
-            border: 1px solid #cbd5e1;
-            border-radius: 6px;
-            font-size: 12px;
-            outline: none;
-            transition: border 0.2s;
-        }
-        .input-remark:focus {
-            border-color: #0b132b;
-        }
         .radio-custom {
             transform: scale(1.2);
             cursor: pointer;
@@ -286,9 +274,8 @@
                                 <thead>
                                     <tr>
                                         <th style="text-align: left; padding-left: 10px;">Item Proteksi</th>
-                                        <th style="width: 50px;">Baik</th>
-                                        <th style="width: 50px;">Tidak</th>
-                                        <th>Keterangan / Remark</th>
+                                        <th style="width: 70px;">Baik</th>
+                                        <th style="width: 70px;">Tidak</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -296,37 +283,31 @@
                                         <td style="font-weight: 500; color: #334155; padding-left: 10px;">Pintu T. Darurat</td>
                                         <td style="text-align: center;"><input type="radio" name="pintu" value="Baik" class="radio-custom" checked></td>
                                         <td style="text-align: center;"><input type="radio" name="pintu" value="Tidak" class="radio-custom"></td>
-                                        <td><input type="text" class="input-remark" placeholder="Catatan temuan..."></td>
                                     </tr>
                                     <tr class="item-baris" data-item="Lantai">
                                         <td style="font-weight: 500; color: #334155; padding-left: 10px;">Lantai</td>
                                         <td style="text-align: center;"><input type="radio" name="lantai" value="Baik" class="radio-custom" checked></td>
                                         <td style="text-align: center;"><input type="radio" name="lantai" value="Tidak" class="radio-custom"></td>
-                                        <td><input type="text" class="input-remark" placeholder="Catatan temuan..."></td>
                                     </tr>
                                     <tr class="item-baris" data-item="Dinding">
                                         <td style="font-weight: 500; color: #334155; padding-left: 10px;">Dinding</td>
                                         <td style="text-align: center;"><input type="radio" name="dinding" value="Baik" class="radio-custom" checked></td>
                                         <td style="text-align: center;"><input type="radio" name="dinding" value="Tidak" class="radio-custom"></td>
-                                        <td><input type="text" class="input-remark" placeholder="Catatan temuan..."></td>
                                     </tr>
                                     <tr class="item-baris" data-item="Penerangan">
                                         <td style="font-weight: 500; color: #334155; padding-left: 10px;">Penerangan</td>
                                         <td style="text-align: center;"><input type="radio" name="penerangan" value="Baik" class="radio-custom" checked></td>
                                         <td style="text-align: center;"><input type="radio" name="penerangan" value="Tidak" class="radio-custom"></td>
-                                        <td><input type="text" class="input-remark" placeholder="Catatan temuan..."></td>
                                     </tr>
                                     <tr class="item-baris" data-item="Kebersihan">
                                         <td style="font-weight: 500; color: #334155; padding-left: 10px;">Kebersihan</td>
                                         <td style="text-align: center;"><input type="radio" name="kebersihan" value="Baik" class="radio-custom" checked></td>
                                         <td style="text-align: center;"><input type="radio" name="kebersihan" value="Tidak" class="radio-custom"></td>
-                                        <td><input type="text" class="input-remark" placeholder="Catatan temuan..."></td>
                                     </tr>
                                     <tr class="item-baris" data-item="Safety Equipment">
                                         <td style="font-weight: 500; color: #334155; padding-left: 10px;">Safety Equip.</td>
                                         <td style="text-align: center;"><input type="radio" name="safety" value="Baik" class="radio-custom" checked></td>
                                         <td style="text-align: center;"><input type="radio" name="safety" value="Tidak" class="radio-custom"></td>
-                                        <td><input type="text" class="input-remark" placeholder="Catatan temuan..."></td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -410,11 +391,10 @@
             document.querySelectorAll(".item-baris").forEach(function(row) {
                 let namaKomponen = row.getAttribute("data-item");
                 let opsiDipilih = row.querySelector("input[type='radio']:checked").value;
-                let keteranganKecil = row.querySelector(".input-remark").value.trim();
                 let teksStatusItem = namaKomponen + ": " + opsiDipilih;
+                
                 if (opsiDipilih === "Tidak") {
                     statusAdaTemuanMemburuk = true;
-                    teksStatusItem += keteranganKecil !== "" ? " (" + keteranganKecil + ")" : " (Tanpa Keterangan)";
                 }
                 rangkaianTeksItem.push(teksStatusItem);
             });
@@ -529,7 +509,6 @@
             let catatanAkhir = rekapanChecklist.stringGabunganCatatan;
             if (catatanTambahanManual !== "") { catatanAkhir += " | Catatan: " + catatanTambahanManual; }
 
-            // Menampilkan loading indikator interaktif yang profesional agar user tahu data sedang berpindah
             Swal.fire({ 
                 title: 'Mengirim Laporan...', 
                 text: 'Menyinkronkan data log dan foto ke server pusat...', 
@@ -553,7 +532,6 @@
                 }
             };
 
-            // Menggunakan FETCH standar yang aman untuk transmisi data Base64
             fetch(API_URL_WEBAPP, { method: "POST", body: JSON.stringify(paketKirim) })
             .then(res => res.json())
             .then(hasil => {
