@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght=400;500;600;700&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
     <style>
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
@@ -70,7 +70,7 @@
             background-color: white;
         }
         
-        /* STYLE DROPDOWN KUSTOM ANTI EMULATOR HP */
+        /* DROPDOWN KUSTOM ANTI EMULATOR HP */
         .wadah-pencarian-kustom {
             position: relative;
         }
@@ -104,6 +104,57 @@
         .item-list-kustom.tidak-ada {
             color: #94a3b8;
             font-style: italic;
+        }
+
+        /* CHECKLIST FORM DESIGN */
+        .checklist-container {
+            overflow-x: auto;
+            background: #ffffff;
+            border-radius: 14px;
+            border: 1px solid #e2e8f0;
+            padding: 5px;
+            margin-bottom: 1rem;
+        }
+        .table-checklist {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        .table-checklist th {
+            background-color: #f8fafc;
+            color: #475569;
+            font-weight: 600;
+            padding: 10px 6px;
+            border-bottom: 2px solid #e2e8f0;
+            text-align: center;
+        }
+        .table-checklist th:first-child {
+            text-align: left;
+            padding-left: 10px;
+        }
+        .table-checklist td {
+            padding: 12px 6px;
+            border-bottom: 1px solid #edf2f7;
+            vertical-align: middle;
+        }
+        .table-checklist tr:last-child td {
+            border-bottom: none;
+        }
+        .input-remark {
+            width: 100%;
+            padding: 6px 8px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 12px;
+            outline: none;
+            transition: border 0.2s;
+        }
+        .input-remark:focus {
+            border-color: #0b132b;
+        }
+        .radio-custom {
+            transform: scale(1.2);
+            cursor: pointer;
         }
 
         .btn-camera {
@@ -229,15 +280,62 @@
                     </div>
 
                     <div class="mb-4">
-                        <label class="form-label-custom">Kondisi Sektor</label>
-                        <select id="kondisiSektor" class="form-select form-select-custom" required>
-                            <option value="">Pilih Kondisi Sektor</option>
-                        </select>
+                        <label class="form-label-custom">Kondisi Komponen Sektor Area</label>
+                        <div class="checklist-container">
+                            <table class="table-checklist">
+                                <thead>
+                                    <tr>
+                                        <th style="text-align: left; padding-left: 10px;">Item Proteksi</th>
+                                        <th style="width: 50px;">Baik</th>
+                                        <th style="width: 50px;">Tidak</th>
+                                        <th>Keterangan / Remark</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="item-baris" data-item="Pintu Tangga Darurat">
+                                        <td style="font-weight: 500; color: #334155; padding-left: 10px;">Pintu T. Darurat</td>
+                                        <td style="text-align: center;"><input type="radio" name="pintu" value="Baik" class="radio-custom" checked></td>
+                                        <td style="text-align: center;"><input type="radio" name="pintu" value="Tidak" class="radio-custom"></td>
+                                        <td><input type="text" class="input-remark" placeholder="Catatan temuan..."></td>
+                                    </tr>
+                                    <tr class="item-baris" data-item="Lantai">
+                                        <td style="font-weight: 500; color: #334155; padding-left: 10px;">Lantai</td>
+                                        <td style="text-align: center;"><input type="radio" name="lantai" value="Baik" class="radio-custom" checked></td>
+                                        <td style="text-align: center;"><input type="radio" name="lantai" value="Tidak" class="radio-custom"></td>
+                                        <td><input type="text" class="input-remark" placeholder="Catatan temuan..."></td>
+                                    </tr>
+                                    <tr class="item-baris" data-item="Dinding">
+                                        <td style="font-weight: 500; color: #334155; padding-left: 10px;">Dinding</td>
+                                        <td style="text-align: center;"><input type="radio" name="dinding" value="Baik" class="radio-custom" checked></td>
+                                        <td style="text-align: center;"><input type="radio" name="dinding" value="Tidak" class="radio-custom"></td>
+                                        <td><input type="text" class="input-remark" placeholder="Catatan temuan..."></td>
+                                    </tr>
+                                    <tr class="item-baris" data-item="Penerangan">
+                                        <td style="font-weight: 500; color: #334155; padding-left: 10px;">Penerangan</td>
+                                        <td style="text-align: center;"><input type="radio" name="penerangan" value="Baik" class="radio-custom" checked></td>
+                                        <td style="text-align: center;"><input type="radio" name="penerangan" value="Tidak" class="radio-custom"></td>
+                                        <td><input type="text" class="input-remark" placeholder="Catatan temuan..."></td>
+                                    </tr>
+                                    <tr class="item-baris" data-item="Kebersihan">
+                                        <td style="font-weight: 500; color: #334155; padding-left: 10px;">Kebersihan</td>
+                                        <td style="text-align: center;"><input type="radio" name="kebersihan" value="Baik" class="radio-custom" checked></td>
+                                        <td style="text-align: center;"><input type="radio" name="kebersihan" value="Tidak" class="radio-custom"></td>
+                                        <td><input type="text" class="input-remark" placeholder="Catatan temuan..."></td>
+                                    </tr>
+                                    <tr class="item-baris" data-item="Safety Equipment">
+                                        <td style="font-weight: 500; color: #334155; padding-left: 10px;">Safety Equip.</td>
+                                        <td style="text-align: center;"><input type="radio" name="safety" value="Baik" class="radio-custom" checked></td>
+                                        <td style="text-align: center;"><input type="radio" name="safety" value="Tidak" class="radio-custom"></td>
+                                        <td><input type="text" class="input-remark" placeholder="Catatan temuan..."></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
 
                     <div class="mb-4">
-                        <label class="form-label-custom">Catatan / Temuan Lapangan</label>
-                        <textarea id="catatanPetugas" class="form-control form-control-custom w-100" rows="3" placeholder="Tulis rincian kondisi atau temuan jika ada... (Opsional)" style="text-align: left; text-align-last: left; border-radius: 12px; resize: none;"></textarea>
+                        <label class="form-label-custom">Catatan Tambahan Personel (Opsional)</label>
+                        <textarea id="catatanPetugas" class="form-control form-control-custom w-100" rows="2" placeholder="Tulis instruksi/kronologi khusus di sini jika ada..." style="text-align: left; text-align-last: left; border-radius: 12px; resize: none;"></textarea>
                     </div>
 
                     <div class="mb-4">
@@ -291,22 +389,17 @@
             fetch(`${API_URL_WEBAPP}?aksi=ambilDropdown`)
             .then(res => res.json())
             .then(data => {
-                const selectKondisi = document.getElementById('kondisiSektor');
-                
                 if(data.daftarNama) {
                     DAFTAR_NAMA_MASTER = data.daftarNama;
                     buatUlangListNama(DAFTAR_NAMA_MASTER);
                 }
-                
                 if(data.daftarZona) {
                     DAFTAR_ZONA_MASTER = data.daftarZona;
                     buatUlangListZona(DAFTAR_ZONA_MASTER);
                 }
-                
-                if(data.daftarKondisi) data.daftarKondisi.forEach(k => selectKondisi.innerHTML += `<option value="${k}">${k}</option>`);
             })
             .catch(err => {
-                console.log("Gagal sinkronisasi dropdown");
+                console.log("Gagal sinkronisasi dropdown nama/zona");
             });
             
             aktifkanSistemGeotaggingGPS();
@@ -318,6 +411,34 @@
                 }
             });
         });
+
+        // ================= PARSING OTOMATIS TABEL CHECKLIST =================
+        function kompilasiDataTabelChecklist() {
+            let rangkaianTeksItem = [];
+            let statusAdaTemuanMemburuk = false;
+
+            document.querySelectorAll(".item-baris").forEach(function(row) {
+                let namaKomponen = row.getAttribute("data-item");
+                let opsiDipilih = row.querySelector("input[type='radio']:checked").value;
+                let keteranganKecil = row.querySelector(".input-remark").value.trim();
+
+                let teksStatusItem = namaKomponen + ": " + opsiDipilih;
+                if (opsiDipilih === "Tidak") {
+                    statusAdaTemuanMemburuk = true;
+                    if (keteranganKecil !== "") {
+                        teksStatusItem += " (" + keteranganKecil + ")";
+                    } else {
+                        teksStatusItem += " (Tanpa Keterangan)";
+                    }
+                }
+                rangkaianTeksItem.push(teksStatusItem);
+            });
+
+            return {
+                kondisiGlobal: statusAdaTemuanMemburuk ? "Ada Temuan" : "Aman",
+                stringGabunganCatatan: rangkaianTeksItem.join(", ")
+            };
+        }
 
         // ================= SEARCH LOGIC NAMA =================
         function buatUlangListNama(arrayNama) {
@@ -461,7 +582,7 @@
             e.preventDefault();
             const nilaiNamaKetik = document.getElementById('namaPetugasInput').value.trim();
             const nilaiZonaKetik = document.getElementById('zonaAreaInput').value.trim();
-            const nilaiCatatan = document.getElementById('catatanPetugas').value.trim();
+            const catatanTambahanManual = document.getElementById('catatanPetugas').value.trim();
             const fileKomponen = document.getElementById('fileFoto').files[0];
 
             if(DAFTAR_NAMA_MASTER.length > 0 && !DAFTAR_NAMA_MASTER.includes(nilaiNamaKetik)) {
@@ -485,6 +606,15 @@
                 return;
             }
 
+            // Hitung hasil rekapan tabel checklist otomatis
+            const rekapanChecklist = kompilasiDataTabelChecklist();
+            
+            // Gabungkan teks checklist dengan catatan tambahan manual jika ada input tambahan
+            let catatanAkhir = rekapanChecklist.stringGabunganCatatan;
+            if (catatanTambahanManual !== "") {
+                catatanAkhir += " | Catatan Tambahan: " + catatanTambahanManual;
+            }
+
             Swal.fire({ title: 'Mengamankan Data Laporan', text: 'Menyinkronkan data GPS dan laporan log ke server pusat...', allowOutsideClick: false, allowEscapeKey: false, showConfirmButton: false, didOpen: () => { Swal.showLoading(); } });
 
             const paketKirim = {
@@ -492,8 +622,8 @@
                 payload: {
                     nama: nilaiNamaKetik,
                     zona: nilaiZonaKetik,
-                    kondisi: document.getElementById('kondisiSektor').value,
-                    catatan: nilaiCatatan, // DATA BARU YANG DIKIRIM KE GOOGLE SCRIPT
+                    kondisi: rekapanChecklist.kondisiGlobal, // Otomatis mengirim "Ada Temuan" atau "Aman" ke kolom D spreadsheet
+                    catatan: catatanAkhir,                   // Mengirim string checklist lengkap ke kolom E spreadsheet
                     fotoBase64: GAMBAR_TERKOMPRES_BASE64,
                     fotoMime: "image/jpeg",
                     lat: window.latCoordinate,
