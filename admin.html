@@ -468,10 +468,13 @@
                     let urlGambarSesuai = "https://placehold.co/45x45/f1f5f9/475569?text=No+Foto";
                     let kolomFoto = "<span class='text-muted' style='font-size:11px;'>Tidak ada foto</span>";
                     
-                    if (item.urlFoto && item.urlFoto.includes("http")) {
-                        urlGambarSesuai = item.urlFoto;
-                        if (item.urlFoto.includes("drive.google.com")) {
-                            let matchId = item.urlFoto.match(/\/d\/([a-zA-Z0-9-_]+)/) || item.urlFoto.match(/id=([a-zA-Z0-9-_]+)/);
+                    // PERBAIKAN: Mengambil properti foto dari variasi key data sheet
+                    let linkFotoData = item['Link Foto'] || item.linkFoto || item.urlFoto;
+
+                    if (linkFotoData && linkFotoData.includes("http")) {
+                        urlGambarSesuai = linkFotoData;
+                        if (linkFotoData.includes("drive.google.com")) {
+                            let matchId = linkFotoData.match(/\/d\/([a-zA-Z0-9-_]+)/) || linkFotoData.match(/id=([a-zA-Z0-9-_]+)/);
                             if (matchId && matchId[1]) {
                                 urlGambarSesuai = `https://docs.google.com/uc?export=view&id=${matchId[1]}`;
                             }
@@ -546,10 +549,14 @@
             document.getElementById('detAlamat').innerText = dataPilihan.alamat || "Alamat tidak terjangkau geocode.";
 
             let urlGambarSesuai = "https://placehold.co/150?text=No+Image";
-            if (dataPilihan.urlFoto && dataPilihan.urlFoto.includes("http")) {
-                urlGambarSesuai = dataPilihan.urlFoto;
-                if (dataPilihan.urlFoto.includes("drive.google.com")) {
-                    let matchId = dataPilihan.urlFoto.match(/\/d\/([a-zA-Z0-9-_]+)/) || dataPilihan.urlFoto.match(/id=([a-zA-Z0-9-_]+)/);
+            
+            // PERBAIKAN: Mengambil properti foto detail dari variasi key data sheet
+            let linkFotoDetail = dataPilihan['Link Foto'] || dataPilihan.linkFoto || dataPilihan.urlFoto;
+
+            if (linkFotoDetail && linkFotoDetail.includes("http")) {
+                urlGambarSesuai = linkFotoDetail;
+                if (linkFotoDetail.includes("drive.google.com")) {
+                    let matchId = linkFotoDetail.match(/\/d\/([a-zA-Z0-9-_]+)/) || linkFotoDetail.match(/id=([a-zA-Z0-9-_]+)/);
                     if (matchId && matchId[1]) {
                         urlGambarSesuai = `https://docs.google.com/uc?export=view&id=${matchId[1]}`;
                     }
@@ -559,7 +566,8 @@
 
             const btnPeta = document.getElementById('linkDetPeta');
             if (dataPilihan.lat && dataPilihan.lat !== "-") {
-                btnPeta.href = `https://www.google.com/maps/search/?api=1&query=${dataPilihan.lat},${dataPilihan.lng}`;
+                // PERBAIKAN: Perubahan penulisan interpolasi string URL maps (${} bukan 0{})
+                btnPeta.href = `https://www.google.com/maps?q=${dataPilihan.lat},${dataPilihan.lng}`;
                 btnPeta.classList.remove('disabled');
             } else {
                 btnPeta.href = "#";
@@ -601,7 +609,6 @@
                 let kolom = tr.querySelectorAll('td, th');
                 
                 if(kolom.length >= 7) {
-                    // Hapus kolom ke-5 (Lampiran/Foto) agar rapi di Excel
                     tr.removeChild(kolom[5]); 
                     
                     let kolomBaru = tr.querySelectorAll('td, th');
@@ -655,16 +662,14 @@
 
             let blob = new Blob([templateExcel], { type: "application/vnd.ms-excel" });
             let url = URL.createObjectURL(blob);
-            let a = document.createElement("a");
             
-            const startStr = document.getElementById('filterTanggalStart').value || 'Semua';
-            const endStr = document.getElementById('filterTanggalEnd').value || 'Waktu';
-            
-            a.href = url;
-            a.download = `Log_Patroli_Mall23_${startStr}_sd_${endStr}.xls`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
+            // Membuat element link download temporary
+            let linkDownload = document.createElement('a');
+            linkDownload.href = url;
+            linkDownload.download = `Log_Patroli_Export_${new Date().getTime()}.xls`;
+            document.body.appendChild(linkDownload);
+            linkDownload.click();
+            document.body.removeChild(linkDownload);
         }
     </script>
 </body>
