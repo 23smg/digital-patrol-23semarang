@@ -3,74 +3,83 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Digital Patrol Log - Mall 23Semarang</title>
+    <title>Sistem Pelaporan Patroli - Mall 23Semarang</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght=400;500;600;700&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap">
     <style>
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: #f4f6f9;
-            color: #1e293b;
-            padding: 1rem 0;
+            background-color: #0f172a; /* Diubah ke Dark Slate agar kontras dan terkesan industrial/tactical */
+            color: #f8fafc;
+            padding: 1.5rem 0;
         }
         .main-card {
-            background: white;
-            border-radius: 24px;
+            background: #ffffff;
+            border-radius: 8px; /* Diubah dari 24px ke 8px agar sudut lebih tegas/kotak */
             overflow: hidden;
-            box-shadow: 0 15px 30px rgba(0,0,0,0.06);
-            border: none;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+            border: 2px solid #334155;
             max-width: 480px;
             margin: 0 auto;
         }
         .card-header-navy {
-            background-color: #0b132b;
+            background-color: #0f172a;
             color: white;
-            padding: 2.5rem 1.5rem;
+            padding: 2rem 1.2rem;
             text-align: center;
-            border-bottom: 4px solid #0056b3;
+            border-bottom: 4px solid #1e3a8a; /* Garis bawah biru tegas */
         }
         .card-header-navy h4 {
-            font-weight: 700;
-            letter-spacing: 1px;
-            margin-bottom: 0.5rem;
-            font-size: 1.4rem;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            margin-bottom: 0.3rem;
+            font-size: 1.35rem;
+            color: #f8fafc;
         }
         .card-header-navy p {
-            font-size: 0.85rem;
-            opacity: 0.7;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.8;
+            color: #38bdf8; /* Sub-teks biru siber/formal */
             margin: 0;
         }
         .card-body-content {
-            padding: 2rem 1.5rem;
+            padding: 1.5rem 1.2rem;
+            background-color: #ffffff;
+            color: #1e293b;
         }
         .form-label-custom {
-            font-weight: 600;
-            font-size: 0.9rem;
-            color: #334155;
-            display: block;
-            text-align: center;
-            margin-bottom: 0.6rem;
-        }
-        .form-select-custom, .form-control-custom {
-            border-radius: 12px;
-            padding: 0.75rem 1rem;
-            border: 1px solid #e2e8f0;
-            background-color: #f8fafc;
-            text-align: center;
-            text-align-last: center;
+            font-weight: 700;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
             color: #1e293b;
-            font-size: 0.95rem;
-            transition: all 0.2s;
+            display: block;
+            text-align: left; /* Aligned left untuk pembacaan form yang formal */
+            margin-bottom: 0.5rem;
+            border-left: 3px solid #1e3a8a;
+            padding-left: 6px;
         }
-        .form-select-custom:focus, .form-control-custom:focus {
-            border-color: #0b132b;
-            box-shadow: none;
+        .form-control-custom {
+            border-radius: 6px; /* Sudut kotak */
+            padding: 0.75rem 1rem;
+            border: 1px solid #cbd5e1;
+            background-color: #f8fafc;
+            text-align: left;
+            color: #0f172a;
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+        .form-control-custom:focus {
+            border-color: #1e3a8a;
+            box-shadow: 0 0 0 2px rgba(30, 58, 138, 0.2);
             background-color: white;
         }
         
-        /* DROPDOWN KUSTOM ANTI EMULATOR HP */
+        /* DROPDOWN KUSTOM KOTAK */
         .wadah-pencarian-kustom {
             position: relative;
         }
@@ -80,40 +89,37 @@
             left: 0;
             right: 0;
             background: white;
-            border: 1px solid #0b132b;
-            border-radius: 12px;
+            border: 2px solid #1e3a8a;
+            border-radius: 6px;
             max-height: 200px;
             overflow-y: auto;
             z-index: 1050;
             display: none;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            margin-top: 4px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            margin-top: 2px;
         }
         .item-list-kustom {
             padding: 0.75rem 1rem;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
+            font-weight: 600;
             color: #334155;
             cursor: pointer;
-            text-align: center;
+            text-align: left;
             border-bottom: 1px solid #f1f5f9;
         }
         .item-list-kustom:hover {
-            background-color: #0b132b;
+            background-color: #1e3a8a;
             color: white;
         }
-        .item-list-kustom.tidak-ada {
-            color: #94a3b8;
-            font-style: italic;
-        }
 
-        /* CHECKLIST FORM DESIGN */
+        /* CHECKLIST FORM DESIGN STRAIGHT LINES */
         .checklist-container {
-            overflow-x: auto;
             background: #ffffff;
-            border-radius: 14px;
-            border: 1px solid #e2e8f0;
-            padding: 5px;
+            border-radius: 6px;
+            border: 1px solid #cbd5e1;
+            padding: 0;
             margin-bottom: 1rem;
+            overflow: hidden;
         }
         .table-checklist {
             width: 100%;
@@ -121,11 +127,14 @@
             font-size: 13px;
         }
         .table-checklist th {
-            background-color: #f8fafc;
-            color: #475569;
-            font-weight: 600;
+            background-color: #0f172a;
+            color: #ffffff;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 0.5px;
             padding: 10px 6px;
-            border-bottom: 2px solid #e2e8f0;
+            border: none;
             text-align: center;
         }
         .table-checklist th:first-child {
@@ -133,125 +142,93 @@
             padding-left: 10px;
         }
         .table-checklist td {
-            padding: 12px 6px;
-            border-bottom: 1px solid #edf2f7;
+            padding: 10px 6px;
+            border-bottom: 1px solid #e2e8f0;
             vertical-align: middle;
-        }
-        .table-checklist tr:last-child td {
-            border-bottom: none;
+            font-weight: 600;
         }
         .input-remark {
             width: 100%;
             padding: 6px 8px;
             border: 1px solid #cbd5e1;
-            border-radius: 6px;
+            border-radius: 4px;
             font-size: 12px;
-            outline: none;
-            transition: border 0.2s;
+            font-weight: 500;
         }
         .input-remark:focus {
-            border-color: #0b132b;
-        }
-        .radio-custom {
-            transform: scale(1.2);
-            cursor: pointer;
+            border-color: #1e3a8a;
+            outline: none;
         }
 
         .btn-camera {
-            background-color: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
+            background-color: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
             padding: 0.75rem;
             width: 100%;
-            color: #0056b3;
-            font-weight: 600;
-            font-size: 0.95rem;
+            color: #1e3a8a;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 0.5rem;
-            cursor: pointer;
         }
         .btn-camera:hover {
-            background-color: #f1f5f9;
+            background-color: #e2e8f0;
         }
         .status-gps-box {
-            background-color: #edf7ed;
-            color: #1e4620;
-            border-radius: 12px;
+            background-color: #f0fdf4;
+            color: #166534;
+            border-radius: 6px;
             padding: 0.75rem;
             text-align: center;
-            font-size: 0.9rem;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-            border: 1px solid #d3eafd;
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border: 1px solid #bbf7d0;
         }
         .status-gps-box.loading {
-            background-color: #fff8ec;
-            color: #b78103;
-            border-color: #fff1d6;
+            background-color: #fffbeh;
+            color: #92400e;
+            border-color: #fde68a;
         }
         .btn-submit-navy {
-            background-color: #0b132b;
+            background-color: #1e3a8a;
             color: white;
             border: none;
-            border-radius: 12px;
+            border-radius: 6px;
             padding: 0.9rem;
-            font-weight: 600;
-            font-size: 1rem;
-            letter-spacing: 0.5px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
             transition: background 0.2s;
         }
         .btn-submit-navy:hover {
-            background-color: #1c2541;
-            color: white;
+            background-color: #1e40af;
         }
         .btn-refresh-circle {
             background-color: white;
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
             width: 48px;
             height: 48px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #334155;
-            transition: all 0.2s;
-        }
-        .btn-refresh-circle:hover {
-            background-color: #f8fafc;
-        }
-        #fileFoto {
-            display: none;
-        }
-        .preview-img-container {
-            text-align: center;
-            margin-top: 0.5rem;
+            color: #64748b;
         }
         .preview-img-tag {
             max-height: 120px;
-            border-radius: 8px;
-            border: 2px dashed #cbd5e1;
-            padding: 4px;
+            border-radius: 4px;
+            border: 2px solid #cbd5e1;
         }
         .dev-watermark {
             text-align: center;
             font-size: 11px;
             color: #94a3b8;
             margin-top: 1.5rem;
-            line-height: 1.4;
-        }
-        .dev-watermark a {
-            color: #64748b;
-            text-decoration: none;
-            font-weight: 500;
-        }
-        .swal2-popup {
-            font-family: 'Plus Jakarta Sans', sans-serif !important;
-            border-radius: 20px !important;
         }
     </style>
 </head>
