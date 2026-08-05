@@ -610,90 +610,100 @@
         }
 
         function eksporKeExcel() {
-            let tabelHtml = document.getElementById('tabelLogPatroli').cloneNode(true);
-            let tbodyLama = tabelHtml.querySelector('tbody');
-            tbodyLama.innerHTML = ""; 
+    let tabelHtml = document.getElementById('tabelLogPatroli').cloneNode(true);
+    let tbodyLama = tabelHtml.querySelector('tbody');
+    tbodyLama.innerHTML = ""; 
 
-            dataTerfilterSaatIni.forEach((item) => {
-                let baris = `<tr>
-                    <td>${item.timestamp}</td>
-                    <td>${item.nama}</td>
-                    <td>${item.zona}</td>
-                    <td>${item.kondisi}</td>
-                    <td>${item.catatan || '-'}</td>
-                    <td>-</td> 
-                    <td><small>${item.alamat || '-'}</small></td>
-                </tr>`;
-                tbodyLama.innerHTML += baris;
-            });
+    dataTerfilterSaatIni.forEach((item) => {
+        // 1. Cek kondisi apakah Aman atau Temuan/Tidak Aman
+        let isAman = item.kondisi.toLowerCase() === "aman";
+        
+        // 2. Atur gaya warna background dan teks khusus kolom Kondisi untuk Excel
+        // Warna Hijau untuk Aman (#dcfce7 & #166534), Warna Merah untuk Temuan (#fee2e2 & #991b1b)
+        let styleKondisi = isAman 
+            ? "background-color: #dcfce7; color: #166534; font-weight: bold; text-align: center;" 
+            : "background-color: #fee2e2; color: #991b1b; font-weight: bold; text-align: center;";
 
-            let barisTabel = tabelHtml.querySelectorAll('tr');
+        let baris = `<tr>
+            <td>${item.timestamp}</td>
+            <td>${item.nama}</td>
+            <td>${item.zona}</td>
+            <td style="${styleKondisi}">${item.kondisi}</td>
+            <td>${item.catatan || '-'}</td>
+            <td>-</td> 
+            <td><small>${item.alamat || '-'}</small></td>
+        </tr>`;
+        tbodyLama.innerHTML += baris;
+    });
+
+    let barisTabel = tabelHtml.querySelectorAll('tr');
+    
+    barisTabel.forEach((tr, indeksBaris) => {
+        let kolom = tr.querySelectorAll('td, th');
+        
+        if(kolom.length >= 7) {
+            tr.removeChild(kolom[5]); 
             
-            barisTabel.forEach((tr, indeksBaris) => {
-                let kolom = tr.querySelectorAll('td, th');
-                
-                if(kolom.length >= 7) {
-                    tr.removeChild(kolom[5]); 
+            let kolomBaru = tr.querySelectorAll('td, th');
+            let kolomGeotagging = kolomBaru[5];
+
+            if (indeksBaris === 0) {
+                kolomBaru.forEach((th, idx) => {
+                    th.style.backgroundColor = '#0a1128';
+                    th.style.color = '#ffffff';
+                    th.style.fontWeight = 'bold';
+                    th.style.fontSize = '12px';
+                    th.style.border = '1px solid #cbd5e1';
+                    th.style.height = '30px';
                     
-                    let kolomBaru = tr.querySelectorAll('td, th');
-                    let kolomGeotagging = kolomBaru[5];
-
-                    if (indeksBaris === 0) {
-                        kolomBaru.forEach((th, idx) => {
-                            th.style.backgroundColor = '#0a1128';
-                            th.style.color = '#ffffff';
-                            th.style.fontWeight = 'bold';
-                            th.style.fontSize = '12px';
-                            th.style.border = '1px solid #cbd5e1';
-                            th.style.height = '30px';
-                            
-                            if(idx === 0) th.setAttribute('width', '150');
-                            if(idx === 1) th.setAttribute('width', '160');
-                            if(idx === 2) th.setAttribute('width', '100');
-                            if(idx === 3) th.setAttribute('width', '130');
-                            if(idx === 4) th.setAttribute('width', '250');
-                            if(idx === 5) th.setAttribute('width', '450');
-                        });
-                    } else {
-                        kolomBaru.forEach((td, idx) => {
-                            td.style.border = '1px solid #cbd5e1';
-                            td.style.fontSize = '11px';
-                            td.style.height = '24px';
-                            
-                            if (idx === 0 || idx === 2 || idx === 3) {
-                                td.style.textAlign = 'center';
-                            } else {
-                                td.style.textAlign = 'left';
-                            }
-                        });
-
-                        let divPeta = kolomGeotagging.querySelector('small, span');
-                        if(divPeta) {
-                            kolomGeotagging.innerHTML = divPeta.innerText;
-                        }
+                    if(idx === 0) th.setAttribute('width', '150');
+                    if(idx === 1) th.setAttribute('width', '160');
+                    if(idx === 2) th.setAttribute('width', '100');
+                    if(idx === 3) th.setAttribute('width', '130');
+                    if(idx === 4) th.setAttribute('width', '250');
+                    if(idx === 5) th.setAttribute('width', '450');
+                });
+            } else {
+                kolomBaru.forEach((td, idx) => {
+                    td.style.border = '1px solid #cbd5e1';
+                    td.style.fontSize = '11px';
+                    td.style.height = '24px';
+                    
+                    // Pertahankan alignment default kecuali kolom kondisi yang sudah diatur style-nya
+                    if (idx === 0 || idx === 2) {
+                        td.style.textAlign = 'center';
+                    } else if (idx !== 3) { // Indeks 3 adalah kolom Kondisi (style dipertahankan)
+                        td.style.textAlign = 'left';
                     }
+                });
+
+                let divPeta = kolomGeotagging.querySelector('small, span');
+                if(divPeta) {
+                    kolomGeotagging.innerHTML = divPeta.innerText;
                 }
-            });
-
-            let templateExcel = `
-                <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
-                <head>
-                    <meta charset="utf-8">
-                </head>
-                <body>${tabelHtml.outerHTML}</body>
-                </html>
-            `;
-
-            let blob = new Blob([templateExcel], { type: "application/vnd.ms-excel" });
-            let url = URL.createObjectURL(blob);
-            
-            let linkDownload = document.createElement('a');
-            linkDownload.href = url;
-            linkDownload.download = `Log_Patroli_Export_${new Date().getTime()}.xls`;
-            document.body.appendChild(linkDownload);
-            linkDownload.click();
-            document.body.removeChild(linkDownload);
+            }
         }
+    });
+
+    let templateExcel = `
+        <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+        <head>
+            <meta charset="utf-8">
+        </head>
+        <body>${tabelHtml.outerHTML}</body>
+        </html>
+    `;
+
+    let blob = new Blob([templateExcel], { type: "application/vnd.ms-excel" });
+    let url = URL.createObjectURL(blob);
+    
+    let linkDownload = document.createElement('a');
+    linkDownload.href = url;
+    linkDownload.download = `Log_Patroli_Export_${new Date().getTime()}.xls`;
+    document.body.appendChild(linkDownload);
+    linkDownload.click();
+    document.body.removeChild(linkDownload);
+}
     </script>
 </body>
 </html>
