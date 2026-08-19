@@ -194,7 +194,7 @@
                     <label class="text-muted mb-1" style="font-size: 11px; font-weight: 500;">Kata Kunci Pencarian:</label>
                     <div class="input-group input-group-sm">
                         <span class="input-group-text bg-white border-end-0 text-muted"><i class="fa-solid fa-magnifying-glass"></i></span>
-                        <input type="text" id="filterCari" class="form-control border-start-0" placeholder="Cari Nama / Zona / Catatan / Kondisi...">
+                        <input type="text" id="filterCari" class="form-control border-start-0" placeholder="Cari Nama Satpam / Zona / Temuan / Kondisi...">
                     </div>
                 </div>
                 <div class="col-md-2">
@@ -220,13 +220,13 @@
                 <table class="table table-custom m-0 align-middle" id="tabelLogPatroli">
                     <thead>
                         <tr>
-                            <th style="width: 12%;">Waktu Log</th>
-                            <th style="width: 14%;">Nama Personel</th>
-                            <th style="width: 10%;">Zona Area</th>
-                            <th style="width: 11%;">Kondisi Sektor</th>
-                            <th style="width: 18%;">Catatan / Temuan</th>
+                            <th style="width: 14%;">Waktu Log</th>
+                            <th style="width: 18%;">Nama Satpam</th>
+                            <th style="width: 12%;">Titik Patroli (Zona)</th>
+                            <th style="width: 11%;">Kondisi</th>
+                            <th style="width: 25%;">Temuan Lapangan</th>
                             <th style="width: 8%;">Lampiran</th>
-                            <th style="width: 27%;">Geotagging</th>
+                            <th style="width: 12%;">Koordinat GPS</th>
                         </tr>
                     </thead>
                     <tbody id="bodyTabelPatroli"></tbody>
@@ -255,37 +255,33 @@
     </div>
 
     <div class="modal fade" id="modalDetailPatroli" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content modal-detail-content">
                 <div class="modal-header modal-detail-header p-3">
                     <h6 class="modal-title fw-bold" id="modalTitleNama"><i class="fa-solid fa-user-shield me-2"></i>Detail Log Patroli</h6>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-4">
-                    <div class="row align-items-center">
-                        <div class="col-7">
+                    <div class="row align-items-start">
+                        <div class="col-md-7">
                             <div class="detail-label">Waktu Pengiriman</div>
                             <div class="detail-value" id="detWaktu">-</div>
-                            <div class="detail-label">Zona Sektor Inspeksi</div>
+                            <div class="detail-label">Titik Patroli (Zona Area)</div>
                             <div class="detail-value"><span id="detZona" class="badge bg-dark">-</span></div>
-                            <div class="detail-label">Kondisi Lapangan</div>
+                            <div class="detail-label">Kondisi Sektor</div>
                             <div class="detail-value"><span id="detKondisi" class="badge-kondisi">-</span></div>
-                            <div class="detail-label">Titik Koordinat GPS</div>
+                            <div class="detail-label">Koordinat GPS (Lat, Lng)</div>
                             <div class="detail-value" id="detGps">-</div>
                         </div>
-                        <div class="col-5 text-center">
-                            <div class="detail-label">Lampiran Visual</div>
-                            <img src="" id="detFoto" class="img-fluid rounded border shadow-sm" style="max-height: 140px; object-fit: cover; width: 100%;">
+                        <div class="col-md-5 text-center">
+                            <div class="detail-label mb-2">Lampiran Foto Visual</div>
+                            <img src="" id="detFoto" class="img-fluid rounded border shadow-sm" style="max-height: 200px; object-fit: cover; width: 100%;">
                         </div>
                     </div>
-                    <hr class="text-muted my-2">
+                    <hr class="text-muted my-3">
                     <div class="mb-3">
-                        <div class="detail-label">Catatan / Temuan Lapangan</div>
-                        <div class="p-2 border rounded bg-light text-dark small fw-medium" id="detCatatan" style="min-height: 40px; white-space: pre-line;">-</div>
-                    </div>
-                    <div class="mb-2">
-                        <div class="detail-label">Estimasi Alamat Geotagging</div>
-                        <div class="text-dark small fw-medium" id="detAlamat" style="line-height: 1.4;">-</div>
+                        <div class="detail-label">Rincian Temuan Lapangan</div>
+                        <div class="p-3 border rounded bg-light text-dark small fw-medium" id="detCatatan" style="min-height: 50px; white-space: pre-line;">-</div>
                     </div>
                     <div class="d-flex gap-2 mt-4">
                         <a href="#" id="linkDetPeta" target="_blank" class="btn btn-primary w-100 py-2 rounded-3 small fw-bold"><i class="fa-solid fa-map-location-dot me-2"></i>Buka Lokasi di Google Maps</a>
@@ -308,9 +304,9 @@
         document.addEventListener("DOMContentLoaded", function() {
             komponenModalDetail = new bootstrap.Modal(document.getElementById('modalDetailPatroli'));
 
-            // Set default rentang filter 01/08/2026 s/d 06/08/2026
+            // Set rentang filter awal otomatis Agustus 2026
             document.getElementById('filterTanggalStart').value = "2026-08-01";
-            document.getElementById('filterTanggalEnd').value = "2026-08-06";
+            document.getElementById('filterTanggalEnd').value = "2026-08-19";
             
             muatDataLaporanDashboard();
 
@@ -373,13 +369,29 @@
             });
         }
 
-        // FUNGSI PARSER TANGGAL TINGKAT TINGGI (TIDAK PERNAH CRASH)
+        // FUNGSI KONVERSI LINK GOOGLE DRIVE KE THUMBNAIL LANGSUNG
+        function konversiUrlDriveKeImage(urlDrive) {
+            if (!urlDrive || typeof urlDrive !== 'string' || !urlDrive.includes('http')) return '';
+            let match = urlDrive.match(/\/d\/([a-zA-Z0-9_-]+)/) || urlDrive.match(/id=([a-zA-Z0-9_-]+)/);
+            if (match && match[1]) {
+                return `https://lh3.googleusercontent.com/d/${match[1]}`;
+            }
+            return urlDrive;
+        }
+
+        // PARSER TANGGAL HANDAL UNTUK FORMAT ISO / EXCEL / ISO-STRING
         function ubahTimestampSheetKeDate(strTimestamp) {
             if (!strTimestamp || strTimestamp === "-" || strTimestamp === "") return null;
             try {
+                if (strTimestamp instanceof Date) return strTimestamp;
                 let str = strTimestamp.toString().trim();
-                let teksTanggal = str.split(/[ T]/)[0];
                 
+                let nativeDate = new Date(str);
+                if (!isNaN(nativeDate.getTime())) {
+                    return new Date(nativeDate.getFullYear(), nativeDate.getMonth(), nativeDate.getDate());
+                }
+
+                let teksTanggal = str.split(/[ T]/)[0];
                 let pemisah = teksTanggal.includes('/') ? '/' : (teksTanggal.includes('-') ? '-' : null);
                 if (!pemisah) return null;
 
@@ -419,13 +431,16 @@
 
             if (Array.isArray(dataMasterPusat)) {
                 dataMasterPusat.forEach(item => {
-                    let nama = item.nama || item.Nama || item.Nama_Personel || "-";
-                    let zona = item.zona || item.Zona || item.Zona_Area || "-";
-                    let kondisi = item.kondisi || item.Kondisi || item.Kondisi_Sektor || "-";
-                    let catatan = item.catatan || item.Catatan || item.Catatan_Temuan || "";
-                    let timestamp = item.timestamp || item.Timestamp || item.Waktu_Log || "";
+                    // PEMETAAN KOLOM DARI SPREADSHEET / EXCEL 'sistem patroli.xlsx'
+                    let nama = item['Nama Satpam'] || item.nama || item.Nama || item.Nama_Personel || "-";
+                    let zona = item['Titik Patroli (Zona)'] || item.zona || item.Zona || item.Zona_Area || "-";
+                    let kondisi = item['Catatan/Kondisi'] || item.kondisi || item.Kondisi || item.Kondisi_Sektor || "-";
+                    let catatan = item['Temuan Lapangan'] || item.catatan || item.Catatan || item.Catatan_Temuan || "";
+                    let timestamp = item.Timestamp || item.timestamp || item.Waktu_Log || "";
+                    let lat = item.Latitude || item.lat || item.Lat || "-";
+                    let lng = item.Longitude || item.lng || item.Lng || "-";
+                    let urlFotoRaw = item['Link Foto'] || item.linkFoto || item.urlFoto || "";
 
-                    // VALIDASI TANGGAL AMAN: Jika parsing gagal, data TETAP DITAMPILKAN
                     if (timestamp && timestamp !== "-") {
                         let dateDataLog = ubahTimestampSheetKeDate(timestamp);
                         if (dateDataLog) {
@@ -446,10 +461,10 @@
                         zona: zona,
                         kondisi: kondisi,
                         catatan: catatan,
-                        linkFoto: item.urlFoto || item['Link Foto'] || item.linkFoto || item.urlAsliDrive || "",
-                        lat: item.lat || item.Lat || item.Latitude || item.latitude || "-",
-                        lng: item.lng || item.Lng || item.Longitude || item.longitude || "-",
-                        alamat: item.alamat || item.Alamat || item.Geotagging || "-"
+                        linkFotoRaw: urlFotoRaw,
+                        linkFotoDisplay: konversiUrlDriveKeImage(urlFotoRaw),
+                        lat: lat,
+                        lng: lng
                     });
                     
                     if (nama && nama !== "-") setPetugasUnik.add(nama);
@@ -463,7 +478,7 @@
 
             if (tglStartVal && tglEndVal) {
                 if (tglStartVal === tglEndVal) {
-                    document.getElementById('judulTabel').innerHTML = `<i class="fa-solid fa-list-ul me-2"></i>Riwayat Patroli Hari Ini (${tglStartVal.split('-').reverse().join('/')})`;
+                    document.getElementById('judulTabel').innerHTML = `<i class="fa-solid fa-list-ul me-2"></i>Riwayat Patroli (${tglStartVal.split('-').reverse().join('/')})`;
                 } else {
                     document.getElementById('judulTabel').innerHTML = `<i class="fa-solid fa-list-ul me-2"></i>Riwayat Periode ${tglStartVal.split('-').reverse().join('/')} s/d ${tglEndVal.split('-').reverse().join('/')}`;
                 }
@@ -493,20 +508,17 @@
             } else {
                 for (let i = indeksMulai; i < indeksSelesai; i++) {
                     let item = dataTerfilterSaatIni[i];
-                    let kelasBadge = item.kondisi.toLowerCase() === "aman" ? "bg-aman" : "bg-temuan";
+                    let isAman = item.kondisi.toLowerCase() === "aman";
+                    let kelasBadge = isAman ? "bg-aman" : "bg-temuan";
 
-                    let urlGambarSesuai = "https://placehold.co/45x45/f1f5f9/475569?text=No+Foto";
                     let kolomFoto = "<span class='text-muted' style='font-size:11px;'>Tidak ada foto</span>";
-                    
-                    let linkFotoData = item.linkFoto;
-                    if (linkFotoData && linkFotoData.toString().includes("http")) {
-                        urlGambarSesuai = linkFotoData;
-                        kolomFoto = `<img src="${urlGambarSesuai}" class="img-thumbnail-custom" onerror="this.onerror=null; this.src='https://placehold.co/45x45/f1f5f9/475569?text=Foto';">`;
+                    if (item.linkFotoDisplay) {
+                        kolomFoto = `<img src="${item.linkFotoDisplay}" class="img-thumbnail-custom" onerror="this.onerror=null; this.src='https://placehold.co/45x45/f1f5f9/475569?text=Foto';">`;
                     }
 
-                    let kolomPeta = "";
-                    if (item.lat && item.lng && item.lat !== "-") {
-                        kolomPeta = `<span class="badge bg-light text-primary border border-primary me-2" style="font-size:10px; padding: 2px 5px;"><i class="fa-solid fa-location-dot me-1"></i>Tersedia</span>`;
+                    let kolomGps = "<span class='text-muted' style='font-size:11px;'>-</span>";
+                    if (item.lat && item.lat !== "-" && item.lng && item.lng !== "-") {
+                        kolomGps = `<span class="badge bg-light text-primary border border-primary" style="font-size:10.5px;"><i class="fa-solid fa-location-dot me-1"></i>${parseFloat(item.lat).toFixed(4)}, ${parseFloat(item.lng).toFixed(4)}</span>`;
                     }
 
                     let baris = `<tr onclick="bukaDetailPopupBerdasarkanIndeks(${i})">
@@ -514,14 +526,9 @@
                         <td class="text-capitalize fw-bold">${item.nama}</td>
                         <td><span class="badge bg-secondary text-white" style="font-size:10px; padding: 3px 6px;">${item.zona}</span></td>
                         <td><span class="badge-kondisi ${kelasBadge}">${item.kondisi}</span></td>
-                        <td><span class="text-dark d-inline-block text-truncate" style="max-width: 220px;">${item.catatan || '-'}</span></td>
+                        <td><span class="text-dark d-inline-block text-truncate" style="max-width: 280px;">${item.catatan || '-'}</span></td>
                         <td>${kolomFoto}</td>
-                        <td>
-                            <div class="d-flex align-items-center flex-wrap">
-                                ${kolomPeta}
-                                <span class="text-muted text-truncate" style="font-size:11.5px; max-width:250px;">${item.alamat || '-'}</span>
-                            </div>
-                        </td>
+                        <td>${kolomGps}</td>
                     </tr>`;
                     tbody.innerHTML += baris;
                 }
@@ -557,10 +564,10 @@
             const dataPilihan = dataTerfilterSaatIni[indeksGlobal];
             if (!dataPilihan) return;
 
-            document.getElementById('modalTitleNama').innerHTML = `<i class="fa-solid fa-user-shield me-2"></i>Patroli: ${dataPilihan.nama}`;
+            document.getElementById('modalTitleNama').innerHTML = `<i class="fa-solid fa-user-shield me-2"></i>Satpam: ${dataPilihan.nama}`;
             document.getElementById('detWaktu').innerText = dataPilihan.timestamp;
             document.getElementById('detZona').innerText = dataPilihan.zona;
-            document.getElementById('detCatatan').innerText = dataPilihan.catatan || "Tidak ada catatan tambahan.";
+            document.getElementById('detCatatan').innerText = dataPilihan.catatan || "Tidak ada rincian temuan.";
             
             const badgeKondisi = document.getElementById('detKondisi');
             badgeKondisi.innerText = dataPilihan.kondisi;
@@ -568,14 +575,8 @@
 
             const koordinatTeks = (dataPilihan.lat && dataPilihan.lat !== "-") ? `${dataPilihan.lat}, ${dataPilihan.lng}` : "Tidak Terlacak";
             document.getElementById('detGps').innerText = koordinatTeks;
-            document.getElementById('detAlamat').innerText = dataPilihan.alamat || "Alamat tidak terjangkau geocode.";
 
-            let urlGambarSesuai = "https://placehold.co/150?text=No+Image";
-            let linkFotoDetail = dataPilihan.linkFoto;
-
-            if (linkFotoDetail && linkFotoDetail.toString().includes("http")) {
-                urlGambarSesuai = linkFotoDetail;
-            }
+            let urlGambarSesuai = dataPilihan.linkFotoDisplay || "https://placehold.co/200?text=No+Image";
             document.getElementById('detFoto').src = urlGambarSesuai;
 
             const btnPeta = document.getElementById('linkDetPeta');
@@ -615,58 +616,10 @@
                     <td>${item.zona}</td>
                     <td style="${styleKondisi}">${item.kondisi}</td>
                     <td>${item.catatan || '-'}</td>
-                    <td>-</td> 
-                    <td><small>${item.alamat || '-'}</small></td>
+                    <td>${item.linkFotoRaw || '-'}</td> 
+                    <td>${item.lat}, ${item.lng}</td>
                 </tr>`;
                 tbodyLama.innerHTML += baris;
-            });
-
-            let barisTabel = tabelHtml.querySelectorAll('tr');
-            
-            barisTabel.forEach((tr, indeksBaris) => {
-                let kolom = tr.querySelectorAll('td, th');
-                
-                if (kolom.length >= 7) {
-                    tr.removeChild(kolom[5]); 
-                    
-                    let kolomBaru = tr.querySelectorAll('td, th');
-                    let kolomGeotagging = kolomBaru[5];
-
-                    if (indeksBaris === 0) {
-                        kolomBaru.forEach((th, idx) => {
-                            th.style.backgroundColor = '#0a1128';
-                            th.style.color = '#ffffff';
-                            th.style.fontWeight = 'bold';
-                            th.style.fontSize = '12px';
-                            th.style.border = '1px solid #cbd5e1';
-                            th.style.height = '30px';
-                            
-                            if(idx === 0) th.setAttribute('width', '150');
-                            if(idx === 1) th.setAttribute('width', '160');
-                            if(idx === 2) th.setAttribute('width', '100');
-                            if(idx === 3) th.setAttribute('width', '130');
-                            if(idx === 4) th.setAttribute('width', '250');
-                            if(idx === 5) th.setAttribute('width', '450');
-                        });
-                    } else {
-                        kolomBaru.forEach((td, idx) => {
-                            td.style.border = '1px solid #cbd5e1';
-                            td.style.fontSize = '11px';
-                            td.style.height = '24px';
-                            
-                            if (idx === 0 || idx === 2) {
-                                td.style.textAlign = 'center';
-                            } else if (idx !== 3) {
-                                td.style.textAlign = 'left';
-                            }
-                        });
-
-                        let divPeta = kolomGeotagging.querySelector('small, span');
-                        if (divPeta) {
-                            kolomGeotagging.innerHTML = divPeta.innerText;
-                        }
-                    }
-                }
             });
 
             let templateExcel = `
@@ -683,7 +636,7 @@
             
             let linkDownload = document.createElement('a');
             linkDownload.href = url;
-            linkDownload.download = `Log_Patroli_Export_${new Date().getTime()}.xls`;
+            linkDownload.download = `Laporan_Patroli_Sistem_${new Date().getTime()}.xls`;
             document.body.appendChild(linkDownload);
             linkDownload.click();
             document.body.removeChild(linkDownload);
