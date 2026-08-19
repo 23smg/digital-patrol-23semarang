@@ -37,7 +37,9 @@
             box-shadow: 0 1px 3px rgba(0,0,0,0.05);
             transition: transform 0.2s;
         }
-        .stat-card:hover { transform: translateY(-2px); }
+        .stat-card:hover {
+            transform: translateY(-2px);
+        }
         .stat-icon {
             width: 40px;
             height: 40px;
@@ -60,8 +62,13 @@
             border: 1px solid var(--border-gray);
             overflow: hidden;
         }
-        .table-custom tbody tr { cursor: pointer; transition: background-color 0.15s ease; }
-        .table-custom tbody tr:hover { background-color: #f1f5f9 !important; }
+        .table-custom tbody tr {
+            cursor: pointer;
+            transition: background-color 0.15s ease;
+        }
+        .table-custom tbody tr:hover {
+            background-color: #f1f5f9 !important;
+        }
         .table-custom th {
             background-color: #f1f5f9;
             color: #475569;
@@ -98,7 +105,11 @@
             overflow: hidden;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
         }
-        .modal-detail-header { background-color: var(--navy-main); color: white; border-bottom: none; }
+        .modal-detail-header {
+            background-color: var(--navy-main);
+            color: white;
+            border-bottom: none;
+        }
         .detail-label {
             font-size: 11px;
             text-transform: uppercase;
@@ -107,30 +118,24 @@
             font-weight: 600;
             margin-bottom: 2px;
         }
-        .detail-value { font-size: 14px; font-weight: 600; color: #0f172a; margin-bottom: 12px; }
-        .dev-watermark { font-size: 11px; color: #94a3b8; text-align: center; margin: 1.5rem 0; }
+        .detail-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: #0f172a;
+            margin-bottom: 12px;
+        }
+        .dev-watermark {
+            font-size: 11px;
+            color: #94a3b8;
+            text-align: center;
+            margin: 1.5rem 0;
+        }
         .chart-box {
             background: white;
             border-radius: 12px;
             padding: 1rem;
             border: 1px solid var(--border-gray);
             height: 250px;
-        }
-
-        /* METODE FORMAT CETAK PDF & HASIL DOKUMEN BERSIH */
-        @media print {
-            .navbar-custom, .filter-section, #areaAksiTombol, #panelNavigasiHalaman, .dev-watermark {
-                display: none !important;
-            }
-            body { background-color: white !important; padding: 0 !important; font-size: 11px !important; }
-            .container-fluid { padding: 0 !important; }
-            .chart-box, .stat-card, .table-container {
-                border: 1px solid #cbd5e1 !important;
-                box-shadow: none !important;
-                break-inside: avoid;
-            }
-            .table-custom th { background-color: #e2e8f0 !important; color: black !important; }
-            .table-custom td { padding: 4px 6px !important; font-size: 11px !important; }
         }
     </style>
 </head>
@@ -163,7 +168,9 @@
                         <h4 class="fw-bold m-0" id="statTotalLog">0</h4>
                         <small class="text-muted" style="font-size: 11px;">Total Log Terfilter</small>
                     </div>
-                    <div class="stat-icon bg-primary bg-opacity-10 text-primary"><i class="fa-solid fa-clipboard-check"></i></div>
+                    <div class="stat-icon bg-primary bg-opacity-10 text-primary">
+                        <i class="fa-solid fa-clipboard-check"></i>
+                    </div>
                 </div>
             </div>
             <div class="col-md-3">
@@ -172,7 +179,9 @@
                         <h4 class="fw-bold m-0 text-danger" id="statTemuan">0</h4>
                         <small class="text-muted" style="font-size: 11px;">Jumlah Temuan / Kendala</small>
                     </div>
-                    <div class="stat-icon bg-danger bg-opacity-10 text-danger"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                    <div class="stat-icon bg-danger bg-opacity-10 text-danger">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
                 </div>
             </div>
             <div class="col-md-3">
@@ -181,7 +190,9 @@
                         <h4 class="fw-bold m-0 text-success" id="statPetugas">0</h4>
                         <small class="text-muted" style="font-size: 11px;">Petugas Aktif</small>
                     </div>
-                    <div class="stat-icon bg-success bg-opacity-10 text-success"><i class="fa-solid fa-user-shield"></i></div>
+                    <div class="stat-icon bg-success bg-opacity-10 text-success">
+                        <i class="fa-solid fa-user-shield"></i>
+                    </div>
                 </div>
             </div>
             <div class="col-md-3">
@@ -190,7 +201,9 @@
                         <h4 class="fw-bold m-0 text-warning" id="statZona">0</h4>
                         <small class="text-muted" style="font-size: 11px;">Zona Terinspeksi</small>
                     </div>
-                    <div class="stat-icon bg-warning bg-opacity-10 text-warning"><i class="fa-solid fa-map-location-dot"></i></div>
+                    <div class="stat-icon bg-warning bg-opacity-10 text-warning">
+                        <i class="fa-solid fa-map-location-dot"></i>
+                    </div>
                 </div>
             </div>
         </div>
@@ -200,13 +213,17 @@
             <div class="col-md-5">
                 <div class="chart-box">
                     <h6 class="fw-bold mb-2 text-dark" style="font-size: 12px;"><i class="fa-solid fa-chart-pie me-1 text-primary"></i> Rasio Kondisi Sektor Area</h6>
-                    <div style="height: 190px; position: relative;"><canvas id="chartRasioKondisi"></canvas></div>
+                    <div style="height: 190px; position: relative;">
+                        <canvas id="chartRasioKondisi"></canvas>
+                    </div>
                 </div>
             </div>
             <div class="col-md-7">
                 <div class="chart-box">
                     <h6 class="fw-bold mb-2 text-dark" style="font-size: 12px;"><i class="fa-solid fa-chart-column me-1 text-danger"></i> Top 5 Zona Paling Sering Ada Temuan</h6>
-                    <div style="height: 190px; position: relative;"><canvas id="chartTopZonaTemuan"></canvas></div>
+                    <div style="height: 190px; position: relative;">
+                        <canvas id="chartTopZonaTemuan"></canvas>
+                    </div>
                 </div>
             </div>
         </div>
@@ -241,9 +258,8 @@
         <div class="table-container mb-3">
             <div class="px-3 py-2 border-bottom d-flex justify-content-between align-items-center bg-white">
                 <span class="fw-bold text-navy-main" id="judulTabel" style="font-size: 13px;"><i class="fa-solid fa-list-ul me-2"></i>Riwayat Aktivitas</span>
-                <div class="d-flex gap-2" id="areaAksiTombol">
-                    <button class="btn btn-danger btn-sm" style="font-size: 11px;" onclick="cetakLaporanPDFDenganGrafik()"><i class="fa-solid fa-file-pdf me-1"></i> Download PDF (+Grafik)</button>
-                    <button class="btn btn-outline-success btn-sm" style="font-size: 11px;" id="btnExport" onclick="eksporRapiKeExcel()"><i class="fa-solid fa-file-excel me-1"></i> Download Excel Rapi</button>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-success btn-sm" style="font-size: 11px;" id="btnExport" onclick="eksporKeExcel()"><i class="fa-solid fa-file-excel me-1"></i> Tarik Data Excel</button>
                     <button class="btn btn-primary btn-sm" style="font-size: 11px;" id="btnRefresh" onclick="muatDataLaporanDashboard()"><i class="fa-solid fa-arrow-rotate-right me-1" id="iconRefresh"></i> Refresh Data</button>
                 </div>
             </div>
@@ -355,6 +371,7 @@
 
         document.addEventListener("DOMContentLoaded", function() {
             komponenModalDetail = new bootstrap.Modal(document.getElementById('modalDetailPatroli'));
+
             setFilterHariIni(false);
             muatDataLaporanDashboard();
 
@@ -386,7 +403,11 @@
         function toggleAudioAlert() {
             audioSuaraAktif = !audioSuaraAktif;
             const icon = document.getElementById('iconAudio');
-            icon.className = audioSuaraAktif ? "fa-solid fa-volume-high text-white" : "fa-solid fa-volume-xmark text-danger";
+            if (audioSuaraAktif) {
+                icon.className = "fa-solid fa-volume-high text-white";
+            } else {
+                icon.className = "fa-solid fa-volume-xmark text-danger";
+            }
         }
 
         function bunyikanAlarmTemuanBaru() {
@@ -409,7 +430,9 @@
             if (timerAutoRefresh) clearInterval(timerAutoRefresh);
             let menit = parseInt(document.getElementById('selectAutoRefresh').value, 10);
             if (menit > 0) {
-                timerAutoRefresh = setInterval(() => { muatDataLaporanDashboard(true); }, menit * 60 * 1000);
+                timerAutoRefresh = setInterval(() => {
+                    muatDataLaporanDashboard(true);
+                }, menit * 60 * 1000);
             }
         }
 
@@ -431,43 +454,65 @@
                 loading.style.display = "block";
             }
 
-            fetch(`${API_URL_WEBAPP}?aksi=ambilData&_=${new Date().getTime()}`, {
+            const URL_DENGAN_PARAMS = `${API_URL_WEBAPP}?aksi=ambilData&_=${new Date().getTime()}`;
+
+            fetch(URL_DENGAN_PARAMS, {
                 method: "GET",
                 mode: "cors",
-                credentials: "omit"
+                credentials: "omit",
+                headers: { "Content-Type": "text/plain" }
             })
-            .then(res => res.json())
+            .then(res => {
+                if (!res.ok) throw new Error("Koneksi jaringan bermasalah.");
+                return res.json();
+            })
             .then(response => {
-                dataMasterPusat = Array.isArray(response) ? response : (response.logData || response.data || []);
+                if (Array.isArray(response)) {
+                    dataMasterPusat = response;
+                } else if (response && response.logData) {
+                    dataMasterPusat = response.logData;
+                } else if (response && response.data) {
+                    dataMasterPusat = response.data;
+                } else {
+                    dataMasterPusat = [];
+                }
+                
                 halamanSaatIni = 1;
                 jalankanFilterData();
+                
                 btnRef.disabled = false;
                 btnExp.disabled = false;
                 iconRef.classList.remove('fa-spin');
                 loading.style.display = "none";
             })
-            .catch(() => {
+            .catch(err => {
                 if (!isBackground) {
-                    loading.innerHTML = "<span class='text-danger'><i class='fa-solid fa-triangle-exclamation me-1'></i> Gagal memuat data.</span>";
+                    loading.innerHTML = "<span class='text-danger'><i class='fa-solid fa-triangle-exclamation me-1'></i> Gagal memuat data dari spreadsheet.</span>";
                     btnRef.disabled = false;
                     iconRef.classList.remove('fa-spin');
                 }
+                console.error("Fetch Error: ", err);
             });
         }
 
         function konversiUrlDriveKeImage(urlDrive) {
             if (!urlDrive || typeof urlDrive !== 'string' || !urlDrive.includes('http')) return '';
             let match = urlDrive.match(/\/d\/([a-zA-Z0-9_-]+)/) || urlDrive.match(/id=([a-zA-Z0-9_-]+)/);
-            return match && match[1] ? `https://lh3.googleusercontent.com/d/${match[1]}` : urlDrive;
+            if (match && match[1]) {
+                return `https://lh3.googleusercontent.com/d/${match[1]}`;
+            }
+            return urlDrive;
         }
 
         function ubahTimestampSheetKeDate(strTimestamp) {
-            if (!strTimestamp || strTimestamp === "-") return null;
+            if (!strTimestamp || strTimestamp === "-" || strTimestamp === "") return null;
             try {
                 if (strTimestamp instanceof Date) return strTimestamp;
                 let str = strTimestamp.toString().trim();
                 let nativeDate = new Date(str);
-                if (!isNaN(nativeDate.getTime())) return new Date(nativeDate.getFullYear(), nativeDate.getMonth(), nativeDate.getDate());
+                if (!isNaN(nativeDate.getTime())) {
+                    return new Date(nativeDate.getFullYear(), nativeDate.getMonth(), nativeDate.getDate());
+                }
 
                 let teksTanggal = str.split(/[ T]/)[0];
                 let pemisah = teksTanggal.includes('/') ? '/' : (teksTanggal.includes('-') ? '-' : null);
@@ -486,8 +531,12 @@
                     bulan = parseInt(komponen[1], 10) - 1;
                     tahun = parseInt(komponen[2], 10);
                 }
+
+                if (isNaN(hari) || isNaN(bulan) || isNaN(tahun)) return null;
                 return new Date(tahun, bulan, hari, 0, 0, 0, 0);
-            } catch(e) { return null; }
+            } catch(e) {
+                return null;
+            }
         }
 
         function jalankanFilterData() {
@@ -502,18 +551,20 @@
             dataTerfilterSaatIni = []; 
             let setPetugasUnik = new Set();
             let setZonaUnik = new Set();
-            let jumlahAman = 0, jumlahAdaTemuan = 0, petaTemuanZona = {};
+            let jumlahAman = 0;
+            let jumlahAdaTemuan = 0;
+            let petaTemuanZona = {};
 
             if (Array.isArray(dataMasterPusat)) {
                 dataMasterPusat.forEach(item => {
-                    let nama = item['Nama Satpam'] || item.nama || item.Nama || "-";
-                    let zona = item['Titik Patroli (Zona)'] || item.zona || item.Zona || "-";
-                    let kondisi = item['Catatan/Kondisi'] || item.kondisi || item.Kondisi || "-";
-                    let catatan = item['Temuan Lapangan'] || item.catatan || item.Catatan || "";
+                    let nama = item['Nama Satpam'] || item.nama || item.Nama || item.Nama_Personel || "-";
+                    let zona = item['Titik Patroli (Zona)'] || item.zona || item.Zona || item.Zona_Area || "-";
+                    let kondisi = item['Catatan/Kondisi'] || item.kondisi || item.Kondisi || item.Kondisi_Sektor || "-";
+                    let catatan = item['Temuan Lapangan'] || item.catatan || item.Catatan || item.Catatan_Temuan || "";
                     let timestamp = item.Timestamp || item.timestamp || item.Waktu_Log || "";
-                    let lat = item.Latitude || item.lat || "-";
-                    let lng = item.Longitude || item.lng || "-";
-                    let urlFotoRaw = item['Link Foto'] || item.linkFoto || "";
+                    let lat = item.Latitude || item.lat || item.Lat || "-";
+                    let lng = item.Longitude || item.lng || item.Lng || "-";
+                    let urlFotoRaw = item['Link Foto'] || item.linkFoto || item.urlFoto || "";
 
                     if (timestamp && timestamp !== "-") {
                         let dateDataLog = ubahTimestampSheetKeDate(timestamp);
@@ -556,6 +607,7 @@
                 });
             }
 
+            // Bunyikan Alarm jika ada temuan baru saat auto refresh
             if (totalJumlahTemuanTerakhir > 0 && jumlahAdaTemuan > totalJumlahTemuanTerakhir) {
                 bunyikanAlarmTemuanBaru();
             }
@@ -569,7 +621,11 @@
             if (tglStartVal === hariIni && tglEndVal === hariIni) {
                 document.getElementById('judulTabel').innerHTML = `<i class="fa-solid fa-list-ul me-2"></i>Riwayat Patroli Hari Ini (${tglStartVal.split('-').reverse().join('/')})`;
             } else if (tglStartVal && tglEndVal) {
-                document.getElementById('judulTabel').innerHTML = `<i class="fa-solid fa-list-ul me-2"></i>Riwayat Periode ${tglStartVal.split('-').reverse().join('/')} s/d ${tglEndVal.split('-').reverse().join('/')}`;
+                if (tglStartVal === tglEndVal) {
+                    document.getElementById('judulTabel').innerHTML = `<i class="fa-solid fa-list-ul me-2"></i>Riwayat Patroli (${tglStartVal.split('-').reverse().join('/')})`;
+                } else {
+                    document.getElementById('judulTabel').innerHTML = `<i class="fa-solid fa-list-ul me-2"></i>Riwayat Periode ${tglStartVal.split('-').reverse().join('/')} s/d ${tglEndVal.split('-').reverse().join('/')}`;
+                }
             } else {
                 document.getElementById('judulTabel').innerHTML = `<i class="fa-solid fa-list-ul me-2"></i>Semua Riwayat Aktivitas Kontrol`;
             }
@@ -579,20 +635,30 @@
         }
 
         function renderChartRingkasan(aman, temuan, objectZonaTemuan) {
+            // Chart Donut Rasio Kondisi
             const ctxRasio = document.getElementById('chartRasioKondisi').getContext('2d');
             if (chartRasioInstansi) chartRasioInstansi.destroy();
             chartRasioInstansi = new Chart(ctxRasio, {
                 type: 'doughnut',
                 data: {
                     labels: ['Aman', 'Ada Temuan'],
-                    datasets: [{ data: [aman, temuan], backgroundColor: ['#22c55e', '#ef4444'] }]
+                    datasets: [{
+                        data: [aman, temuan],
+                        backgroundColor: ['#22c55e', '#ef4444']
+                    }]
                 },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'right' } }
+                }
             });
 
+            // Chart Bar Top Zona
             let sortedZona = Object.keys(objectZonaTemuan)
                 .map(key => ({ zona: key, total: objectZonaTemuan[key] }))
-                .sort((a, b) => b.total - a.total).slice(0, 5);
+                .sort((a, b) => b.total - a.total)
+                .slice(0, 5);
 
             const ctxTop = document.getElementById('chartTopZonaTemuan').getContext('2d');
             if (chartTopZonaInstansi) chartTopZonaInstansi.destroy();
@@ -600,9 +666,18 @@
                 type: 'bar',
                 data: {
                     labels: sortedZona.length ? sortedZona.map(z => z.zona) : ['Tidak Ada Temuan'],
-                    datasets: [{ label: 'Jumlah Temuan', data: sortedZona.length ? sortedZona.map(z => z.total) : [0], backgroundColor: '#f87171' }]
+                    datasets: [{
+                        label: 'Jumlah Temuan',
+                        data: sortedZona.length ? sortedZona.map(z => z.total) : [0],
+                        backgroundColor: '#f87171'
+                    }]
                 },
-                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }, plugins: { legend: { display: false } } }
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
+                    plugins: { legend: { display: false } }
+                }
             });
         }
 
@@ -612,11 +687,12 @@
 
             const totalData = dataTerfilterSaatIni.length;
             const totalHalaman = Math.ceil(totalData / JUMLAH_DATA_PER_HALAMAN) || 1;
+
             const indeksMulai = (halamanSaatIni - 1) * JUMLAH_DATA_PER_HALAMAN;
             const indeksSelesai = Math.min(indeksMulai + JUMLAH_DATA_PER_HALAMAN, totalData);
 
             if (totalData === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="text-center p-4 text-muted">Tidak ada data patroli untuk kriteria ini.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center p-4 text-muted">Tidak ada data patroli untuk tanggal/kriteria ini.</td></tr>`;
                 document.getElementById('infoTeksHalaman').innerText = "Menampilkan 0-0 dari 0 data";
                 document.getElementById('labelHalamanAktif').innerText = "1 / 1";
                 document.getElementById('btnHalamanPrev').classList.add('disabled');
@@ -627,22 +703,31 @@
                     let isAman = !item.kondisi.toLowerCase().includes("temuan");
                     let kelasBadge = isAman ? "bg-aman" : "bg-temuan";
 
-                    let kolomFoto = item.linkFotoDisplay ? `<img src="${item.linkFotoDisplay}" class="img-thumbnail-custom">` : "<span class='text-muted' style='font-size:11px;'>Tidak ada foto</span>";
-                    let kolomGps = (item.lat && item.lat !== "-") ? `<span class="badge bg-light text-primary border border-primary" style="font-size:10.5px;"><i class="fa-solid fa-location-dot me-1"></i>${parseFloat(item.lat).toFixed(4)}, ${parseFloat(item.lng).toFixed(4)}</span>` : "<span class='text-muted' style='font-size:11px;'>-</span>";
+                    let kolomFoto = "<span class='text-muted' style='font-size:11px;'>Tidak ada foto</span>";
+                    if (item.linkFotoDisplay) {
+                        kolomFoto = `<img src="${item.linkFotoDisplay}" class="img-thumbnail-custom" onerror="this.onerror=null; this.src='https://placehold.co/45x45/f1f5f9/475569?text=Foto';">`;
+                    }
 
-                    tbody.innerHTML += `<tr onclick="bukaDetailPopupBerdasarkanIndeks(${i})">
+                    let kolomGps = "<span class='text-muted' style='font-size:11px;'>-</span>";
+                    if (item.lat && item.lat !== "-" && item.lng && item.lng !== "-") {
+                        kolomGps = `<span class="badge bg-light text-primary border border-primary" style="font-size:10.5px;"><i class="fa-solid fa-location-dot me-1"></i>${parseFloat(item.lat).toFixed(4)}, ${parseFloat(item.lng).toFixed(4)}</span>`;
+                    }
+
+                    let baris = `<tr onclick="bukaDetailPopupBerdasarkanIndeks(${i})">
                         <td><small class="fw-medium">${item.timestamp}</small></td>
                         <td class="text-capitalize fw-bold">${item.nama}</td>
-                        <td><span class="badge bg-secondary text-white" style="font-size:10px;">${item.zona}</span></td>
+                        <td><span class="badge bg-secondary text-white" style="font-size:10px; padding: 3px 6px;">${item.zona}</span></td>
                         <td><span class="badge-kondisi ${kelasBadge}">${item.kondisi}</span></td>
                         <td><span class="text-dark d-inline-block text-truncate" style="max-width: 280px;">${item.catatan || '-'}</span></td>
                         <td>${kolomFoto}</td>
                         <td>${kolomGps}</td>
                     </tr>`;
+                    tbody.innerHTML += baris;
                 }
 
                 document.getElementById('infoTeksHalaman').innerText = `Menampilkan ${indeksMulai + 1}-${indeksSelesai} dari ${totalData} data`;
                 document.getElementById('labelHalamanAktif').innerText = `${halamanSaatIni} / ${totalHalaman}`;
+                
                 document.getElementById('btnHalamanPrev').classList.toggle('disabled', halamanSaatIni === 1);
                 document.getElementById('btnHalamanNext').classList.toggle('disabled', halamanSaatIni === totalHalaman);
             }
@@ -652,13 +737,19 @@
 
         function pindahKeHalamanSebelumnya(e) {
             e.preventDefault();
-            if (halamanSaatIni > 1) { halamanSaatIni--; renderTabelBerdasarkanHalaman(); }
+            if (halamanSaatIni > 1) {
+                halamanSaatIni--;
+                renderTabelBerdasarkanHalaman();
+            }
         }
 
         function pindahKeHalamanBerikutnya(e) {
             e.preventDefault();
             const totalHalaman = Math.ceil(dataTerfilterSaatIni.length / JUMLAH_DATA_PER_HALAMAN);
-            if (halamanSaatIni < totalHalaman) { halamanSaatIni++; renderTabelBerdasarkanHalaman(); }
+            if (halamanSaatIni < totalHalaman) {
+                halamanSaatIni++;
+                renderTabelBerdasarkanHalaman();
+            }
         }
 
         function bukaDetailPopupBerdasarkanIndeks(indeksGlobal) {
@@ -674,8 +765,11 @@
             badgeKondisi.innerText = dataPilihan.kondisi;
             badgeKondisi.className = !dataPilihan.kondisi.toLowerCase().includes("temuan") ? "badge-kondisi bg-aman" : "badge-kondisi bg-temuan";
 
-            document.getElementById('detGps').innerText = (dataPilihan.lat && dataPilihan.lat !== "-") ? `${dataPilihan.lat}, ${dataPilihan.lng}` : "Tidak Terlacak";
-            document.getElementById('detFoto').src = dataPilihan.linkFotoDisplay || "https://placehold.co/200?text=No+Image";
+            const koordinatTeks = (dataPilihan.lat && dataPilihan.lat !== "-") ? `${dataPilihan.lat}, ${dataPilihan.lng}` : "Tidak Terlacak";
+            document.getElementById('detGps').innerText = koordinatTeks;
+
+            let urlGambarSesuai = dataPilihan.linkFotoDisplay || "https://placehold.co/200?text=No+Image";
+            document.getElementById('detFoto').src = urlGambarSesuai;
 
             const btnPeta = document.getElementById('linkDetPeta');
             if (dataPilihan.lat && dataPilihan.lat !== "-") {
@@ -701,43 +795,44 @@
             jalankanFilterData();
         }
 
-        // FUNGSI TARIKAN DATA PERBAIKAN 1: DOWNLOAD PDF LAPORAN BESERTA DIAGRAM
-        function cetakLaporanPDFDenganGrafik() {
-            window.print();
-        }
+        function eksporKeExcel() {
+            let tabelHtml = document.getElementById('tabelLogPatroli').cloneNode(true);
+            let tbodyLama = tabelHtml.querySelector('tbody');
+            tbodyLama.innerHTML = ""; 
 
-        // FUNGSI TARIKAN DATA PERBAIKAN 2: EXPORT EXCEL BERSIH & RAPI (.CSV FORMAT)
-        function eksporRapiKeExcel() {
-            if (!dataTerfilterSaatIni || dataTerfilterSaatIni.length === 0) return;
+            dataTerfilterSaatIni.forEach((item) => {
+                let isAman = !item.kondisi.toLowerCase().includes("temuan");
+                let styleKondisi = isAman 
+                    ? "background-color: #dcfce7; color: #166534; font-weight: bold; text-align: center;" 
+                    : "background-color: #fee2e2; color: #991b1b; font-weight: bold; text-align: center;";
 
-            let barisExcel = [];
-            // Header Kolom Excel yang Bersih
-            barisExcel.push(["No", "Waktu Log", "Nama Satpam", "Titik Patroli / Zona", "Kondisi Sektor", "Detail Temuan Lapangan", "Koordinat GPS", "Link Foto Visual"].join("\t"));
-
-            dataTerfilterSaatIni.forEach((item, index) => {
-                let catatanBersih = (item.catatan || "-").replace(/(\r\n|\n|\r)/gm, " ").replace(/\t/g, " ");
-                let gpsTeks = (item.lat && item.lat !== "-") ? `${item.lat}, ${item.lng}` : "-";
-                
-                let baris = [
-                    index + 1,
-                    item.timestamp || "-",
-                    item.nama || "-",
-                    item.zona || "-",
-                    item.kondisi || "-",
-                    catatanBersih,
-                    gpsTeks,
-                    item.linkFotoRaw || "-"
-                ];
-                barisExcel.push(baris.join("\t"));
+                let baris = `<tr>
+                    <td>${item.timestamp}</td>
+                    <td>${item.nama}</td>
+                    <td>${item.zona}</td>
+                    <td style="${styleKondisi}">${item.kondisi}</td>
+                    <td>${item.catatan || '-'}</td>
+                    <td>${item.linkFotoRaw || '-'}</td> 
+                    <td>${item.lat}, ${item.lng}</td>
+                </tr>`;
+                tbodyLama.innerHTML += baris;
             });
 
-            let isiStringTabel = barisExcel.join("\n");
-            let blob = new Blob(["\ufeff" + isiStringTabel], { type: 'text/csv;charset=utf-8;' });
+            let templateExcel = `
+                <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+                <head>
+                    <meta charset="utf-8">
+                </head>
+                <body>${tabelHtml.outerHTML}</body>
+                </html>
+            `;
+
+            let blob = new Blob([templateExcel], { type: "application/vnd.ms-excel" });
             let url = URL.createObjectURL(blob);
             
             let linkDownload = document.createElement('a');
             linkDownload.href = url;
-            linkDownload.download = `Laporan_Patroli_Rapi_${new Date().getTime()}.csv`;
+            linkDownload.download = `Laporan_Patroli_Lengkap_${new Date().getTime()}.xls`;
             document.body.appendChild(linkDownload);
             linkDownload.click();
             document.body.removeChild(linkDownload);
