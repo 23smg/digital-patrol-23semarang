@@ -297,7 +297,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // URL Web App Script Anda
+        // MASUKKAN URL WEB APP GOOGLE APPS SCRIPT ANDA DI SINI
         const API_URL_WEBAPP = "https://script.google.com/macros/s/AKfycbyJuzwTGe-bucxDG6Yvgp-GEEsk5RdUpjR7ZX-G6KL_PlkiAn6QhustBE5n2fWBVrmA/exec";
         
         let dataMasterPusat = [];
@@ -309,15 +309,17 @@
         document.addEventListener("DOMContentLoaded", function() {
             komponenModalDetail = new bootstrap.Modal(document.getElementById('modalDetailPatroli'));
 
-            // Mengatur inisialisasi filter langsung ke hari ini
+            // Set Tanggal Mulai Otomatis ke Tanggal 1 Bulan Ini (Contoh: YYYY-MM-01)
             const hariIni = new Date();
             const yyyy = hariIni.getFullYear();
             const mm = String(hariIni.getMonth() + 1).padStart(2, '0');
             const dd = String(hariIni.getDate()).padStart(2, '0');
-            const formatStringTanggal = `${yyyy}-${mm}-${dd}`;
             
-            document.getElementById('filterTanggalStart').value = formatStringTanggal;
-            document.getElementById('filterTanggalEnd').value = formatStringTanggal;
+            const formatTanggalAwalBulan = `${yyyy}-${mm}-01`;
+            const formatTanggalHariIni = `${yyyy}-${mm}-${dd}`;
+            
+            document.getElementById('filterTanggalStart').value = formatTanggalAwalBulan;
+            document.getElementById('filterTanggalEnd').value = formatTanggalHariIni;
             
             muatDataLaporanDashboard();
 
@@ -355,7 +357,6 @@
                 return res.json();
             })
             .then(response => {
-                // Fleksibilitas membaca response objek ataupun array mentah
                 if (Array.isArray(response)) {
                     dataMasterPusat = response;
                 } else if (response && response.logData) {
@@ -381,20 +382,30 @@
             });
         }
 
+        // FUNGSI BARU Fleksibel Membaca Format Tanggal 1 Digit (1/8/2026 atau 01/08/2026)
         function ubahTimestampSheetKeDate(strTimestamp) {
-            if(!strTimestamp || strTimestamp === "-") return null;
+            if (!strTimestamp || strTimestamp === "-" || strTimestamp === "") return null;
             try {
-                // Memisahkan tanggal dan jam jika formatnya DD/MM/YYYY HH:mm:ss
-                let pecahanAwal = strTimestamp.split(' ');
-                let bagianTanggal = pecahanAwal[0]; 
+                let teksTanggal = strTimestamp.toString().trim().split(/[ T]/)[0];
                 
-                let komponen = bagianTanggal.split('/'); 
-                if(komponen.length < 3) komponen = bagianTanggal.split('-'); // Antisipasi pembatas strip
-                
-                let hari = parseInt(komponen[0], 10);
-                let bulan = parseInt(komponen[1], 10) - 1; 
-                let tahun = parseInt(komponen[2], 10);
-                
+                let pemisah = teksTanggal.includes('/') ? '/' : (teksTanggal.includes('-') ? '-' : null);
+                if (!pemisah) return null;
+
+                let komponen = teksTanggal.split(pemisah);
+                if (komponen.length < 3) return null;
+
+                let hari, bulan, tahun;
+
+                if (komponen[0].length === 4) {
+                    tahun = parseInt(komponen[0], 10);
+                    bulan = parseInt(komponen[1], 10) - 1;
+                    hari = parseInt(komponen[2], 10);
+                } else { 
+                    hari = parseInt(komponen[0], 10);
+                    bulan = parseInt(komponen[1], 10) - 1;
+                    tahun = parseInt(komponen[2], 10);
+                }
+
                 if (isNaN(hari) || isNaN(bulan) || isNaN(tahun)) return null;
                 return new Date(tahun, bulan, hari, 0, 0, 0, 0);
             } catch(e) {
@@ -416,16 +427,15 @@
 
             if (Array.isArray(dataMasterPusat)) {
                 dataMasterPusat.forEach(item => {
-                    // Ekstraksi nilai properties secara aman tanpa sensitif huruf besar/kecil (case-insensitive)
                     let nama = item.nama || item.Nama || item.Nama_Personel || "-";
                     let zona = item.zona || item.Zona || item.Zona_Area || "-";
                     let kondisi = item.kondisi || item.Kondisi || item.Kondisi_Sektor || "-";
                     let catatan = item.catatan || item.Catatan || item.Catatan_Temuan || "";
                     let timestamp = item.timestamp || item.Timestamp || item.Waktu_Log || "";
 
-                    if(timestamp && timestamp !== "-") {
+                    if (timestamp && timestamp !== "-") {
                         let dateDataLog = ubahTimestampSheetKeDate(timestamp);
-                        if(dateDataLog) {
+                        if (dateDataLog) {
                             if (dateMulai && dateDataLog < dateMulai) return;
                             if (dateSelesai && dateDataLog > dateSelesai) return;
                         }
@@ -437,21 +447,20 @@
                         !teksCatatan.includes(kataKunci) &&
                         !kondisi.toLowerCase().includes(kataKunci)) return;
 
-                    // Standardisasi struktur objek agar seragam saat di-render
                     dataTerfilterSaatIni.push({
                         timestamp: timestamp,
                         nama: nama,
                         zona: zona,
                         kondisi: kondisi,
                         catatan: catatan,
-                        linkFoto: item['Link Foto'] || item.linkFoto || item.urlFoto || item.Foto || item.foto || "",
+                        linkFoto: item.urlFoto || item['Link Foto'] || item.linkFoto || item.urlAsliDrive || "",
                         lat: item.lat || item.Lat || item.Latitude || item.latitude || "-",
                         lng: item.lng || item.Lng || item.Longitude || item.longitude || "-",
                         alamat: item.alamat || item.Alamat || item.Geotagging || "-"
                     });
                     
-                    if(nama && nama !== "-") setPetugasUnik.add(nama);
-                    if(zona && zona !== "-") setZonaUnik.add(zona);
+                    if (nama && nama !== "-") setPetugasUnik.add(nama);
+                    if (zona && zona !== "-") setZonaUnik.add(zona);
                 });
             }
 
@@ -460,7 +469,7 @@
             document.getElementById('statZona').innerText = setZonaUnik.size;
 
             if (tglStartVal && tglEndVal) {
-                if(tglStartVal === tglEndVal) {
+                if (tglStartVal === tglEndVal) {
                     document.getElementById('judulTabel').innerHTML = `<i class="fa-solid fa-list-ul me-2"></i>Riwayat Patroli Hari Ini (${tglStartVal.split('-').reverse().join('/')})`;
                 } else {
                     document.getElementById('judulTabel').innerHTML = `<i class="fa-solid fa-list-ul me-2"></i>Riwayat Periode ${tglStartVal.split('-').reverse().join('/')} s/d ${tglEndVal.split('-').reverse().join('/')}`;
@@ -499,12 +508,6 @@
                     let linkFotoData = item.linkFoto;
                     if (linkFotoData && linkFotoData.toString().includes("http")) {
                         urlGambarSesuai = linkFotoData;
-                        if (linkFotoData.includes("drive.google.com")) {
-                            let matchId = linkFotoData.match(/\/d\/([a-zA-Z0-9-_]+)/) || linkFotoData.match(/id=([a-zA-Z0-9-_]+)/);
-                            if (matchId && matchId[1]) {
-                                urlGambarSesuai = `https://docs.google.com/uc?export=view&id=${matchId[1]}`;
-                            }
-                        }
                         kolomFoto = `<img src="${urlGambarSesuai}" class="img-thumbnail-custom" onerror="this.onerror=null; this.src='https://placehold.co/45x45/f1f5f9/475569?text=Foto';">`;
                     }
 
@@ -579,18 +582,11 @@
 
             if (linkFotoDetail && linkFotoDetail.toString().includes("http")) {
                 urlGambarSesuai = linkFotoDetail;
-                if (linkFotoDetail.includes("drive.google.com")) {
-                    let matchId = linkFotoDetail.match(/\/d\/([a-zA-Z0-9-_]+)/) || linkFotoDetail.match(/id=([a-zA-Z0-9-_]+)/);
-                    if (matchId && matchId[1]) {
-                        urlGambarSesuai = `https://docs.google.com/uc?export=view&id=${matchId[1]}`;
-                    }
-                }
             }
             document.getElementById('detFoto').src = urlGambarSesuai;
 
             const btnPeta = document.getElementById('linkDetPeta');
             if (dataPilihan.lat && dataPilihan.lat !== "-") {
-                // SIKAT TYPO: Menggunakan format backtick string template literal secara sempurna
                 btnPeta.href = `https://www.google.com/maps/search/?api=1&query=${dataPilihan.lat},${dataPilihan.lng}`;
                 btnPeta.classList.remove('disabled');
             } else {
@@ -610,100 +606,95 @@
         }
 
         function eksporKeExcel() {
-    let tabelHtml = document.getElementById('tabelLogPatroli').cloneNode(true);
-    let tbodyLama = tabelHtml.querySelector('tbody');
-    tbodyLama.innerHTML = ""; 
+            let tabelHtml = document.getElementById('tabelLogPatroli').cloneNode(true);
+            let tbodyLama = tabelHtml.querySelector('tbody');
+            tbodyLama.innerHTML = ""; 
 
-    dataTerfilterSaatIni.forEach((item) => {
-        // 1. Cek kondisi apakah Aman atau Temuan/Tidak Aman
-        let isAman = item.kondisi.toLowerCase() === "aman";
-        
-        // 2. Atur gaya warna background dan teks khusus kolom Kondisi untuk Excel
-        // Warna Hijau untuk Aman (#dcfce7 & #166534), Warna Merah untuk Temuan (#fee2e2 & #991b1b)
-        let styleKondisi = isAman 
-            ? "background-color: #dcfce7; color: #166534; font-weight: bold; text-align: center;" 
-            : "background-color: #fee2e2; color: #991b1b; font-weight: bold; text-align: center;";
+            dataTerfilterSaatIni.forEach((item) => {
+                let isAman = item.kondisi.toLowerCase() === "aman";
+                let styleKondisi = isAman 
+                    ? "background-color: #dcfce7; color: #166534; font-weight: bold; text-align: center;" 
+                    : "background-color: #fee2e2; color: #991b1b; font-weight: bold; text-align: center;";
 
-        let baris = `<tr>
-            <td>${item.timestamp}</td>
-            <td>${item.nama}</td>
-            <td>${item.zona}</td>
-            <td style="${styleKondisi}">${item.kondisi}</td>
-            <td>${item.catatan || '-'}</td>
-            <td>-</td> 
-            <td><small>${item.alamat || '-'}</small></td>
-        </tr>`;
-        tbodyLama.innerHTML += baris;
-    });
+                let baris = `<tr>
+                    <td>${item.timestamp}</td>
+                    <td>${item.nama}</td>
+                    <td>${item.zona}</td>
+                    <td style="${styleKondisi}">${item.kondisi}</td>
+                    <td>${item.catatan || '-'}</td>
+                    <td>-</td> 
+                    <td><small>${item.alamat || '-'}</small></td>
+                </tr>`;
+                tbodyLama.innerHTML += baris;
+            });
 
-    let barisTabel = tabelHtml.querySelectorAll('tr');
-    
-    barisTabel.forEach((tr, indeksBaris) => {
-        let kolom = tr.querySelectorAll('td, th');
-        
-        if(kolom.length >= 7) {
-            tr.removeChild(kolom[5]); 
+            let barisTabel = tabelHtml.querySelectorAll('tr');
             
-            let kolomBaru = tr.querySelectorAll('td, th');
-            let kolomGeotagging = kolomBaru[5];
+            barisTabel.forEach((tr, indeksBaris) => {
+                let kolom = tr.querySelectorAll('td, th');
+                
+                if (kolom.length >= 7) {
+                    tr.removeChild(kolom[5]); 
+                    
+                    let kolomBaru = tr.querySelectorAll('td, th');
+                    let kolomGeotagging = kolomBaru[5];
 
-            if (indeksBaris === 0) {
-                kolomBaru.forEach((th, idx) => {
-                    th.style.backgroundColor = '#0a1128';
-                    th.style.color = '#ffffff';
-                    th.style.fontWeight = 'bold';
-                    th.style.fontSize = '12px';
-                    th.style.border = '1px solid #cbd5e1';
-                    th.style.height = '30px';
-                    
-                    if(idx === 0) th.setAttribute('width', '150');
-                    if(idx === 1) th.setAttribute('width', '160');
-                    if(idx === 2) th.setAttribute('width', '100');
-                    if(idx === 3) th.setAttribute('width', '130');
-                    if(idx === 4) th.setAttribute('width', '250');
-                    if(idx === 5) th.setAttribute('width', '450');
-                });
-            } else {
-                kolomBaru.forEach((td, idx) => {
-                    td.style.border = '1px solid #cbd5e1';
-                    td.style.fontSize = '11px';
-                    td.style.height = '24px';
-                    
-                    // Pertahankan alignment default kecuali kolom kondisi yang sudah diatur style-nya
-                    if (idx === 0 || idx === 2) {
-                        td.style.textAlign = 'center';
-                    } else if (idx !== 3) { // Indeks 3 adalah kolom Kondisi (style dipertahankan)
-                        td.style.textAlign = 'left';
+                    if (indeksBaris === 0) {
+                        kolomBaru.forEach((th, idx) => {
+                            th.style.backgroundColor = '#0a1128';
+                            th.style.color = '#ffffff';
+                            th.style.fontWeight = 'bold';
+                            th.style.fontSize = '12px';
+                            th.style.border = '1px solid #cbd5e1';
+                            th.style.height = '30px';
+                            
+                            if(idx === 0) th.setAttribute('width', '150');
+                            if(idx === 1) th.setAttribute('width', '160');
+                            if(idx === 2) th.setAttribute('width', '100');
+                            if(idx === 3) th.setAttribute('width', '130');
+                            if(idx === 4) th.setAttribute('width', '250');
+                            if(idx === 5) th.setAttribute('width', '450');
+                        });
+                    } else {
+                        kolomBaru.forEach((td, idx) => {
+                            td.style.border = '1px solid #cbd5e1';
+                            td.style.fontSize = '11px';
+                            td.style.height = '24px';
+                            
+                            if (idx === 0 || idx === 2) {
+                                td.style.textAlign = 'center';
+                            } else if (idx !== 3) {
+                                td.style.textAlign = 'left';
+                            }
+                        });
+
+                        let divPeta = kolomGeotagging.querySelector('small, span');
+                        if (divPeta) {
+                            kolomGeotagging.innerHTML = divPeta.innerText;
+                        }
                     }
-                });
-
-                let divPeta = kolomGeotagging.querySelector('small, span');
-                if(divPeta) {
-                    kolomGeotagging.innerHTML = divPeta.innerText;
                 }
-            }
+            });
+
+            let templateExcel = `
+                <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+                <head>
+                    <meta charset="utf-8">
+                </head>
+                <body>${tabelHtml.outerHTML}</body>
+                </html>
+            `;
+
+            let blob = new Blob([templateExcel], { type: "application/vnd.ms-excel" });
+            let url = URL.createObjectURL(blob);
+            
+            let linkDownload = document.createElement('a');
+            linkDownload.href = url;
+            linkDownload.download = `Log_Patroli_Export_${new Date().getTime()}.xls`;
+            document.body.appendChild(linkDownload);
+            linkDownload.click();
+            document.body.removeChild(linkDownload);
         }
-    });
-
-    let templateExcel = `
-        <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
-        <head>
-            <meta charset="utf-8">
-        </head>
-        <body>${tabelHtml.outerHTML}</body>
-        </html>
-    `;
-
-    let blob = new Blob([templateExcel], { type: "application/vnd.ms-excel" });
-    let url = URL.createObjectURL(blob);
-    
-    let linkDownload = document.createElement('a');
-    linkDownload.href = url;
-    linkDownload.download = `Log_Patroli_Export_${new Date().getTime()}.xls`;
-    document.body.appendChild(linkDownload);
-    linkDownload.click();
-    document.body.removeChild(linkDownload);
-}
     </script>
 </body>
 </html>
