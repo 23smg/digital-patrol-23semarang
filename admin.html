@@ -190,15 +190,16 @@
                     <label class="text-muted mb-1" style="font-size: 11px; font-weight: 500;">Sampai Tanggal:</label>
                     <input type="date" id="filterTanggalEnd" class="form-control form-control-sm">
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <label class="text-muted mb-1" style="font-size: 11px; font-weight: 500;">Kata Kunci Pencarian:</label>
                     <div class="input-group input-group-sm">
                         <span class="input-group-text bg-white border-end-0 text-muted"><i class="fa-solid fa-magnifying-glass"></i></span>
-                        <input type="text" id="filterCari" class="form-control border-start-0" placeholder="Cari Nama Satpam / Zona / Temuan / Kondisi...">
+                        <input type="text" id="filterCari" class="form-control border-start-0" placeholder="Cari Nama / Zona / Temuan...">
                     </div>
                 </div>
-                <div class="col-md-2">
-                    <button class="btn btn-outline-secondary btn-sm w-100" onclick="resetSemuaFilter()">Semua Waktu</button>
+                <div class="col-md-3 d-flex gap-1">
+                    <button class="btn btn-outline-primary btn-sm flex-fill" onclick="setFilterHariIni()">Hari Ini</button>
+                    <button class="btn btn-outline-secondary btn-sm flex-fill" onclick="resetSemuaFilter()">Semua Waktu</button>
                 </div>
             </div>
         </div>
@@ -301,12 +302,20 @@
         let halamanSaatIni = 1;
         const JUMLAH_DATA_PER_HALAMAN = 10;
 
+        // FUNGSI MENDAPATKAN FORMAT TANGGAL YYYY-MM-DD LOKAL HARI INI
+        function getDaftarTanggalHariIni() {
+            let sekarang = new Date();
+            let tahun = sekarang.getFullYear();
+            let bulan = String(sekarang.getMonth() + 1).padStart(2, '0');
+            let hari = String(sekarang.getDate()).padStart(2, '0');
+            return `${tahun}-${bulan}-${hari}`;
+        }
+
         document.addEventListener("DOMContentLoaded", function() {
             komponenModalDetail = new bootstrap.Modal(document.getElementById('modalDetailPatroli'));
 
-            // Set rentang filter awal otomatis Agustus 2026
-            document.getElementById('filterTanggalStart').value = "2026-08-01";
-            document.getElementById('filterTanggalEnd').value = "2026-08-19";
+            // Set filter otomatis ke Hari Ini saat pertama kali load
+            setFilterHariIni(false);
             
             muatDataLaporanDashboard();
 
@@ -314,6 +323,15 @@
             document.getElementById('filterTanggalEnd').addEventListener('change', memicuUlangFilter);
             document.getElementById('filterCari').addEventListener('input', memicuUlangFilter);
         });
+
+        function setFilterHariIni(memicuFilter = true) {
+            let hariIni = getDaftarTanggalHariIni();
+            document.getElementById('filterTanggalStart').value = hariIni;
+            document.getElementById('filterTanggalEnd').value = hariIni;
+            if (memicuFilter) {
+                memicuUlangFilter();
+            }
+        }
 
         function memicuUlangFilter() {
             halamanSaatIni = 1;
@@ -369,7 +387,6 @@
             });
         }
 
-        // FUNGSI KONVERSI LINK GOOGLE DRIVE KE THUMBNAIL LANGSUNG
         function konversiUrlDriveKeImage(urlDrive) {
             if (!urlDrive || typeof urlDrive !== 'string' || !urlDrive.includes('http')) return '';
             let match = urlDrive.match(/\/d\/([a-zA-Z0-9_-]+)/) || urlDrive.match(/id=([a-zA-Z0-9_-]+)/);
@@ -379,7 +396,6 @@
             return urlDrive;
         }
 
-        // PARSER TANGGAL HANDAL UNTUK FORMAT ISO / EXCEL / ISO-STRING
         function ubahTimestampSheetKeDate(strTimestamp) {
             if (!strTimestamp || strTimestamp === "-" || strTimestamp === "") return null;
             try {
@@ -421,7 +437,8 @@
             const tglStartVal = document.getElementById('filterTanggalStart').value; 
             const tglEndVal = document.getElementById('filterTanggalEnd').value; 
             const kataKunci = document.getElementById('filterCari').value.toLowerCase().trim();
-            
+            const hariIni = getDaftarTanggalHariIni();
+
             let dateMulai = tglStartVal ? new Date(tglStartVal + "T00:00:00") : null;
             let dateSelesai = tglEndVal ? new Date(tglEndVal + "T23:59:59") : null;
 
@@ -431,7 +448,6 @@
 
             if (Array.isArray(dataMasterPusat)) {
                 dataMasterPusat.forEach(item => {
-                    // PEMETAAN KOLOM DARI SPREADSHEET / EXCEL 'sistem patroli.xlsx'
                     let nama = item['Nama Satpam'] || item.nama || item.Nama || item.Nama_Personel || "-";
                     let zona = item['Titik Patroli (Zona)'] || item.zona || item.Zona || item.Zona_Area || "-";
                     let kondisi = item['Catatan/Kondisi'] || item.kondisi || item.Kondisi || item.Kondisi_Sektor || "-";
@@ -476,7 +492,9 @@
             document.getElementById('statPetugas').innerText = setPetugasUnik.size;
             document.getElementById('statZona').innerText = setZonaUnik.size;
 
-            if (tglStartVal && tglEndVal) {
+            if (tglStartVal === hariIni && tglEndVal === hariIni) {
+                document.getElementById('judulTabel').innerHTML = `<i class="fa-solid fa-list-ul me-2"></i>Riwayat Patroli Hari Ini (${tglStartVal.split('-').reverse().join('/')})`;
+            } else if (tglStartVal && tglEndVal) {
                 if (tglStartVal === tglEndVal) {
                     document.getElementById('judulTabel').innerHTML = `<i class="fa-solid fa-list-ul me-2"></i>Riwayat Patroli (${tglStartVal.split('-').reverse().join('/')})`;
                 } else {
@@ -500,7 +518,7 @@
             const indeksSelesai = Math.min(indeksMulai + JUMLAH_DATA_PER_HALAMAN, totalData);
 
             if (totalData === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="text-center p-4 text-muted">Tidak ditemukan data patroli pada rentang kriteria ini.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center p-4 text-muted">Tidak ada data patroli untuk tanggal/kriteria ini.</td></tr>`;
                 document.getElementById('infoTeksHalaman').innerText = "Menampilkan 0-0 dari 0 data";
                 document.getElementById('labelHalamanAktif').innerText = "1 / 1";
                 document.getElementById('btnHalamanPrev').classList.add('disabled');
@@ -636,7 +654,7 @@
             
             let linkDownload = document.createElement('a');
             linkDownload.href = url;
-            linkDownload.download = `Laporan_Patroli_Sistem_${new Date().getTime()}.xls`;
+            linkDownload.download = `Laporan_Patroli_HariIni_${new Date().getTime()}.xls`;
             document.body.appendChild(linkDownload);
             linkDownload.click();
             document.body.removeChild(linkDownload);
