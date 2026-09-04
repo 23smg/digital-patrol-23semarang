@@ -10,133 +10,28 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root {
-            --navy-main: #0a1128;
-            --navy-light: #1c2541;
-            --blue-accent: #0066cc;
-            --border-gray: #e2e8f0;
-            --bg-light: #f8fafc;
-        }
-        body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: var(--bg-light);
-            color: #334155;
-            font-size: 13px;
-        }
-        .navbar-custom {
-            background-color: var(--navy-main);
-            color: white;
-            padding: 0.8rem 2rem;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
-        }
-        .stat-card {
-            background: white;
-            border-radius: 12px;
-            padding: 1rem;
-            border: 1px solid var(--border-gray);
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-            transition: transform 0.2s;
-        }
-        .stat-card:hover {
-            transform: translateY(-2px);
-        }
-        .stat-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.1rem;
-        }
-        .filter-section {
-            background: white;
-            border-radius: 12px;
-            padding: 1rem;
-            border: 1px solid var(--border-gray);
-            margin-bottom: 1rem;
-        }
-        .table-container {
-            background: white;
-            border-radius: 12px;
-            border: 1px solid var(--border-gray);
-            overflow: hidden;
-        }
-        .table-custom tbody tr {
-            cursor: pointer;
-            transition: background-color 0.15s ease;
-        }
-        .table-custom tbody tr:hover {
-            background-color: #f1f5f9 !important;
-        }
-        .table-custom th {
-            background-color: #f1f5f9;
-            color: #475569;
-            font-weight: 600;
-            text-transform: uppercase;
-            font-size: 0.7rem;
-            letter-spacing: 0.05em;
-            padding: 0.6rem 0.7rem;
-        }
-        .table-custom td {
-            padding: 0.45rem 0.7rem;
-            vertical-align: middle;
-            border-bottom: 1px solid var(--border-gray);
-            font-size: 12.5px;
-        }
-        .badge-kondisi {
-            padding: 0.25rem 0.6rem;
-            border-radius: 9999px;
-            font-size: 0.7rem;
-            font-weight: 600;
-        }
+        :root { --navy-main: #0a1128; --navy-light: #1c2541; --blue-accent: #0066cc; --border-gray: #e2e8f0; --bg-light: #f8fafc; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: var(--bg-light); color: #334155; font-size: 13px; }
+        .navbar-custom { background-color: var(--navy-main); color: white; padding: 0.8rem 2rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        .stat-card { background: white; border-radius: 12px; padding: 1rem; border: 1px solid var(--border-gray); box-shadow: 0 1px 3px rgba(0,0,0,0.05); transition: transform 0.2s; }
+        .stat-card:hover { transform: translateY(-2px); }
+        .stat-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
+        .filter-section { background: white; border-radius: 12px; padding: 1rem; border: 1px solid var(--border-gray); margin-bottom: 1rem; }
+        .table-container { background: white; border-radius: 12px; border: 1px solid var(--border-gray); overflow: hidden; }
+        .table-custom tbody tr { cursor: pointer; transition: background-color 0.15s ease; }
+        .table-custom tbody tr:hover { background-color: #f1f5f9 !important; }
+        .table-custom th { background-color: #f1f5f9; color: #475569; font-weight: 600; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.05em; padding: 0.6rem 0.7rem; }
+        .table-custom td { padding: 0.45rem 0.7rem; vertical-align: middle; border-bottom: 1px solid var(--border-gray); font-size: 12.5px; }
+        .badge-kondisi { padding: 0.25rem 0.6rem; border-radius: 9999px; font-size: 0.7rem; font-weight: 600; }
         .bg-aman { background-color: #dcfce7; color: #166534; }
         .bg-temuan { background-color: #fee2e2; color: #991b1b; }
-        .img-thumbnail-custom {
-            width: 45px;
-            height: 45px;
-            object-fit: cover;
-            border-radius: 6px;
-            border: 1px solid var(--border-gray);
-        }
-        .modal-detail-content {
-            border-radius: 20px;
-            border: none;
-            overflow: hidden;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
-        }
-        .modal-detail-header {
-            background-color: var(--navy-main);
-            color: white;
-            border-bottom: none;
-        }
-        .detail-label {
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: #64748b;
-            font-weight: 600;
-            margin-bottom: 2px;
-        }
-        .detail-value {
-            font-size: 14px;
-            font-weight: 600;
-            color: #0f172a;
-            margin-bottom: 12px;
-        }
-        .dev-watermark {
-            font-size: 11px;
-            color: #94a3b8;
-            text-align: center;
-            margin: 1.5rem 0;
-        }
-        .chart-box {
-            background: white;
-            border-radius: 12px;
-            padding: 1rem;
-            border: 1px solid var(--border-gray);
-            height: 250px;
-        }
+        .img-thumbnail-custom { width: 45px; height: 45px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border-gray); }
+        .modal-detail-content { border-radius: 20px; border: none; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15); }
+        .modal-detail-header { background-color: var(--navy-main); color: white; border-bottom: none; }
+        .detail-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; font-weight: 600; margin-bottom: 2px; }
+        .detail-value { font-size: 14px; font-weight: 600; color: #0f172a; margin-bottom: 12px; }
+        .dev-watermark { font-size: 11px; color: #94a3b8; text-align: center; margin: 1.5rem 0; }
+        .chart-box { background: white; border-radius: 12px; padding: 1rem; border: 1px solid var(--border-gray); height: 250px; }
     </style>
 </head>
 <body>
@@ -208,7 +103,7 @@
             </div>
         </div>
 
-        <!-- PANEL GRAFIK ANALISTIK TEMUAN -->
+        <!-- PANEL GRAFIK ANALISTIK -->
         <div class="row g-3 mb-3">
             <div class="col-md-5">
                 <div class="chart-box">
@@ -228,7 +123,7 @@
             </div>
         </div>
 
-        <!-- PANEL FILTER DATA -->
+        <!-- PANEL FILTER -->
         <div class="filter-section">
             <div class="row g-2 align-items-end">
                 <div class="col-md-2">
@@ -254,7 +149,7 @@
             </div>
         </div>
 
-        <!-- TABEL DATA PATROLI -->
+        <!-- TABEL DATA -->
         <div class="table-container mb-3">
             <div class="px-3 py-2 border-bottom d-flex justify-content-between align-items-center bg-white">
                 <span class="fw-bold text-navy-main" id="judulTabel" style="font-size: 13px;"><i class="fa-solid fa-list-ul me-2"></i>Riwayat Aktivitas</span>
@@ -361,18 +256,10 @@
         let audioSuaraAktif = true;
         let totalJumlahTemuanTerakhir = 0;
 
-        function getDaftarTanggalHariIni() {
-            let sekarang = new Date();
-            let tahun = sekarang.getFullYear();
-            let bulan = String(sekarang.getMonth() + 1).padStart(2, '0');
-            let hari = String(sekarang.getDate()).padStart(2, '0');
-            return `${tahun}-${bulan}-${hari}`;
-        }
-
         document.addEventListener("DOMContentLoaded", function() {
             komponenModalDetail = new bootstrap.Modal(document.getElementById('modalDetailPatroli'));
-
-            setFilterHariIni(false);
+            
+            // Muat seluruh data terlebih dahulu tanpa memblokir tanggal hari ini
             muatDataLaporanDashboard();
 
             document.getElementById('filterTanggalStart').addEventListener('change', memicuUlangFilter);
@@ -381,9 +268,14 @@
         });
 
         function setFilterHariIni(memicuFilter = true) {
-            let hariIni = getDaftarTanggalHariIni();
-            document.getElementById('filterTanggalStart').value = hariIni;
-            document.getElementById('filterTanggalEnd').value = hariIni;
+            let sekarang = new Date();
+            let tahun = sekarang.getFullYear();
+            let bulan = String(sekarang.getMonth() + 1).padStart(2, '0');
+            let hari = String(sekarang.getDate()).padStart(2, '0');
+            let tglStr = `${tahun}-${bulan}-${hari}`;
+            
+            document.getElementById('filterTanggalStart').value = tglStr;
+            document.getElementById('filterTanggalEnd').value = tglStr;
             if (memicuFilter) memicuUlangFilter();
         }
 
@@ -403,11 +295,7 @@
         function toggleAudioAlert() {
             audioSuaraAktif = !audioSuaraAktif;
             const icon = document.getElementById('iconAudio');
-            if (audioSuaraAktif) {
-                icon.className = "fa-solid fa-volume-high text-white";
-            } else {
-                icon.className = "fa-solid fa-volume-xmark text-danger";
-            }
+            icon.className = audioSuaraAktif ? "fa-solid fa-volume-high text-white" : "fa-solid fa-volume-xmark text-danger";
         }
 
         function bunyikanAlarmTemuanBaru() {
@@ -458,24 +346,21 @@
 
             fetch(URL_DENGAN_PARAMS, {
                 method: "GET",
-                mode: "cors",
-                credentials: "omit",
-                headers: { "Content-Type": "text/plain" }
+                redirect: "follow"
             })
-            .then(res => {
-                if (!res.ok) throw new Error("Koneksi jaringan bermasalah.");
-                return res.json();
-            })
+            .then(res => res.json())
             .then(response => {
+                let rawArr = [];
                 if (Array.isArray(response)) {
-                    dataMasterPusat = response;
+                    rawArr = response;
                 } else if (response && response.logData) {
-                    dataMasterPusat = response.logData;
+                    rawArr = response.logData;
                 } else if (response && response.data) {
-                    dataMasterPusat = response.data;
-                } else {
-                    dataMasterPusat = [];
+                    rawArr = response.data;
                 }
+                
+                // Urutkan data terbaru berada di posisi paling atas
+                dataMasterPusat = rawArr.reverse();
                 
                 halamanSaatIni = 1;
                 jalankanFilterData();
@@ -487,7 +372,7 @@
             })
             .catch(err => {
                 if (!isBackground) {
-                    loading.innerHTML = "<span class='text-danger'><i class='fa-solid fa-triangle-exclamation me-1'></i> Gagal memuat data dari spreadsheet.</span>";
+                    loading.innerHTML = "<span class='text-danger'><i class='fa-solid fa-triangle-exclamation me-1'></i> Gagal memuat data dari spreadsheet. Pastikan Web App diset ke 'Anyone'.</span>";
                     btnRef.disabled = false;
                     iconRef.classList.remove('fa-spin');
                 }
@@ -543,7 +428,6 @@
             const tglStartVal = document.getElementById('filterTanggalStart').value; 
             const tglEndVal = document.getElementById('filterTanggalEnd').value; 
             const kataKunci = document.getElementById('filterCari').value.toLowerCase().trim();
-            const hariIni = getDaftarTanggalHariIni();
 
             let dateMulai = tglStartVal ? new Date(tglStartVal + "T00:00:00") : null;
             let dateSelesai = tglEndVal ? new Date(tglEndVal + "T23:59:59") : null;
@@ -557,14 +441,15 @@
 
             if (Array.isArray(dataMasterPusat)) {
                 dataMasterPusat.forEach(item => {
-                    let nama = item['Nama Satpam'] || item.nama || item.Nama || item.Nama_Personel || "-";
-                    let zona = item['Titik Patroli (Zona)'] || item.zona || item.Zona || item.Zona_Area || "-";
-                    let kondisi = item['Catatan/Kondisi'] || item.kondisi || item.Kondisi || item.Kondisi_Sektor || "-";
-                    let catatan = item['Temuan Lapangan'] || item.catatan || item.Catatan || item.Catatan_Temuan || "";
-                    let timestamp = item.Timestamp || item.timestamp || item.Waktu_Log || "";
-                    let lat = item.Latitude || item.lat || item.Lat || "-";
-                    let lng = item.Longitude || item.lng || item.Lng || "-";
-                    let urlFotoRaw = item['Link Foto'] || item.linkFoto || item.urlFoto || "";
+                    // Penanganan nama kolom dinamis
+                    let nama = item.nama || item['Nama Satpam'] || item.Nama || item.Nama_Personel || "-";
+                    let zona = item.zona || item['Titik Patroli (Zona)'] || item.Zona || item.Zona_Area || "-";
+                    let kondisi = item.kondisi || item['Catatan/Kondisi'] || item.Kondisi || item.Kondisi_Sektor || "-";
+                    let catatan = item.catatan || item['Temuan Lapangan'] || item.Catatan || item.Catatan_Temuan || "";
+                    let timestamp = item.timestamp || item.Timestamp || item.Waktu_Log || "";
+                    let lat = item.lat || item.Latitude || item.Lat || "-";
+                    let lng = item.lng || item.Longitude || item.Lng || "-";
+                    let urlFotoRaw = item.urlFoto || item.linkFoto || item['Link Foto'] || item.url || "";
 
                     if (timestamp && timestamp !== "-") {
                         let dateDataLog = ubahTimestampSheetKeDate(timestamp);
@@ -574,7 +459,7 @@
                         }
                     }
                     
-                    let isTemuan = kondisi.toLowerCase().includes("temuan");
+                    let isTemuan = kondisi.toLowerCase().includes("temuan") || kondisi.toLowerCase().includes("kendala") || kondisi.toLowerCase().includes("rusak");
                     if (filterHanyaTemuan && !isTemuan) return;
 
                     let teksCatatan = catatan.toLowerCase();
@@ -607,7 +492,6 @@
                 });
             }
 
-            // Bunyikan Alarm jika ada temuan baru saat auto refresh
             if (totalJumlahTemuanTerakhir > 0 && jumlahAdaTemuan > totalJumlahTemuanTerakhir) {
                 bunyikanAlarmTemuanBaru();
             }
@@ -618,14 +502,8 @@
             document.getElementById('statPetugas').innerText = setPetugasUnik.size;
             document.getElementById('statZona').innerText = setZonaUnik.size;
 
-            if (tglStartVal === hariIni && tglEndVal === hariIni) {
-                document.getElementById('judulTabel').innerHTML = `<i class="fa-solid fa-list-ul me-2"></i>Riwayat Patroli Hari Ini (${tglStartVal.split('-').reverse().join('/')})`;
-            } else if (tglStartVal && tglEndVal) {
-                if (tglStartVal === tglEndVal) {
-                    document.getElementById('judulTabel').innerHTML = `<i class="fa-solid fa-list-ul me-2"></i>Riwayat Patroli (${tglStartVal.split('-').reverse().join('/')})`;
-                } else {
-                    document.getElementById('judulTabel').innerHTML = `<i class="fa-solid fa-list-ul me-2"></i>Riwayat Periode ${tglStartVal.split('-').reverse().join('/')} s/d ${tglEndVal.split('-').reverse().join('/')}`;
-                }
+            if (tglStartVal && tglEndVal) {
+                document.getElementById('judulTabel').innerHTML = `<i class="fa-solid fa-list-ul me-2"></i>Riwayat Periode ${tglStartVal.split('-').reverse().join('/')} s/d ${tglEndVal.split('-').reverse().join('/')}`;
             } else {
                 document.getElementById('judulTabel').innerHTML = `<i class="fa-solid fa-list-ul me-2"></i>Semua Riwayat Aktivitas Kontrol`;
             }
@@ -635,7 +513,6 @@
         }
 
         function renderChartRingkasan(aman, temuan, objectZonaTemuan) {
-            // Chart Donut Rasio Kondisi
             const ctxRasio = document.getElementById('chartRasioKondisi').getContext('2d');
             if (chartRasioInstansi) chartRasioInstansi.destroy();
             chartRasioInstansi = new Chart(ctxRasio, {
@@ -654,7 +531,6 @@
                 }
             });
 
-            // Chart Bar Top Zona
             let sortedZona = Object.keys(objectZonaTemuan)
                 .map(key => ({ zona: key, total: objectZonaTemuan[key] }))
                 .sort((a, b) => b.total - a.total)
@@ -692,7 +568,7 @@
             const indeksSelesai = Math.min(indeksMulai + JUMLAH_DATA_PER_HALAMAN, totalData);
 
             if (totalData === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="text-center p-4 text-muted">Tidak ada data patroli untuk tanggal/kriteria ini.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center p-4 text-muted">Tidak ada data patroli untuk kriteria ini.</td></tr>`;
                 document.getElementById('infoTeksHalaman').innerText = "Menampilkan 0-0 dari 0 data";
                 document.getElementById('labelHalamanAktif').innerText = "1 / 1";
                 document.getElementById('btnHalamanPrev').classList.add('disabled');
@@ -700,7 +576,7 @@
             } else {
                 for (let i = indeksMulai; i < indeksSelesai; i++) {
                     let item = dataTerfilterSaatIni[i];
-                    let isAman = !item.kondisi.toLowerCase().includes("temuan");
+                    let isAman = !item.kondisi.toLowerCase().includes("temuan") && !item.kondisi.toLowerCase().includes("kendala") && !item.kondisi.toLowerCase().includes("rusak");
                     let kelasBadge = isAman ? "bg-aman" : "bg-temuan";
 
                     let kolomFoto = "<span class='text-muted' style='font-size:11px;'>Tidak ada foto</span>";
@@ -763,7 +639,8 @@
             
             const badgeKondisi = document.getElementById('detKondisi');
             badgeKondisi.innerText = dataPilihan.kondisi;
-            badgeKondisi.className = !dataPilihan.kondisi.toLowerCase().includes("temuan") ? "badge-kondisi bg-aman" : "badge-kondisi bg-temuan";
+            let isAman = !dataPilihan.kondisi.toLowerCase().includes("temuan") && !dataPilihan.kondisi.toLowerCase().includes("kendala") && !dataPilihan.kondisi.toLowerCase().includes("rusak");
+            badgeKondisi.className = isAman ? "badge-kondisi bg-aman" : "badge-kondisi bg-temuan";
 
             const koordinatTeks = (dataPilihan.lat && dataPilihan.lat !== "-") ? `${dataPilihan.lat}, ${dataPilihan.lng}` : "Tidak Terlacak";
             document.getElementById('detGps').innerText = koordinatTeks;
@@ -801,7 +678,7 @@
             tbodyLama.innerHTML = ""; 
 
             dataTerfilterSaatIni.forEach((item) => {
-                let isAman = !item.kondisi.toLowerCase().includes("temuan");
+                let isAman = !item.kondisi.toLowerCase().includes("temuan") && !item.kondisi.toLowerCase().includes("kendala");
                 let styleKondisi = isAman 
                     ? "background-color: #dcfce7; color: #166534; font-weight: bold; text-align: center;" 
                     : "background-color: #fee2e2; color: #991b1b; font-weight: bold; text-align: center;";
@@ -820,19 +697,16 @@
 
             let templateExcel = `
                 <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
-                <head>
-                    <meta charset="utf-8">
-                </head>
+                <head><meta charset="utf-8"></head>
                 <body>${tabelHtml.outerHTML}</body>
                 </html>
             `;
 
             let blob = new Blob([templateExcel], { type: "application/vnd.ms-excel" });
             let url = URL.createObjectURL(blob);
-            
             let linkDownload = document.createElement('a');
             linkDownload.href = url;
-            linkDownload.download = `Laporan_Patroli_Lengkap_${new Date().getTime()}.xls`;
+            linkDownload.download = `Laporan_Patroli_${new Date().getTime()}.xls`;
             document.body.appendChild(linkDownload);
             linkDownload.click();
             document.body.removeChild(linkDownload);
