@@ -315,6 +315,9 @@
                 <button class="btn btn-sm btn-outline-light ms-1" onclick="toggleAudioAlert()" id="btnAudioToggle" title="Suara Alarm jika Ada Temuan Baru">
                     <i class="fa-solid fa-volume-high" id="iconAudio"></i>
                 </button>
+                <button class="btn btn-sm btn-outline-warning ms-1" onclick="bukaModalGantiPassword()" title="Ganti Password">
+                    <i class="fa-solid fa-key"></i>
+                </button>
                 <button class="btn btn-sm btn-outline-danger ms-2" onclick="prosesLogoutAdmin()" title="Keluar">
                     <i class="fa-solid fa-power-off"></i>
                 </button>
@@ -469,7 +472,7 @@
         </div>
     </div>
 
-    <!-- MODAL DETAIL -->
+    <!-- MODAL DETAIL PATROLI -->
     <div class="modal fade" id="modalDetailPatroli" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content modal-detail-content">
@@ -507,6 +510,38 @@
         </div>
     </div>
 
+    <!-- MODAL GANTI PASSWORD -->
+    <div class="modal fade" id="modalGantiPassword" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content border-0 rounded-4 shadow">
+                <div class="modal-header bg-dark text-white border-0 py-2 px-3">
+                    <h6 class="modal-title fw-bold" style="font-size: 13px;"><i class="fa-solid fa-key me-2 text-warning"></i>Ganti Password</h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-3">
+                    <div id="alertGantiPass" class="alert d-none py-2 small border-0 rounded-3 mb-2" style="font-size: 11px;"></div>
+                    <form id="formGantiPassword" onsubmit="prosesGantiPassword(event)">
+                        <div class="mb-2">
+                            <label class="form-label text-muted mb-1" style="font-size: 11px; font-weight: 600;">Password Saat Ini</label>
+                            <input type="password" id="inputPassLama" class="form-control form-control-sm" required placeholder="••••••••">
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label text-muted mb-1" style="font-size: 11px; font-weight: 600;">Password Baru</label>
+                            <input type="password" id="inputPassBaru" class="form-control form-control-sm" required placeholder="••••••••">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted mb-1" style="font-size: 11px; font-weight: 600;">Konfirmasi Password Baru</label>
+                            <input type="password" id="inputPassKonfirmasi" class="form-control form-control-sm" required placeholder="••••••••">
+                        </div>
+                        <button type="submit" id="btnSubmitGantiPass" class="btn btn-primary btn-sm w-100 fw-bold">
+                            Simpan Password Baru
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         const API_URL_WEBAPP = "https://script.google.com/macros/s/AKfycbyJuzwTGe-bucxDG6Yvgp-GEEsk5RdUpjR7ZX-G6KL_PlkiAn6QhustBE5n2fWBVrmA/exec";
@@ -514,6 +549,7 @@
         let dataMasterPusat = [];
         let dataTerfilterSaatIni = []; 
         let komponenModalDetail;
+        let modalGantiPassObj;
         let halamanSaatIni = 1;
         const JUMLAH_DATA_PER_HALAMAN = 10;
         
@@ -526,6 +562,7 @@
 
         document.addEventListener("DOMContentLoaded", function() {
             komponenModalDetail = new bootstrap.Modal(document.getElementById('modalDetailPatroli'));
+            modalGantiPassObj = new bootstrap.Modal(document.getElementById('modalGantiPassword'));
 
             const userSesi = localStorage.getItem("adminPatroliUser");
             if (userSesi) {
@@ -584,6 +621,62 @@
         function prosesLogoutAdmin() {
             localStorage.removeItem("adminPatroliUser");
             location.reload();
+        }
+
+        function bukaModalGantiPassword() {
+            document.getElementById('formGantiPassword').reset();
+            const alertBox = document.getElementById('alertGantiPass');
+            alertBox.classList.add('d-none');
+            modalGantiPassObj.show();
+        }
+
+        function prosesGantiPassword(e) {
+            e.preventDefault();
+            const userSesi = JSON.parse(localStorage.getItem("adminPatroliUser"));
+            if (!userSesi) return;
+
+            const passLama = document.getElementById('inputPassLama').value;
+            const passBaru = document.getElementById('inputPassBaru').value;
+            const passKonf = document.getElementById('inputPassKonfirmasi').value;
+            const btn = document.getElementById('btnSubmitGantiPass');
+            const alertBox = document.getElementById('alertGantiPass');
+
+            if (passBaru !== passKonf) {
+                alertBox.className = "alert alert-danger py-2 small border-0 rounded-3 mb-2";
+                alertBox.innerText = "Konfirmasi password baru tidak cocok!";
+                alertBox.classList.remove('d-none');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin me-1"></i> Memproses...`;
+
+            fetch(`${API_URL_WEBAPP}?aksi=gantiPassword&username=${encodeURIComponent(userSesi.username || userSesi.nama)}&passLama=${encodeURIComponent(passLama)}&passBaru=${encodeURIComponent(passBaru)}`)
+            .then(res => res.json())
+            .then(res => {
+                btn.disabled = false;
+                btn.innerText = "Simpan Password Baru";
+
+                if (res.status === "SUCCESS") {
+                    alertBox.className = "alert alert-success py-2 small border-0 rounded-3 mb-2";
+                    alertBox.innerText = res.message || "Password berhasil diperbarui!";
+                    alertBox.classList.remove('d-none');
+                    setTimeout(() => {
+                        modalGantiPassObj.hide();
+                    }, 1500);
+                } else {
+                    alertBox.className = "alert alert-danger py-2 small border-0 rounded-3 mb-2";
+                    alertBox.innerText = res.message || "Gagal mengganti password.";
+                    alertBox.classList.remove('d-none');
+                }
+            })
+            .catch(err => {
+                btn.disabled = false;
+                btn.innerText = "Simpan Password Baru";
+                alertBox.className = "alert alert-danger py-2 small border-0 rounded-3 mb-2";
+                alertBox.innerText = "Gagal terhubung ke server backend.";
+                alertBox.classList.remove('d-none');
+            });
         }
 
         function getDaftarTanggalHariIni() {
