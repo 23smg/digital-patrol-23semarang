@@ -375,10 +375,10 @@
 
             setFilterHariIni(false);
             
-            // 1. Ambil data pertama kali saat halaman dimuat
+            // Ambil data pertama kali saat halaman dimuat
             muatDataLaporanDashboard();
 
-            // 2. Jalankan Auto Refresh bawaan (15 detik untuk update real-time)
+            // Auto Refresh bawaan 15 detik
             mulaiAutoPolling(15); 
 
             // Listener Event Filter
@@ -518,7 +518,6 @@
             return urlDrive;
         }
 
-        // PERBAIKAN: Parser Tanggal Fleksibel (Mendukung DD/MM/YYYY & YYYY-MM-DD)
         function ubahTimestampSheetKeDate(strTimestamp) {
             if (!strTimestamp || strTimestamp === "-" || strTimestamp === "") return null;
             try {
@@ -811,44 +810,122 @@
             jalankanFilterData();
         }
 
+        // PERBAIKAN: Format Ekspor Excel Rapi, Lebar Kolom Teratur & Link Ringkas
         function eksporKeExcel() {
-            let tabelHtml = document.getElementById('tabelLogPatroli').cloneNode(true);
-            let tbodyLama = tabelHtml.querySelector('tbody');
-            tbodyLama.innerHTML = ""; 
+            if (!dataTerfilterSaatIni || dataTerfilterSaatIni.length === 0) {
+                alert("Tidak ada data untuk diekspor!");
+                return;
+            }
 
-            dataTerfilterSaatIni.forEach((item) => {
-                let isAman = !item.kondisi.toLowerCase().includes("temuan");
-                let styleKondisi = isAman 
-                    ? "background-color: #dcfce7; color: #166534; font-weight: bold; text-align: center;" 
-                    : "background-color: #fee2e2; color: #991b1b; font-weight: bold; text-align: center;";
+            const tglStartVal = document.getElementById('filterTanggalStart').value;
+            const tglEndVal = document.getElementById('filterTanggalEnd').value;
+            
+            let rentangWaktuTeks = "Semua_Waktu";
+            if (tglStartVal && tglEndVal) {
+                rentangWaktuTeks = (tglStartVal === tglEndVal) ? tglStartVal : `${tglStartVal}_s.d_${tglEndVal}`;
+            }
 
-                let baris = `<tr>
-                    <td>${item.timestamp}</td>
-                    <td>${item.nama}</td>
-                    <td>${item.zona}</td>
-                    <td style="${styleKondisi}">${item.kondisi}</td>
-                    <td>${item.catatan || '-'}</td>
-                    <td>${item.linkFotoRaw || '-'}</td> 
-                    <td>${item.lat}, ${item.lng}</td>
-                </tr>`;
-                tbodyLama.innerHTML += baris;
-            });
-
-            let templateExcel = `
+            let htmlContent = `
                 <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
                 <head>
                     <meta charset="utf-8">
+                    <!--[if gte mso 9]>
+                    <xml>
+                        <x:ExcelWorkbook>
+                            <x:ExcelWorksheets>
+                                <x:ExcelWorksheet>
+                                    <x:Name>Laporan Patroli</x:Name>
+                                    <x:WorksheetOptions>
+                                        <x:DisplayGridlines/>
+                                    </x:WorksheetOptions>
+                                </x:ExcelWorksheet>
+                            </x:ExcelWorksheets>
+                        </x:ExcelWorkbook>
+                    </xml>
+                    <![endif]-->
+                    <style>
+                        body { font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; }
+                        table { border-collapse: collapse; width: 100%; }
+                        th { 
+                            background-color: #0a1128; 
+                            color: #ffffff; 
+                            font-weight: bold; 
+                            text-align: center; 
+                            border: 1px solid #000000; 
+                            padding: 8px;
+                            vertical-align: middle;
+                        }
+                        td { 
+                            border: 1px solid #cccccc; 
+                            padding: 6px; 
+                            vertical-align: top;
+                            mso-number-format:"\\@";
+                        }
+                        .text-center { text-align: center; }
+                        .bg-aman { background-color: #dcfce7; color: #166534; font-weight: bold; text-align: center; }
+                        .bg-temuan { background-color: #fee2e2; color: #991b1b; font-weight: bold; text-align: center; }
+                        .wrap-text { white-space: normal; word-wrap: break-word; }
+                    </style>
                 </head>
-                <body>${tabelHtml.outerHTML}</body>
+                <body>
+                    <h3 style="margin-bottom: 5px;">LAPORAN MONITORING PATROLI - MALL 23SEMARANG</h3>
+                    <p style="margin-top: 0px; font-size: 10pt; color: #555555;">Periode Data: <b>${rentangWaktuTeks.replace(/_/g, ' ')}</b> | Total Record: <b>${dataTerfilterSaatIni.length} Data</b></p>
+                    <br>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 150px;">Waktu Log</th>
+                                <th style="width: 160px;">Nama Satpam</th>
+                                <th style="width: 110px;">Zona / Area</th>
+                                <th style="width: 100px;">Kondisi</th>
+                                <th style="width: 350px;">Temuan Lapangan / Checklist</th>
+                                <th style="width: 120px;">Lampiran Foto</th>
+                                <th style="width: 160px;">Koordinat GPS</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            dataTerfilterSaatIni.forEach((item) => {
+                let isAman = !item.kondisi.toLowerCase().includes("temuan");
+                let kelasKondisi = isAman ? "bg-aman" : "bg-temuan";
+
+                let linkFotoFormatted = "-";
+                if (item.linkFotoRaw && item.linkFotoRaw.includes("http")) {
+                    linkFotoFormatted = `<a href="${item.linkFotoRaw}" target="_blank" style="color: #0066cc; font-weight: bold;">[Lihat Foto]</a>`;
+                }
+
+                let gpsFormatted = "-";
+                if (item.lat && item.lat !== "-" && item.lng && item.lng !== "-") {
+                    gpsFormatted = `${item.lat}, ${item.lng}`;
+                }
+
+                htmlContent += `
+                    <tr>
+                        <td class="text-center">${item.timestamp}</td>
+                        <td><b>${item.nama}</b></td>
+                        <td class="text-center">${item.zona}</td>
+                        <td class="${kelasKondisi}">${item.kondisi}</td>
+                        <td class="wrap-text">${item.catatan || '-'}</td>
+                        <td class="text-center">${linkFotoFormatted}</td>
+                        <td class="text-center">${gpsFormatted}</td>
+                    </tr>
+                `;
+            });
+
+            htmlContent += `
+                        </tbody>
+                    </table>
+                </body>
                 </html>
             `;
 
-            let blob = new Blob([templateExcel], { type: "application/vnd.ms-excel" });
+            let blob = new Blob([htmlContent], { type: "application/vnd.ms-excel;charset=utf-8" });
             let url = URL.createObjectURL(blob);
             
             let linkDownload = document.createElement('a');
             linkDownload.href = url;
-            linkDownload.download = `Laporan_Patroli_Lengkap_${new Date().getTime()}.xls`;
+            linkDownload.download = `Laporan_Patroli_${rentangWaktuTeks}_(${dataTerfilterSaatIni.length}_data).xls`;
             document.body.appendChild(linkDownload);
             linkDownload.click();
             document.body.removeChild(linkDownload);
