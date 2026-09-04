@@ -378,10 +378,10 @@
             // 1. Ambil data pertama kali saat halaman dimuat
             muatDataLaporanDashboard();
 
-            // 2. Jalankan Auto Refresh bawaan (Default: 15 detik untuk update real-time)
+            // 2. Jalankan Auto Refresh bawaan (15 detik untuk update real-time)
             mulaiAutoPolling(15); 
 
-            // Event Listeners Filter Input
+            // Listener Event Filter
             document.getElementById('filterTanggalStart').addEventListener('change', memicuUlangFilter);
             document.getElementById('filterTanggalEnd').addEventListener('change', memicuUlangFilter);
             document.getElementById('filterCari').addEventListener('input', memicuUlangFilter);
@@ -437,7 +437,7 @@
             if (timerAutoRefresh) clearInterval(timerAutoRefresh);
             if (detik > 0) {
                 timerAutoRefresh = setInterval(() => {
-                    muatDataLaporanDashboard(true); // Background update
+                    muatDataLaporanDashboard(true);
                 }, detik * 1000);
             }
         }
@@ -458,7 +458,6 @@
             var btnExp = document.getElementById('btnExport');
             var loading = document.getElementById('loadingStatus');
             
-            // Tampilkan indikator manual refresh saja agar tidak mengganggu tampilan
             if (!isBackground) {
                 btnRef.disabled = true;
                 btnExp.disabled = true;
@@ -466,13 +465,12 @@
                 loading.style.display = "block";
             }
 
-            // Mencegah cache browser dengan timestamp unik
             const URL_DENGAN_PARAMS = `${API_URL_WEBAPP}?aksi=ambilData&_t=${new Date().getTime()}`;
 
             fetch(URL_DENGAN_PARAMS, {
                 method: "GET",
                 mode: "cors",
-                cache: "no-store", 
+                cache: "no-store",
                 headers: { 
                     "Content-Type": "text/plain"
                 }
@@ -492,7 +490,6 @@
                     dataMasterPusat = [];
                 }
                 
-                // Re-render data dengan mempertahankan posisi halaman
                 jalankanFilterData();
                 
                 if (!isBackground) {
@@ -521,17 +518,17 @@
             return urlDrive;
         }
 
+        // PERBAIKAN: Parser Tanggal Fleksibel (Mendukung DD/MM/YYYY & YYYY-MM-DD)
         function ubahTimestampSheetKeDate(strTimestamp) {
             if (!strTimestamp || strTimestamp === "-" || strTimestamp === "") return null;
             try {
-                if (strTimestamp instanceof Date) return strTimestamp;
-                let str = strTimestamp.toString().trim();
-                let nativeDate = new Date(str);
-                if (!isNaN(nativeDate.getTime())) {
-                    return new Date(nativeDate.getFullYear(), nativeDate.getMonth(), nativeDate.getDate());
+                if (strTimestamp instanceof Date) {
+                    return new Date(strTimestamp.getFullYear(), strTimestamp.getMonth(), strTimestamp.getDate());
                 }
 
+                let str = strTimestamp.toString().trim();
                 let teksTanggal = str.split(/[ T]/)[0];
+                
                 let pemisah = teksTanggal.includes('/') ? '/' : (teksTanggal.includes('-') ? '-' : null);
                 if (!pemisah) return null;
 
@@ -539,11 +536,14 @@
                 if (komponen.length < 3) return null;
 
                 let hari, bulan, tahun;
+
                 if (komponen[0].length === 4) {
+                    // Format YYYY-MM-DD
                     tahun = parseInt(komponen[0], 10);
                     bulan = parseInt(komponen[1], 10) - 1;
                     hari = parseInt(komponen[2], 10);
                 } else { 
+                    // Format DD/MM/YYYY (Standar Google Sheets Indonesia)
                     hari = parseInt(komponen[0], 10);
                     bulan = parseInt(komponen[1], 10) - 1;
                     tahun = parseInt(komponen[2], 10);
@@ -624,7 +624,6 @@
                 });
             }
 
-            // Bunyikan Alarm jika ada temuan baru
             if (totalJumlahTemuanTerakhir > 0 && jumlahAdaTemuan > totalJumlahTemuanTerakhir) {
                 bunyikanAlarmTemuanBaru();
             }
