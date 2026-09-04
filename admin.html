@@ -375,13 +375,13 @@
 
             setFilterHariIni(false);
             
-            // Ambil data pertama kali saat halaman dimuat
+            // Ambil data pertama kali
             muatDataLaporanDashboard();
 
             // Auto Refresh bawaan 15 detik
             mulaiAutoPolling(15); 
 
-            // Listener Event Filter
+            // Event Filter
             document.getElementById('filterTanggalStart').addEventListener('change', memicuUlangFilter);
             document.getElementById('filterTanggalEnd').addEventListener('change', memicuUlangFilter);
             document.getElementById('filterCari').addEventListener('input', memicuUlangFilter);
@@ -808,7 +808,7 @@
             jalankanFilterData();
         }
 
-        // EKSPOR EXCEL DENGAN OTOMATIS AUTOFILTER & FREEZE PANES
+        // PERBAIKAN: EKSPOR EXCEL DENGAN AUTOFILTER DI HEADER TABEL
         function eksporKeExcel() {
             if (!dataTerfilterSaatIni || dataTerfilterSaatIni.length === 0) {
                 alert("Tidak ada data untuk diekspor!");
@@ -835,9 +835,6 @@
                                     <x:Name>Laporan Patroli</x:Name>
                                     <x:WorksheetOptions>
                                         <x:DisplayGridlines/>
-                                        <!-- Mengaktifkan AutoFilter pada Header Tabel (Baris 5 Kolom A s/d G) -->
-                                        <x:AutoFilter x:Range="R5C1:R5C7"/>
-                                        <!-- Mengunci Header Tabel (Freeze Panes) -->
                                         <x:FreezePanes/>
                                         <x:FrozenNoSplit/>
                                         <x:SplitRow>5</x:SplitRow>
@@ -877,16 +874,16 @@
                     <h3 style="margin-bottom: 5px;">LAPORAN MONITORING PATROLI - MALL 23SEMARANG</h3>
                     <p style="margin-top: 0px; font-size: 10pt; color: #555555;">Periode Data: <b>${rentangWaktuTeks.replace(/_/g, ' ')}</b> | Total Record: <b>${dataTerfilterSaatIni.length} Data</b></p>
                     <br>
-                    <table>
+                    <table x:str x:autofilter="all" x:publishwithseries="all">
                         <thead>
                             <tr>
-                                <th style="width: 150px;">Waktu Log</th>
-                                <th style="width: 160px;">Nama Satpam</th>
-                                <th style="width: 110px;">Zona / Area</th>
-                                <th style="width: 100px;">Kondisi</th>
-                                <th style="width: 350px;">Temuan Lapangan / Checklist</th>
-                                <th style="width: 120px;">Lampiran Foto</th>
-                                <th style="width: 160px;">Koordinat GPS</th>
+                                <th style="width: 150px;" x:autofilter="all">Waktu Log</th>
+                                <th style="width: 160px;" x:autofilter="all">Nama Satpam</th>
+                                <th style="width: 110px;" x:autofilter="all">Zona / Area</th>
+                                <th style="width: 100px;" x:autofilter="all">Kondisi</th>
+                                <th style="width: 350px;" x:autofilter="all">Temuan Lapangan / Checklist</th>
+                                <th style="width: 120px;" x:autofilter="all">Lampiran Foto</th>
+                                <th style="width: 160px;" x:autofilter="all">Koordinat GPS</th>
                             </tr>
                         </thead>
                         <tbody>
