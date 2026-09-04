@@ -537,12 +537,10 @@
                 let hari, bulan, tahun;
 
                 if (komponen[0].length === 4) {
-                    // Format YYYY-MM-DD
                     tahun = parseInt(komponen[0], 10);
                     bulan = parseInt(komponen[1], 10) - 1;
                     hari = parseInt(komponen[2], 10);
                 } else { 
-                    // Format DD/MM/YYYY (Standar Google Sheets Indonesia)
                     hari = parseInt(komponen[0], 10);
                     bulan = parseInt(komponen[1], 10) - 1;
                     tahun = parseInt(komponen[2], 10);
@@ -810,7 +808,7 @@
             jalankanFilterData();
         }
 
-        // PERBAIKAN: Format Ekspor Excel Rapi, Lebar Kolom Teratur & Link Ringkas
+        // EKSPOR EXCEL DENGAN OTOMATIS AUTOFILTER & FREEZE PANES
         function eksporKeExcel() {
             if (!dataTerfilterSaatIni || dataTerfilterSaatIni.length === 0) {
                 alert("Tidak ada data untuk diekspor!");
@@ -837,6 +835,14 @@
                                     <x:Name>Laporan Patroli</x:Name>
                                     <x:WorksheetOptions>
                                         <x:DisplayGridlines/>
+                                        <!-- Mengaktifkan AutoFilter pada Header Tabel (Baris 5 Kolom A s/d G) -->
+                                        <x:AutoFilter x:Range="R5C1:R5C7"/>
+                                        <!-- Mengunci Header Tabel (Freeze Panes) -->
+                                        <x:FreezePanes/>
+                                        <x:FrozenNoSplit/>
+                                        <x:SplitRow>5</x:SplitRow>
+                                        <x:TopRowBottomPane>5</x:TopRowBottomPane>
+                                        <x:ActivePane>2</x:ActivePane>
                                     </x:WorksheetOptions>
                                 </x:ExcelWorksheet>
                             </x:ExcelWorksheets>
