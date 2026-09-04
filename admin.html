@@ -10,28 +10,133 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root { --navy-main: #0a1128; --navy-light: #1c2541; --blue-accent: #0066cc; --border-gray: #e2e8f0; --bg-light: #f8fafc; }
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: var(--bg-light); color: #334155; font-size: 13px; }
-        .navbar-custom { background-color: var(--navy-main); color: white; padding: 0.8rem 2rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-        .stat-card { background: white; border-radius: 12px; padding: 1rem; border: 1px solid var(--border-gray); box-shadow: 0 1px 3px rgba(0,0,0,0.05); transition: transform 0.2s; }
-        .stat-card:hover { transform: translateY(-2px); }
-        .stat-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
-        .filter-section { background: white; border-radius: 12px; padding: 1rem; border: 1px solid var(--border-gray); margin-bottom: 1rem; }
-        .table-container { background: white; border-radius: 12px; border: 1px solid var(--border-gray); overflow: hidden; }
-        .table-custom tbody tr { cursor: pointer; transition: background-color 0.15s ease; }
-        .table-custom tbody tr:hover { background-color: #f1f5f9 !important; }
-        .table-custom th { background-color: #f1f5f9; color: #475569; font-weight: 600; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.05em; padding: 0.6rem 0.7rem; }
-        .table-custom td { padding: 0.45rem 0.7rem; vertical-align: middle; border-bottom: 1px solid var(--border-gray); font-size: 12.5px; }
-        .badge-kondisi { padding: 0.25rem 0.6rem; border-radius: 9999px; font-size: 0.7rem; font-weight: 600; }
+        :root {
+            --navy-main: #0a1128;
+            --navy-light: #1c2541;
+            --blue-accent: #0066cc;
+            --border-gray: #e2e8f0;
+            --bg-light: #f8fafc;
+        }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-light);
+            color: #334155;
+            font-size: 13px;
+        }
+        .navbar-custom {
+            background-color: var(--navy-main);
+            color: white;
+            padding: 0.8rem 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        }
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1rem;
+            border: 1px solid var(--border-gray);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            transition: transform 0.2s;
+        }
+        .stat-card:hover {
+            transform: translateY(-2px);
+        }
+        .stat-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+        }
+        .filter-section {
+            background: white;
+            border-radius: 12px;
+            padding: 1rem;
+            border: 1px solid var(--border-gray);
+            margin-bottom: 1rem;
+        }
+        .table-container {
+            background: white;
+            border-radius: 12px;
+            border: 1px solid var(--border-gray);
+            overflow: hidden;
+        }
+        .table-custom tbody tr {
+            cursor: pointer;
+            transition: background-color 0.15s ease;
+        }
+        .table-custom tbody tr:hover {
+            background-color: #f1f5f9 !important;
+        }
+        .table-custom th {
+            background-color: #f1f5f9;
+            color: #475569;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.7rem;
+            letter-spacing: 0.05em;
+            padding: 0.6rem 0.7rem;
+        }
+        .table-custom td {
+            padding: 0.45rem 0.7rem;
+            vertical-align: middle;
+            border-bottom: 1px solid var(--border-gray);
+            font-size: 12.5px;
+        }
+        .badge-kondisi {
+            padding: 0.25rem 0.6rem;
+            border-radius: 9999px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
         .bg-aman { background-color: #dcfce7; color: #166534; }
         .bg-temuan { background-color: #fee2e2; color: #991b1b; }
-        .img-thumbnail-custom { width: 45px; height: 45px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border-gray); }
-        .modal-detail-content { border-radius: 20px; border: none; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15); }
-        .modal-detail-header { background-color: var(--navy-main); color: white; border-bottom: none; }
-        .detail-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; font-weight: 600; margin-bottom: 2px; }
-        .detail-value { font-size: 14px; font-weight: 600; color: #0f172a; margin-bottom: 12px; }
-        .dev-watermark { font-size: 11px; color: #94a3b8; text-align: center; margin: 1.5rem 0; }
-        .chart-box { background: white; border-radius: 12px; padding: 1rem; border: 1px solid var(--border-gray); height: 250px; }
+        .img-thumbnail-custom {
+            width: 45px;
+            height: 45px;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 1px solid var(--border-gray);
+        }
+        .modal-detail-content {
+            border-radius: 20px;
+            border: none;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+        }
+        .modal-detail-header {
+            background-color: var(--navy-main);
+            color: white;
+            border-bottom: none;
+        }
+        .detail-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #64748b;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+        .detail-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: #0f172a;
+            margin-bottom: 12px;
+        }
+        .dev-watermark {
+            font-size: 11px;
+            color: #94a3b8;
+            text-align: center;
+            margin: 1.5rem 0;
+        }
+        .chart-box {
+            background: white;
+            border-radius: 12px;
+            padding: 1rem;
+            border: 1px solid var(--border-gray);
+            height: 250px;
+        }
     </style>
 </head>
 <body>
@@ -44,9 +149,10 @@
         <div class="d-flex align-items-center gap-2">
             <label class="text-white-50 small mb-0 me-1" style="font-size: 11px;"><i class="fa-solid fa-clock-rotate-left me-1"></i>Auto Refresh:</label>
             <select id="selectAutoRefresh" class="form-select form-select-sm border-0" style="width: 110px; font-size: 11px;" onchange="aturAutoRefresh()">
+                <option value="15" selected>15 Detik</option>
+                <option value="60">1 Menit</option>
+                <option value="300">5 Menit</option>
                 <option value="0">Matikan</option>
-                <option value="1">1 Menit</option>
-                <option value="5">5 Menit</option>
             </select>
             <button class="btn btn-sm btn-outline-light ms-2" onclick="toggleAudioAlert()" id="btnAudioToggle" title="Suara Alarm jika Ada Temuan Baru">
                 <i class="fa-solid fa-volume-high" id="iconAudio"></i>
@@ -103,7 +209,7 @@
             </div>
         </div>
 
-        <!-- PANEL GRAFIK ANALISTIK -->
+        <!-- PANEL GRAFIK ANALISTIK TEMUAN -->
         <div class="row g-3 mb-3">
             <div class="col-md-5">
                 <div class="chart-box">
@@ -123,7 +229,7 @@
             </div>
         </div>
 
-        <!-- PANEL FILTER -->
+        <!-- PANEL FILTER DATA -->
         <div class="filter-section">
             <div class="row g-2 align-items-end">
                 <div class="col-md-2">
@@ -149,7 +255,7 @@
             </div>
         </div>
 
-        <!-- TABEL DATA -->
+        <!-- TABEL DATA PATROLI -->
         <div class="table-container mb-3">
             <div class="px-3 py-2 border-bottom d-flex justify-content-between align-items-center bg-white">
                 <span class="fw-bold text-navy-main" id="judulTabel" style="font-size: 13px;"><i class="fa-solid fa-list-ul me-2"></i>Riwayat Aktivitas</span>
@@ -256,26 +362,35 @@
         let audioSuaraAktif = true;
         let totalJumlahTemuanTerakhir = 0;
 
+        function getDaftarTanggalHariIni() {
+            let sekarang = new Date();
+            let tahun = sekarang.getFullYear();
+            let bulan = String(sekarang.getMonth() + 1).padStart(2, '0');
+            let hari = String(sekarang.getDate()).padStart(2, '0');
+            return `${tahun}-${bulan}-${hari}`;
+        }
+
         document.addEventListener("DOMContentLoaded", function() {
             komponenModalDetail = new bootstrap.Modal(document.getElementById('modalDetailPatroli'));
+
+            setFilterHariIni(false);
             
-            // Muat seluruh data terlebih dahulu tanpa memblokir tanggal hari ini
+            // 1. Ambil data pertama kali saat halaman dimuat
             muatDataLaporanDashboard();
 
+            // 2. Jalankan Auto Refresh bawaan (Default: 15 detik untuk update real-time)
+            mulaiAutoPolling(15); 
+
+            // Event Listeners Filter Input
             document.getElementById('filterTanggalStart').addEventListener('change', memicuUlangFilter);
             document.getElementById('filterTanggalEnd').addEventListener('change', memicuUlangFilter);
             document.getElementById('filterCari').addEventListener('input', memicuUlangFilter);
         });
 
         function setFilterHariIni(memicuFilter = true) {
-            let sekarang = new Date();
-            let tahun = sekarang.getFullYear();
-            let bulan = String(sekarang.getMonth() + 1).padStart(2, '0');
-            let hari = String(sekarang.getDate()).padStart(2, '0');
-            let tglStr = `${tahun}-${bulan}-${hari}`;
-            
-            document.getElementById('filterTanggalStart').value = tglStr;
-            document.getElementById('filterTanggalEnd').value = tglStr;
+            let hariIni = getDaftarTanggalHariIni();
+            document.getElementById('filterTanggalStart').value = hariIni;
+            document.getElementById('filterTanggalEnd').value = hariIni;
             if (memicuFilter) memicuUlangFilter();
         }
 
@@ -295,7 +410,11 @@
         function toggleAudioAlert() {
             audioSuaraAktif = !audioSuaraAktif;
             const icon = document.getElementById('iconAudio');
-            icon.className = audioSuaraAktif ? "fa-solid fa-volume-high text-white" : "fa-solid fa-volume-xmark text-danger";
+            if (audioSuaraAktif) {
+                icon.className = "fa-solid fa-volume-high text-white";
+            } else {
+                icon.className = "fa-solid fa-volume-xmark text-danger";
+            }
         }
 
         function bunyikanAlarmTemuanBaru() {
@@ -314,14 +433,18 @@
             } catch(e) {}
         }
 
-        function aturAutoRefresh() {
+        function mulaiAutoPolling(detik = 15) {
             if (timerAutoRefresh) clearInterval(timerAutoRefresh);
-            let menit = parseInt(document.getElementById('selectAutoRefresh').value, 10);
-            if (menit > 0) {
+            if (detik > 0) {
                 timerAutoRefresh = setInterval(() => {
-                    muatDataLaporanDashboard(true);
-                }, menit * 60 * 1000);
+                    muatDataLaporanDashboard(true); // Background update
+                }, detik * 1000);
             }
+        }
+
+        function aturAutoRefresh() {
+            let nilaiPilihan = parseInt(document.getElementById('selectAutoRefresh').value, 10);
+            mulaiAutoPolling(nilaiPilihan);
         }
 
         function memicuUlangFilter() {
@@ -335,6 +458,7 @@
             var btnExp = document.getElementById('btnExport');
             var loading = document.getElementById('loadingStatus');
             
+            // Tampilkan indikator manual refresh saja agar tidak mengganggu tampilan
             if (!isBackground) {
                 btnRef.disabled = true;
                 btnExp.disabled = true;
@@ -342,37 +466,45 @@
                 loading.style.display = "block";
             }
 
-            const URL_DENGAN_PARAMS = `${API_URL_WEBAPP}?aksi=ambilData&_=${new Date().getTime()}`;
+            // Mencegah cache browser dengan timestamp unik
+            const URL_DENGAN_PARAMS = `${API_URL_WEBAPP}?aksi=ambilData&_t=${new Date().getTime()}`;
 
             fetch(URL_DENGAN_PARAMS, {
                 method: "GET",
-                redirect: "follow"
+                mode: "cors",
+                cache: "no-store", 
+                headers: { 
+                    "Content-Type": "text/plain"
+                }
             })
-            .then(res => res.json())
+            .then(res => {
+                if (!res.ok) throw new Error("Koneksi jaringan bermasalah.");
+                return res.json();
+            })
             .then(response => {
-                let rawArr = [];
                 if (Array.isArray(response)) {
-                    rawArr = response;
+                    dataMasterPusat = response;
                 } else if (response && response.logData) {
-                    rawArr = response.logData;
+                    dataMasterPusat = response.logData;
                 } else if (response && response.data) {
-                    rawArr = response.data;
+                    dataMasterPusat = response.data;
+                } else {
+                    dataMasterPusat = [];
                 }
                 
-                // Urutkan data terbaru berada di posisi paling atas
-                dataMasterPusat = rawArr.reverse();
-                
-                halamanSaatIni = 1;
+                // Re-render data dengan mempertahankan posisi halaman
                 jalankanFilterData();
                 
-                btnRef.disabled = false;
-                btnExp.disabled = false;
-                iconRef.classList.remove('fa-spin');
-                loading.style.display = "none";
+                if (!isBackground) {
+                    btnRef.disabled = false;
+                    btnExp.disabled = false;
+                    iconRef.classList.remove('fa-spin');
+                    loading.style.display = "none";
+                }
             })
             .catch(err => {
                 if (!isBackground) {
-                    loading.innerHTML = "<span class='text-danger'><i class='fa-solid fa-triangle-exclamation me-1'></i> Gagal memuat data dari spreadsheet. Pastikan Web App diset ke 'Anyone'.</span>";
+                    loading.innerHTML = "<span class='text-danger'><i class='fa-solid fa-triangle-exclamation me-1'></i> Gagal memuat data dari spreadsheet.</span>";
                     btnRef.disabled = false;
                     iconRef.classList.remove('fa-spin');
                 }
@@ -428,6 +560,7 @@
             const tglStartVal = document.getElementById('filterTanggalStart').value; 
             const tglEndVal = document.getElementById('filterTanggalEnd').value; 
             const kataKunci = document.getElementById('filterCari').value.toLowerCase().trim();
+            const hariIni = getDaftarTanggalHariIni();
 
             let dateMulai = tglStartVal ? new Date(tglStartVal + "T00:00:00") : null;
             let dateSelesai = tglEndVal ? new Date(tglEndVal + "T23:59:59") : null;
@@ -441,15 +574,14 @@
 
             if (Array.isArray(dataMasterPusat)) {
                 dataMasterPusat.forEach(item => {
-                    // Penanganan nama kolom dinamis
-                    let nama = item.nama || item['Nama Satpam'] || item.Nama || item.Nama_Personel || "-";
-                    let zona = item.zona || item['Titik Patroli (Zona)'] || item.Zona || item.Zona_Area || "-";
-                    let kondisi = item.kondisi || item['Catatan/Kondisi'] || item.Kondisi || item.Kondisi_Sektor || "-";
-                    let catatan = item.catatan || item['Temuan Lapangan'] || item.Catatan || item.Catatan_Temuan || "";
-                    let timestamp = item.timestamp || item.Timestamp || item.Waktu_Log || "";
-                    let lat = item.lat || item.Latitude || item.Lat || "-";
-                    let lng = item.lng || item.Longitude || item.Lng || "-";
-                    let urlFotoRaw = item.urlFoto || item.linkFoto || item['Link Foto'] || item.url || "";
+                    let nama = item['Nama Satpam'] || item.nama || item.Nama || item.Nama_Personel || "-";
+                    let zona = item['Titik Patroli (Zona)'] || item.zona || item.Zona || item.Zona_Area || "-";
+                    let kondisi = item['Catatan/Kondisi'] || item.kondisi || item.Kondisi || item.Kondisi_Sektor || "-";
+                    let catatan = item['Temuan Lapangan'] || item.catatan || item.Catatan || item.Catatan_Temuan || "";
+                    let timestamp = item.Timestamp || item.timestamp || item.Waktu_Log || "";
+                    let lat = item.Latitude || item.lat || item.Lat || "-";
+                    let lng = item.Longitude || item.lng || item.Lng || "-";
+                    let urlFotoRaw = item['Link Foto'] || item.linkFoto || item.urlFoto || "";
 
                     if (timestamp && timestamp !== "-") {
                         let dateDataLog = ubahTimestampSheetKeDate(timestamp);
@@ -459,7 +591,7 @@
                         }
                     }
                     
-                    let isTemuan = kondisi.toLowerCase().includes("temuan") || kondisi.toLowerCase().includes("kendala") || kondisi.toLowerCase().includes("rusak");
+                    let isTemuan = kondisi.toLowerCase().includes("temuan");
                     if (filterHanyaTemuan && !isTemuan) return;
 
                     let teksCatatan = catatan.toLowerCase();
@@ -492,6 +624,7 @@
                 });
             }
 
+            // Bunyikan Alarm jika ada temuan baru
             if (totalJumlahTemuanTerakhir > 0 && jumlahAdaTemuan > totalJumlahTemuanTerakhir) {
                 bunyikanAlarmTemuanBaru();
             }
@@ -502,8 +635,14 @@
             document.getElementById('statPetugas').innerText = setPetugasUnik.size;
             document.getElementById('statZona').innerText = setZonaUnik.size;
 
-            if (tglStartVal && tglEndVal) {
-                document.getElementById('judulTabel').innerHTML = `<i class="fa-solid fa-list-ul me-2"></i>Riwayat Periode ${tglStartVal.split('-').reverse().join('/')} s/d ${tglEndVal.split('-').reverse().join('/')}`;
+            if (tglStartVal === hariIni && tglEndVal === hariIni) {
+                document.getElementById('judulTabel').innerHTML = `<i class="fa-solid fa-list-ul me-2"></i>Riwayat Patroli Hari Ini (${tglStartVal.split('-').reverse().join('/')})`;
+            } else if (tglStartVal && tglEndVal) {
+                if (tglStartVal === tglEndVal) {
+                    document.getElementById('judulTabel').innerHTML = `<i class="fa-solid fa-list-ul me-2"></i>Riwayat Patroli (${tglStartVal.split('-').reverse().join('/')})`;
+                } else {
+                    document.getElementById('judulTabel').innerHTML = `<i class="fa-solid fa-list-ul me-2"></i>Riwayat Periode ${tglStartVal.split('-').reverse().join('/')} s/d ${tglEndVal.split('-').reverse().join('/')}`;
+                }
             } else {
                 document.getElementById('judulTabel').innerHTML = `<i class="fa-solid fa-list-ul me-2"></i>Semua Riwayat Aktivitas Kontrol`;
             }
@@ -564,11 +703,13 @@
             const totalData = dataTerfilterSaatIni.length;
             const totalHalaman = Math.ceil(totalData / JUMLAH_DATA_PER_HALAMAN) || 1;
 
+            if (halamanSaatIni > totalHalaman) halamanSaatIni = totalHalaman;
+
             const indeksMulai = (halamanSaatIni - 1) * JUMLAH_DATA_PER_HALAMAN;
             const indeksSelesai = Math.min(indeksMulai + JUMLAH_DATA_PER_HALAMAN, totalData);
 
             if (totalData === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="text-center p-4 text-muted">Tidak ada data patroli untuk kriteria ini.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center p-4 text-muted">Tidak ada data patroli untuk tanggal/kriteria ini.</td></tr>`;
                 document.getElementById('infoTeksHalaman').innerText = "Menampilkan 0-0 dari 0 data";
                 document.getElementById('labelHalamanAktif').innerText = "1 / 1";
                 document.getElementById('btnHalamanPrev').classList.add('disabled');
@@ -576,7 +717,7 @@
             } else {
                 for (let i = indeksMulai; i < indeksSelesai; i++) {
                     let item = dataTerfilterSaatIni[i];
-                    let isAman = !item.kondisi.toLowerCase().includes("temuan") && !item.kondisi.toLowerCase().includes("kendala") && !item.kondisi.toLowerCase().includes("rusak");
+                    let isAman = !item.kondisi.toLowerCase().includes("temuan");
                     let kelasBadge = isAman ? "bg-aman" : "bg-temuan";
 
                     let kolomFoto = "<span class='text-muted' style='font-size:11px;'>Tidak ada foto</span>";
@@ -639,8 +780,7 @@
             
             const badgeKondisi = document.getElementById('detKondisi');
             badgeKondisi.innerText = dataPilihan.kondisi;
-            let isAman = !dataPilihan.kondisi.toLowerCase().includes("temuan") && !dataPilihan.kondisi.toLowerCase().includes("kendala") && !dataPilihan.kondisi.toLowerCase().includes("rusak");
-            badgeKondisi.className = isAman ? "badge-kondisi bg-aman" : "badge-kondisi bg-temuan";
+            badgeKondisi.className = !dataPilihan.kondisi.toLowerCase().includes("temuan") ? "badge-kondisi bg-aman" : "badge-kondisi bg-temuan";
 
             const koordinatTeks = (dataPilihan.lat && dataPilihan.lat !== "-") ? `${dataPilihan.lat}, ${dataPilihan.lng}` : "Tidak Terlacak";
             document.getElementById('detGps').innerText = koordinatTeks;
@@ -678,7 +818,7 @@
             tbodyLama.innerHTML = ""; 
 
             dataTerfilterSaatIni.forEach((item) => {
-                let isAman = !item.kondisi.toLowerCase().includes("temuan") && !item.kondisi.toLowerCase().includes("kendala");
+                let isAman = !item.kondisi.toLowerCase().includes("temuan");
                 let styleKondisi = isAman 
                     ? "background-color: #dcfce7; color: #166534; font-weight: bold; text-align: center;" 
                     : "background-color: #fee2e2; color: #991b1b; font-weight: bold; text-align: center;";
@@ -697,16 +837,19 @@
 
             let templateExcel = `
                 <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
-                <head><meta charset="utf-8"></head>
+                <head>
+                    <meta charset="utf-8">
+                </head>
                 <body>${tabelHtml.outerHTML}</body>
                 </html>
             `;
 
             let blob = new Blob([templateExcel], { type: "application/vnd.ms-excel" });
             let url = URL.createObjectURL(blob);
+            
             let linkDownload = document.createElement('a');
             linkDownload.href = url;
-            linkDownload.download = `Laporan_Patroli_${new Date().getTime()}.xls`;
+            linkDownload.download = `Laporan_Patroli_Lengkap_${new Date().getTime()}.xls`;
             document.body.appendChild(linkDownload);
             linkDownload.click();
             document.body.removeChild(linkDownload);
