@@ -7,15 +7,17 @@
     <title>Dashboard Monitoring Patroli - Mall 23Semarang</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
             --navy-main: #0a1128;
             --navy-light: #1c2541;
+            --navy-card: rgba(15, 23, 42, 0.75);
             --blue-accent: #0066cc;
             --border-gray: #e2e8f0;
             --bg-light: #f8fafc;
+            --border-glass: rgba(255, 255, 255, 0.12);
         }
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
@@ -24,26 +26,156 @@
             font-size: 13px;
         }
         
-        /* OVERLAY LOGIN */
+        /* LUXURY GLASSMORPHISM LOGIN OVERLAY */
         #loginOverlay {
             position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(10, 17, 40, 0.92);
-            backdrop-filter: blur(8px);
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: 
+                radial-gradient(circle at 20% 20%, rgba(0, 102, 204, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 80% 80%, rgba(197, 160, 89, 0.1) 0%, transparent 40%),
+                linear-gradient(135deg, #050914 0%, #0d1527 50%, #070c1e 100%);
             z-index: 9999;
             display: flex;
             align-items: center;
             justify-content: center;
-        }
-        .login-card {
-            background: white;
-            border-radius: 16px;
-            padding: 2.5rem;
-            width: 100%;
-            max-width: 400px;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
         }
 
+        #loginOverlay::before {
+            content: "";
+            position: absolute;
+            width: 200%; height: 200%;
+            background-image: 
+                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            transform: rotate(-12deg);
+            pointer-events: none;
+        }
+
+        .login-card {
+            position: relative;
+            background: var(--navy-card);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-glass);
+            border-radius: 24px;
+            padding: 3rem 2.5rem;
+            width: 100%;
+            max-width: 440px;
+            box-shadow: 
+                0 30px 60px -12px rgba(0, 0, 0, 0.5),
+                0 18px 36px -18px rgba(0, 0, 0, 0.7),
+                inset 0 1px 1px rgba(255, 255, 255, 0.2);
+            animation: cardAppear 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes cardAppear {
+            0% { opacity: 0; transform: translateY(20px) scale(0.96); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .brand-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 64px; height: 64px;
+            border-radius: 18px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.02) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            margin-bottom: 1.2rem;
+            color: #00f2fe;
+        }
+
+        .login-title {
+            color: #ffffff;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            font-size: 1.4rem;
+            margin-bottom: 4px;
+        }
+
+        .login-subtitle {
+            color: #94a3b8;
+            font-size: 0.82rem;
+            font-weight: 500;
+            letter-spacing: 0.2px;
+        }
+
+        .custom-input-group {
+            position: relative;
+            margin-bottom: 1.25rem;
+        }
+
+        .custom-input-group i.input-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #64748b;
+            font-size: 0.95rem;
+            transition: color 0.3s;
+        }
+
+        .custom-input {
+            width: 100%;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 0.75rem 1rem 0.75rem 2.75rem;
+            color: #f8fafc;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.25s ease;
+        }
+
+        .custom-input::placeholder { color: #475569; }
+
+        .custom-input:focus {
+            outline: none;
+            background: rgba(15, 23, 42, 0.85);
+            border-color: #00f2fe;
+            box-shadow: 0 0 0 4px rgba(0, 242, 254, 0.15);
+        }
+
+        .custom-input:focus + i.input-icon { color: #00f2fe; }
+
+        .btn-login-luxury {
+            background: linear-gradient(135deg, #0052d4 0%, #4364f7 50%, #6fb1fc 100%);
+            border: none;
+            border-radius: 12px;
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 0.9rem;
+            padding: 0.85rem;
+            width: 100%;
+            letter-spacing: 0.5px;
+            box-shadow: 0 10px 20px -5px rgba(67, 100, 247, 0.5);
+            transition: all 0.3s ease;
+            margin-top: 0.5rem;
+        }
+
+        .btn-login-luxury:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 25px -5px rgba(67, 100, 247, 0.7);
+            color: #ffffff;
+        }
+
+        .security-tag {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            margin-top: 1.75rem;
+            color: #64748b;
+            font-size: 0.72rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+
+        /* LAYOUT DASHBOARD UTAMA */
         .navbar-custom {
             background-color: var(--navy-main);
             color: white;
@@ -125,34 +257,47 @@
 </head>
 <body>
 
-    <!-- OVERLAY FORM LOGIN -->
+    <!-- OVERLAY LOGIN EKSKLUSIF -->
     <div id="loginOverlay">
         <div class="login-card text-center">
-            <div class="mb-3 text-primary">
-                <i class="fa-solid fa-user-shield fa-3x" style="color: #0a1128;"></i>
+            <div class="brand-badge">
+                <i class="fa-solid fa-shield-halved fa-2x"></i>
             </div>
-            <h5 class="fw-bold mb-1" style="color: #0a1128;">ADMIN PATROLI</h5>
-            <p class="text-muted small mb-4">Mall 23Semarang Control Center</p>
             
-            <div id="loginAlert" class="alert alert-danger py-2 small d-none" role="alert"></div>
+            <h4 class="login-title">CONTROL CENTER</h4>
+            <p class="login-subtitle mb-4">Admin Security Patrol • Mall 23Semarang</p>
+            
+            <div id="loginAlert" class="alert alert-danger py-2 small d-none border-0 rounded-3 text-start mb-3" style="background: rgba(239, 68, 68, 0.2); color: #fca5a5;" role="alert"></div>
 
             <form id="formLoginAdmin" onsubmit="prosesLoginAdmin(event)">
-                <div class="mb-3 text-start">
-                    <label class="form-label small fw-bold text-muted">Username</label>
-                    <input type="text" id="inputUsername" class="form-control" placeholder="Masukkan username" required>
+                <div class="text-start mb-1">
+                    <label class="form-label text-white-50" style="font-size: 0.75rem; font-weight: 600; letter-spacing: 0.5px;">USERNAME</label>
                 </div>
-                <div class="mb-4 text-start">
-                    <label class="form-label small fw-bold text-muted">Password</label>
-                    <input type="password" id="inputPassword" class="form-control" placeholder="Masukkan password" required>
+                <div class="custom-input-group">
+                    <input type="text" id="inputUsername" class="custom-input" placeholder="Masukkan ID Pengguna" required autocomplete="off">
+                    <i class="fa-solid fa-user input-icon"></i>
                 </div>
-                <button type="submit" id="btnLoginSubmit" class="btn w-100 fw-bold py-2" style="background-color: #0a1128; color: white;">
-                    <i class="fa-solid fa-right-to-bracket me-2"></i> Masuk Dashboard
+
+                <div class="text-start mb-1">
+                    <label class="form-label text-white-50" style="font-size: 0.75rem; font-weight: 600; letter-spacing: 0.5px;">PASSWORD</label>
+                </div>
+                <div class="custom-input-group">
+                    <input type="password" id="inputPassword" class="custom-input" placeholder="••••••••••••" required>
+                    <i class="fa-solid fa-lock input-icon"></i>
+                </div>
+
+                <button type="submit" id="btnLoginSubmit" class="btn btn-login-luxury">
+                    <i class="fa-solid fa-right-to-bracket me-2"></i> MASUK DASHBOARD
                 </button>
             </form>
+
+            <div class="security-tag">
+                <i class="fa-solid fa-lock text-success"></i> Encrypted 256-Bit Connection
+            </div>
         </div>
     </div>
 
-    <!-- UTAMA DASHBOARD (TERSEMBUNYI SEBELUM LOGIN) -->
+    <!-- DASHBOARD UTAMA -->
     <div id="dashboardContent" class="d-none">
         <nav class="navbar-custom mb-3 d-flex justify-content-between align-items-center">
             <div>
@@ -177,7 +322,7 @@
         </nav>
 
         <div class="container-fluid px-3">
-            <!-- STATISTIK KARTU UTAMA -->
+            <!-- RINGKASAN METRIK -->
             <div class="row g-3 mb-3">
                 <div class="col-md-3">
                     <div class="stat-card d-flex align-items-center justify-content-between">
@@ -225,7 +370,7 @@
                 </div>
             </div>
 
-            <!-- PANEL GRAFIK ANALISTIK TEMUAN -->
+            <!-- CHART ANALISTIK -->
             <div class="row g-3 mb-3">
                 <div class="col-md-5">
                     <div class="chart-box">
@@ -245,7 +390,7 @@
                 </div>
             </div>
 
-            <!-- PANEL FILTER DATA -->
+            <!-- CONTROL FILTER -->
             <div class="filter-section">
                 <div class="row g-2 align-items-end">
                     <div class="col-md-2">
@@ -271,7 +416,7 @@
                 </div>
             </div>
 
-            <!-- TABEL DATA PATROLI -->
+            <!-- TABEL DATA -->
             <div class="table-container mb-3">
                 <div class="px-3 py-2 border-bottom d-flex justify-content-between align-items-center bg-white">
                     <span class="fw-bold text-navy-main" id="judulTabel" style="font-size: 13px;"><i class="fa-solid fa-list-ul me-2"></i>Riwayat Aktivitas</span>
@@ -324,7 +469,7 @@
         </div>
     </div>
 
-    <!-- MODAL DETAIL POPUP -->
+    <!-- MODAL DETAIL -->
     <div class="modal fade" id="modalDetailPatroli" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content modal-detail-content">
@@ -382,7 +527,6 @@
         document.addEventListener("DOMContentLoaded", function() {
             komponenModalDetail = new bootstrap.Modal(document.getElementById('modalDetailPatroli'));
 
-            // Cek Sesi Login di Browser
             const userSesi = localStorage.getItem("adminPatroliUser");
             if (userSesi) {
                 bukaDashboard(JSON.parse(userSesi));
@@ -390,15 +534,11 @@
 
             setFilterHariIni(false);
 
-            // Event Filter
             document.getElementById('filterTanggalStart').addEventListener('change', memicuUlangFilter);
             document.getElementById('filterTanggalEnd').addEventListener('change', memicuUlangFilter);
             document.getElementById('filterCari').addEventListener('input', memicuUlangFilter);
         });
 
-        // -------------------------------------------------------------
-        // LOGIKA LOGIN ADMIN
-        // -------------------------------------------------------------
         function prosesLoginAdmin(e) {
             e.preventDefault();
             const u = document.getElementById('inputUsername').value;
@@ -407,27 +547,27 @@
             const alertBox = document.getElementById('loginAlert');
 
             btn.disabled = true;
-            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin me-2"></i> Memeriksa...`;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin me-2"></i> OTENTIKASI...`;
             alertBox.classList.add('d-none');
 
             fetch(`${API_URL_WEBAPP}?aksi=login&username=${encodeURIComponent(u)}&password=${encodeURIComponent(p)}`)
             .then(res => res.json())
             .then(res => {
                 btn.disabled = false;
-                btn.innerHTML = `<i class="fa-solid fa-right-to-bracket me-2"></i> Masuk Dashboard`;
+                btn.innerHTML = `<i class="fa-solid fa-right-to-bracket me-2"></i> MASUK DASHBOARD`;
 
                 if (res.status === "SUCCESS") {
                     localStorage.setItem("adminPatroliUser", JSON.stringify(res.user));
                     bukaDashboard(res.user);
                 } else {
-                    alertBox.innerText = res.message || "Login gagal!";
+                    alertBox.innerText = res.message || "Username atau Password salah!";
                     alertBox.classList.remove('d-none');
                 }
             })
             .catch(err => {
                 btn.disabled = false;
-                btn.innerHTML = `<i class="fa-solid fa-right-to-bracket me-2"></i> Masuk Dashboard`;
-                alertBox.innerText = "Gagal terhubung ke server!";
+                btn.innerHTML = `<i class="fa-solid fa-right-to-bracket me-2"></i> MASUK DASHBOARD`;
+                alertBox.innerText = "Gagal terhubung ke server backend!";
                 alertBox.classList.remove('d-none');
             });
         }
@@ -437,7 +577,6 @@
             document.getElementById('dashboardContent').classList.remove('d-none');
             document.getElementById('labelUserAdmin').innerHTML = `<i class="fa-solid fa-user-shield me-1"></i> ${user.nama}`;
             
-            // Ambil Data Pertama Kali
             muatDataLaporanDashboard();
             mulaiAutoPolling(15);
         }
@@ -447,9 +586,6 @@
             location.reload();
         }
 
-        // -------------------------------------------------------------
-        // FITUR DASHBOARD EKSISTING
-        // -------------------------------------------------------------
         function getDaftarTanggalHariIni() {
             let sekarang = new Date();
             let tahun = sekarang.getFullYear();
@@ -542,9 +678,7 @@
                 method: "GET",
                 mode: "cors",
                 cache: "no-store",
-                headers: { 
-                    "Content-Type": "text/plain"
-                }
+                headers: { "Content-Type": "text/plain" }
             })
             .then(res => {
                 if (!res.ok) throw new Error("Koneksi jaringan bermasalah.");
@@ -576,7 +710,6 @@
                     btnRef.disabled = false;
                     iconRef.classList.remove('fa-spin');
                 }
-                console.error("Fetch Error: ", err);
             });
         }
 
@@ -776,7 +909,7 @@
             const indeksSelesai = Math.min(indeksMulai + JUMLAH_DATA_PER_HALAMAN, totalData);
 
             if (totalData === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="text-center p-4 text-muted">Tidak ada data patroli untuk tanggal/kriteria ini.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center p-4 text-muted">Tidak ada data patroli untuk kriteria ini.</td></tr>`;
                 document.getElementById('infoTeksHalaman').innerText = "Menampilkan 0-0 dari 0 data";
                 document.getElementById('labelHalamanAktif').innerText = "1 / 1";
                 document.getElementById('btnHalamanPrev').classList.add('disabled');
@@ -897,63 +1030,30 @@
                 <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
                 <head>
                     <meta charset="utf-8">
-                    <!--[if gte mso 9]>
-                    <xml>
-                        <x:ExcelWorkbook>
-                            <x:ExcelWorksheets>
-                                <x:ExcelWorksheet>
-                                    <x:Name>Laporan Patroli</x:Name>
-                                    <x:WorksheetOptions>
-                                        <x:DisplayGridlines/>
-                                        <x:FreezePanes/>
-                                        <x:FrozenNoSplit/>
-                                        <x:SplitRow>5</x:SplitRow>
-                                        <x:TopRowBottomPane>5</x:TopRowBottomPane>
-                                        <x:ActivePane>2</x:ActivePane>
-                                    </x:WorksheetOptions>
-                                </x:ExcelWorksheet>
-                            </x:ExcelWorksheets>
-                        </x:ExcelWorkbook>
-                    </xml>
-                    <![endif]-->
                     <style>
                         body { font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; }
                         table { border-collapse: collapse; width: 100%; }
-                        th { 
-                            background-color: #0a1128; 
-                            color: #ffffff; 
-                            font-weight: bold; 
-                            text-align: center; 
-                            border: 1px solid #000000; 
-                            padding: 8px;
-                            vertical-align: middle;
-                        }
-                        td { 
-                            border: 1px solid #cccccc; 
-                            padding: 6px; 
-                            vertical-align: top;
-                            mso-number-format:"\\@";
-                        }
+                        th { background-color: #0a1128; color: #ffffff; font-weight: bold; text-align: center; border: 1px solid #000000; padding: 8px; }
+                        td { border: 1px solid #cccccc; padding: 6px; vertical-align: top; mso-number-format:"\\@"; }
                         .text-center { text-align: center; }
                         .bg-aman { background-color: #dcfce7; color: #166534; font-weight: bold; text-align: center; }
                         .bg-temuan { background-color: #fee2e2; color: #991b1b; font-weight: bold; text-align: center; }
-                        .wrap-text { white-space: normal; word-wrap: break-word; }
                     </style>
                 </head>
                 <body>
-                    <h3 style="margin-bottom: 5px;">LAPORAN MONITORING PATROLI - MALL 23SEMARANG</h3>
-                    <p style="margin-top: 0px; font-size: 10pt; color: #555555;">Periode Data: <b>${rentangWaktuTeks.replace(/_/g, ' ')}</b> | Total Record: <b>${dataTerfilterSaatIni.length} Data</b></p>
+                    <h3>LAPORAN MONITORING PATROLI - MALL 23SEMARANG</h3>
+                    <p>Periode Data: <b>${rentangWaktuTeks.replace(/_/g, ' ')}</b> | Total Record: <b>${dataTerfilterSaatIni.length} Data</b></p>
                     <br>
-                    <table x:str x:autofilter="all" x:publishwithseries="all">
+                    <table>
                         <thead>
                             <tr>
-                                <th style="width: 150px;" x:autofilter="all">Waktu Log</th>
-                                <th style="width: 160px;" x:autofilter="all">Nama Satpam</th>
-                                <th style="width: 110px;" x:autofilter="all">Zona / Area</th>
-                                <th style="width: 100px;" x:autofilter="all">Kondisi</th>
-                                <th style="width: 350px;" x:autofilter="all">Temuan Lapangan / Checklist</th>
-                                <th style="width: 120px;" x:autofilter="all">Lampiran Foto</th>
-                                <th style="width: 160px;" x:autofilter="all">Koordinat GPS</th>
+                                <th>Waktu Log</th>
+                                <th>Nama Satpam</th>
+                                <th>Zona / Area</th>
+                                <th>Kondisi</th>
+                                <th>Temuan Lapangan / Checklist</th>
+                                <th>Lampiran Foto</th>
+                                <th>Koordinat GPS</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -965,7 +1065,7 @@
 
                 let linkFotoFormatted = "-";
                 if (item.linkFotoRaw && item.linkFotoRaw.includes("http")) {
-                    linkFotoFormatted = `<a href="${item.linkFotoRaw}" target="_blank" style="color: #0066cc; font-weight: bold;">[Lihat Foto]</a>`;
+                    linkFotoFormatted = `<a href="${item.linkFotoRaw}" target="_blank">[Lihat Foto]</a>`;
                 }
 
                 let gpsFormatted = "-";
@@ -979,7 +1079,7 @@
                         <td><b>${item.nama}</b></td>
                         <td class="text-center">${item.zona}</td>
                         <td class="${kelasKondisi}">${item.kondisi}</td>
-                        <td class="wrap-text">${item.catatan || '-'}</td>
+                        <td>${item.catatan || '-'}</td>
                         <td class="text-center">${linkFotoFormatted}</td>
                         <td class="text-center">${gpsFormatted}</td>
                     </tr>
@@ -998,7 +1098,7 @@
             
             let linkDownload = document.createElement('a');
             linkDownload.href = url;
-            linkDownload.download = `Laporan_Patroli_${rentangWaktuTeks}_(${dataTerfilterSaatIni.length}_data).xls`;
+            linkDownload.download = `Laporan_Patroli_${rentangWaktuTeks}.xls`;
             document.body.appendChild(linkDownload);
             linkDownload.click();
             document.body.removeChild(linkDownload);
