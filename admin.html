@@ -60,7 +60,7 @@
             -webkit-backdrop-filter: blur(20px);
             border: 1px solid var(--border-glass);
             border-radius: 24px;
-            padding: 3rem 2.5rem;
+            padding: 2.5rem 2.5rem 2rem 2.5rem;
             width: 100%;
             max-width: 440px;
             box-shadow: 
@@ -75,31 +75,10 @@
             100% { opacity: 1; transform: translateY(0) scale(1); }
         }
 
-        .brand-badge {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 64px; height: 64px;
-            border-radius: 18px;
-            background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.02) 100%);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-            margin-bottom: 1.2rem;
-            color: #00f2fe;
-        }
-
-        .login-title {
-            color: #ffffff;
-            font-weight: 800;
-            letter-spacing: -0.5px;
-            font-size: 1.4rem;
-            margin-bottom: 4px;
-        }
-
         .login-subtitle {
             color: #94a3b8;
-            font-size: 0.82rem;
-            font-weight: 500;
+            font-size: 0.9rem;
+            font-weight: 600;
             letter-spacing: 0.2px;
         }
 
@@ -160,19 +139,6 @@
             transform: translateY(-2px);
             box-shadow: 0 15px 25px -5px rgba(67, 100, 247, 0.7);
             color: #ffffff;
-        }
-
-        .security-tag {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            margin-top: 1.75rem;
-            color: #64748b;
-            font-size: 0.72rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
         }
 
         /* LAYOUT DASHBOARD UTAMA */
@@ -260,11 +226,7 @@
     <!-- OVERLAY LOGIN EKSKLUSIF -->
     <div id="loginOverlay">
         <div class="login-card text-center">
-            <div class="brand-badge">
-                <i class="fa-solid fa-shield-halved fa-2x"></i>
-            </div>
             
-            <h4 class="login-title">CONTROL CENTER</h4>
             <p class="login-subtitle mb-4">Admin Security Patrol • Mall 23Semarang</p>
             
             <div id="loginAlert" class="alert alert-danger py-2 small d-none border-0 rounded-3 text-start mb-3" style="background: rgba(239, 68, 68, 0.2); color: #fca5a5;" role="alert"></div>
@@ -290,10 +252,6 @@
                     <i class="fa-solid fa-right-to-bracket me-2"></i> MASUK DASHBOARD
                 </button>
             </form>
-
-            <div class="security-tag">
-                <i class="fa-solid fa-lock text-success"></i> Encrypted 256-Bit Connection
-            </div>
         </div>
     </div>
 
@@ -587,7 +545,10 @@
             btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin me-2"></i> OTENTIKASI...`;
             alertBox.classList.add('d-none');
 
-            fetch(`${API_URL_WEBAPP}?aksi=login&username=${encodeURIComponent(u)}&password=${encodeURIComponent(p)}`)
+            fetch(`${API_URL_WEBAPP}?aksi=login&username=${encodeURIComponent(u)}&password=${encodeURIComponent(p)}`, {
+                method: "GET",
+                redirect: "follow"
+            })
             .then(res => res.json())
             .then(res => {
                 btn.disabled = false;
@@ -651,7 +612,10 @@
             btn.disabled = true;
             btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin me-1"></i> Memproses...`;
 
-            fetch(`${API_URL_WEBAPP}?aksi=gantiPassword&username=${encodeURIComponent(userSesi.username || userSesi.nama)}&passLama=${encodeURIComponent(passLama)}&passBaru=${encodeURIComponent(passBaru)}`)
+            fetch(`${API_URL_WEBAPP}?aksi=gantiPassword&username=${encodeURIComponent(userSesi.username || userSesi.nama)}&passLama=${encodeURIComponent(passLama)}&passBaru=${encodeURIComponent(passBaru)}`, {
+                method: "GET",
+                redirect: "follow"
+            })
             .then(res => res.json())
             .then(res => {
                 btn.disabled = false;
@@ -769,14 +733,10 @@
 
             fetch(URL_DENGAN_PARAMS, {
                 method: "GET",
-                mode: "cors",
-                cache: "no-store",
-                headers: { "Content-Type": "text/plain" }
+                redirect: "follow",
+                cache: "no-store"
             })
-            .then(res => {
-                if (!res.ok) throw new Error("Koneksi jaringan bermasalah.");
-                return res.json();
-            })
+            .then(res => res.json())
             .then(response => {
                 if (Array.isArray(response)) {
                     dataMasterPusat = response;
