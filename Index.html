@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#10243B">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src https://script.google.com https://script.googleusercontent.com; media-src blob:; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<title>Patroli - Mall 23Semarang</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="petugas.css">
+</head>
+<body>
+
+<header class="kepala">
+  <div class="kepala-isi">
+    <div>
+      <div class="judul">Patroli</div>
+      <div class="sub">Mall 23Semarang</div>
+    </div>
+    <a class="tautan" href="Tenant.html">Checklist tenant</a>
+  </div>
+</header>
+<div class="stempel" id="stempel" aria-label="Stempel waktu dan lokasi"></div>
+
+<main class="app">
+  <div id="antrean-wadah"></div>
+  <div id="hasil" class="hasil" role="status" hidden></div>
+  <div id="muat" class="muat">Memuat daftar petugas dan zona...</div>
+
+  <form id="form" hidden novalidate>
+    <section class="bagian">
+      <h2>Petugas</h2>
+      <div class="medan">
+        <label for="nama">Nama petugas</label>
+        <div class="kombo">
+          <input id="nama" class="input" type="text" autocomplete="off" placeholder="Ketik untuk mencari nama" aria-controls="daftar-nama">
+          <ul id="daftar-nama" class="daftar" role="listbox" hidden></ul>
+        </div>
+      </div>
+      <div class="medan">
+        <label for="pin">PIN</label>
+        <input id="pin" class="input" type="password" inputmode="numeric" autocomplete="off" maxlength="12" placeholder="PIN dari admin">
+        <p id="g-pin" class="galat" hidden></p>
+      </div>
+    </section>
+
+    <section class="bagian">
+      <h2>Titik patroli</h2>
+      <div class="medan">
+        <label for="zona">Zona atau sektor</label>
+        <div class="kombo">
+          <input id="zona" class="input" type="text" autocomplete="off" placeholder="Ketik untuk mencari zona" aria-controls="daftar-zona">
+          <ul id="daftar-zona" class="daftar" role="listbox" hidden></ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="bagian">
+      <h2>Kondisi area <small id="progres">0 dari 0</small></h2>
+      <p class="petunjuk">Jawab setiap item. Pilih Temuan jika ada yang tidak normal, lalu jelaskan.</p>
+      <div id="checklist"></div>
+      <div id="blok-temuan" hidden>
+        <div class="medan" style="margin-top:18px">
+          <span class="label" id="lbl-tingkat">Tingkat temuan</span>
+          <div class="tingkat" role="radiogroup" aria-labelledby="lbl-tingkat">
+            <input type="radio" name="tingkat" id="t1" value="Rendah"><label class="seg t-rendah" for="t1">Rendah</label>
+            <input type="radio" name="tingkat" id="t2" value="Sedang"><label class="seg t-sedang" for="t2">Sedang</label>
+            <input type="radio" name="tingkat" id="t3" value="Tinggi"><label class="seg t-tinggi" for="t3">Tinggi</label>
+          </div>
+        </div>
+      </div>
+      <div class="medan" style="margin-top:18px">
+        <label for="catatan">Catatan tambahan (opsional)</label>
+        <textarea id="catatan" class="input" rows="2" maxlength="500" placeholder="Kronologi atau instruksi khusus"></textarea>
+      </div>
+    </section>
+
+    <section class="bagian">
+      <h2>Foto bukti <small id="jml-foto">0 dari 3</small></h2>
+      <p class="petunjuk">Foto langsung dari kamera. Tanggal, jam, petugas, zona, dan GPS tercetak otomatis pada foto.</p>
+      <div id="foto-grid" class="foto-grid"></div>
+      <button type="button" id="btn-foto" class="btn btn-foto">Ambil foto</button>
+      <p id="hint-foto" class="petunjuk" style="margin:8px 0 0"></p>
+    </section>
+  </form>
+</main>
+
+<div class="bar-kirim" id="bar-kirim" hidden>
+  <div class="bar-isi">
+    <p id="kurang" class="kurang"></p>
+    <button type="button" id="btn-kirim" class="btn btn-utama btn-lebar" disabled>Kirim laporan patroli</button>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script src="core.js"></script>
+<script>
+(function () {
+  "use strict";
+  var PC = window.PC, h = PC.h;
+  var $ = function (id) { return document.getElementById(id); };
+  var KUNCI_DRAFT = "dp_draft_patroli_v1", KUNCI_MASTER = "dp_master_v1", KUNCI_NAMA = "dp_nama";
+  var master = null, idLaporan = PC.buatId(), tingkat = "", mengirim = false, timerDraft = null;
+  var cbNama, cbZona, cl, foto;
+
+  PC.pasangStempel($("stempel"));
+  PC.Lokasi.mulai();
+  var antrean = PC.pasangAntrean($("antrean-wadah"));
+  setInterval(PC.sinkronJam, 300000);
+  document.addEventListener("visibilitychange", function () { if (!document.hidden) PC.sinkronJam(); });
+
+  /* ------------------------------------------------ memuat master */
+  function muat() {
+    var muatEl = $("muat");
+    muatEl.hidden = false;
+    PC.kosongkan(muatEl);
+    muatEl.textContent = "Memuat daftar petugas dan zona...";
+    var t0 = Date.now();
+    PC.api("ambilDropdown", {}, 25000).then(function (r) {
+      if (r.status !== "SUCCESS") throw new Error(r.message);
+      PC.Jam.sinkron(r.waktuServer + (Date.now() - t0) / 2);
+      master = r;
+      try { localStorage.setItem(KUNCI_MASTER, JSON.stringify(r)); } catch (e) { /* abaikan */ }
+    }).catch(function () {
+      try {
+        var c = JSON.parse(localStorage.getItem(KUNCI_MASTER));
+        if (c) { master = c; PC.toast("Tanpa sinyal. Memakai daftar yang tersimpan.", "bad"); }
+      } catch (e) { /* abaikan */ }
+    }).then(function () {
+      if (master) { mulai(); return; }
+      PC.kosongkan(muatEl);
+      muatEl.appendChild(h("p", { text: "Daftar belum bisa dimuat. Periksa sinyal, lalu coba lagi." }));
+      muatEl.appendChild(h("button", { type: "button", class: "btn btn-utama", text: "Coba lagi", onclick: muat }));
+    });
+  }
+
+  function mulai() {
+    $("muat").hidden = true;
+    $("form").hidden = false;
+    $("bar-kirim").hidden = false;
+
+    cbNama = PC.Combobox({ input: $("nama"), list: $("daftar-nama"), kosong: "Nama tidak terdaftar",
+      items: function () { return master.daftarNama; },
+      onPick: function (v) { if (v) { try { localStorage.setItem(KUNCI_NAMA, v); } catch (e) { /* abaikan */ } } ubah(); } });
+    cbZona = PC.Combobox({ input: $("zona"), list: $("daftar-zona"), kosong: "Zona tidak terdaftar",
+      items: function () { return master.daftarZona; }, onPick: function () { ubah(); } });
+    foto = PC.FotoGrid($("foto-grid"), { maks: 3, onUbah: ubah });
+    cl = PC.Checklist($("checklist"), { onUbah: ubah });
+
+    var draft = bacaDraft();
+    cl.set(master.checklist.PATROLI, draft && draft.cl);
+    if (draft) {
+      if (draft.zona) $("zona").value = draft.zona;
+      $("catatan").value = draft.catatan || "";
+      if (draft.tingkat) {
+        tingkat = draft.tingkat;
+        var r = document.querySelector('input[name="tingkat"][value="' + draft.tingkat + '"]');
+        if (r) r.checked = true;
+      }
+    }
+    var tersimpan = null;
+    try { tersimpan = localStorage.getItem(KUNCI_NAMA); } catch (e) { /* abaikan */ }
+    if (tersimpan && master.daftarNama.indexOf(tersimpan) >= 0) $("nama").value = tersimpan;
+
+    Array.prototype.forEach.call(document.querySelectorAll('input[name="tingkat"]'), function (r) {
+      r.addEventListener("change", function () { tingkat = r.value; ubah(); });
+    });
+    $("pin").addEventListener("input", function () { $("g-pin").hidden = true; $("pin").classList.remove("invalid"); ubah(); });
+    $("catatan").addEventListener("input", ubah);
+    $("btn-foto").addEventListener("click", ambilFoto);
+    $("btn-kirim").addEventListener("click", kirim);
+    ubah();
+  }
+
+  /* ------------------------------------------------ draft lokal */
+  function bacaDraft() {
+    try {
+      var d = JSON.parse(localStorage.getItem(KUNCI_DRAFT));
+      if (d && Date.now() - d.t < 12 * 3600 * 1000) return d;
+    } catch (e) { /* abaikan */ }
+    return null;
+  }
+  function simpanDraft() {
+    try {
+      localStorage.setItem(KUNCI_DRAFT, JSON.stringify({
+        t: Date.now(), zona: cbZona.nilai(), cl: cl.ekspor(), tingkat: tingkat, catatan: $("catatan").value
+      }));
+    } catch (e) { /* abaikan */ }
+  }
+
+  /* ------------------------------------------------ status form */
+  function kekurangan() {
+    var k = [], c = cl.nilai();
+    if (!cbNama.nilai()) k.push("nama petugas");
+    if (!$("pin").value.trim()) k.push("PIN");
+    if (!cbZona.nilai()) k.push("zona");
+    if (!c.lengkap) k.push("checklist (" + c.terisi + "/" + c.total + ")");
+    if (c.adaTemuan) {
+      if (c.catatanKurang) k.push("penjelasan temuan");
+      if (!tingkat) k.push("tingkat temuan");
+    }
+    if (!foto.daftar().length) k.push("foto");
+    return k;
+  }
+
+  function ubah() {
+    if (!cl) return;
+    var c = cl.nilai(), k = kekurangan();
+    $("progres").textContent = c.terisi + " dari " + c.total;
+    $("blok-temuan").hidden = !c.adaTemuan;
+    if (!c.adaTemuan) {
+      tingkat = "";
+      Array.prototype.forEach.call(document.querySelectorAll('input[name="tingkat"]'), function (r) { r.checked = false; });
+    }
+    $("jml-foto").textContent = foto.daftar().length + " dari 3";
+    var siapFoto = !!cbNama.nilai() && !!cbZona.nilai();
+    $("btn-foto").disabled = !siapFoto || foto.penuh();
+    $("btn-foto").textContent = foto.penuh() ? "Foto sudah 3 (maksimal)" : (foto.daftar().length ? "Tambah foto" : "Ambil foto");
+    $("hint-foto").textContent = siapFoto ? "" : "Pilih nama petugas dan zona dulu. Keduanya dicetak pada foto.";
+    $("kurang").textContent = k.length ? "Lengkapi: " + k.join(", ") : "Semua isian lengkap.";
+    $("kurang").className = "kurang" + (k.length ? "" : " siap");
+    $("btn-kirim").disabled = mengirim || k.length > 0;
+    clearTimeout(timerDraft);
+    timerDraft = setTimeout(simpanDraft, 500);
+  }
+
+  /* ------------------------------------------------ foto */
+  function ambilFoto() {
+    PC.Kamera.buka({
+      baris: function (now) {
+        var f = PC.fmtWIB(now);
+        return [f.tgl + "  " + f.jam + " WIB", "Patroli: " + (cbZona.nilai() || "-"),
+          "Petugas: " + (cbNama.nilai() || "-"), PC.teksGps()];
+      },
+      onFoto: function (f) { foto.tambah(f); }
+    });
+  }
+
+  /* ------------------------------------------------ kirim */
+  function setMengirim(v) {
+    mengirim = v;
+    $("btn-kirim").textContent = v ? "Mengirim..." : "Kirim laporan patroli";
+    ubah();
+  }
+
+  function reset() {
+    cl.set(master.checklist.PATROLI);
+    $("zona").value = ""; $("catatan").value = "";
+    tingkat = "";
+    foto.kosongkan();
+    idLaporan = PC.buatId();
+    try { localStorage.removeItem(KUNCI_DRAFT); } catch (e) { /* abaikan */ }
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    ubah();
+  }
+
+  function kirim() {
+    var k = kekurangan();
+    if (mengirim || k.length) { if (k.length) PC.toast("Lengkapi: " + k.join(", "), "bad"); return; }
+    var c = cl.nilai(), gps = PC.Lokasi.saatIni();
+    var payload = {
+      id: idLaporan, nama: cbNama.nilai(), pin: $("pin").value.trim(), zona: cbZona.nilai(),
+      checklist: c.daftar, tingkat: c.adaTemuan ? tingkat : "", catatan: $("catatan").value.trim(),
+      lat: gps ? gps.lat : null, lng: gps ? gps.lng : null, akurasi: gps ? gps.akurasi : null,
+      fotos: foto.daftar().map(function (f) { return { b64: f.b64, t: f.t, sumber: f.sumber }; }),
+      jamPerangkat: !PC.Jam.terpercaya()
+    };
+    var zonaTeks = payload.zona;
+    setMengirim(true);
+    PC.api("simpanPatroli", { payload: payload }).then(function (r) {
+      if (r.status === "SUCCESS") {
+        var hasil = $("hasil");
+        hasil.textContent = "Laporan patroli tercatat" + (r.waktu ? " pukul " + r.waktu + " WIB" : "") + ". Zona: " + zonaTeks + ".";
+        hasil.hidden = false;
+        PC.toast("Laporan tersimpan.", "ok");
+        reset();
+        return;
+      }
+      PC.toast(r.message || "Laporan ditolak.", "bad");
+      if (["PIN", "PIN_KOSONG", "TERKUNCI", "NAMA"].indexOf(r.kode) >= 0) {
+        var g = $("g-pin");
+        g.textContent = r.message; g.hidden = false;
+        $("pin").classList.add("invalid"); $("pin").focus();
+      }
+    }).catch(function (e) {
+      if (!e.jaringan) { PC.toast("Gagal mengirim. Coba lagi.", "bad"); return; }
+      PC.Antrean.simpan({ id: payload.id, aksi: "simpanPatroli", payload: payload, dibuat: Date.now(),
+        status: "menunggu", label: "Patroli " + zonaTeks }).then(function () {
+        PC.toast("Tidak ada sinyal. Laporan disimpan di perangkat dan dikirim otomatis nanti.", "ok");
+        $("hasil").hidden = true;
+        reset();
+        antrean.segarkan();
+      }).catch(function () {
+        PC.toast("Tidak ada sinyal dan penyimpanan perangkat gagal. Isian tetap di layar, coba kirim lagi.", "bad");
+      });
+    }).then(function () { setMengirim(false); });
+  }
+
+  muat();
+})();
+</script>
+</body>
+</html>

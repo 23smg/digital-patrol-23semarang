@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#10243B">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://lh3.googleusercontent.com https://drive.google.com; connect-src https://script.google.com https://script.googleusercontent.com; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<title>Dashboard - Digital Patrol Mall 23Semarang</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="petugas.css">
+<style>
+  body { font-size: 14px; }
+  .btn { min-height: 38px; font-size: 14px; padding: 0 14px; }
+  .input { min-height: 38px; padding: 6px 10px; font-size: 14px; }
+  select.input { padding-right: 6px; }
+
+  /* masuk */
+  .masuk { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; background: var(--ink); }
+  .masuk-kotak { background: var(--surface); width: 100%; max-width: 380px; padding: 28px 24px; border-radius: 6px; border-top: 6px solid var(--stempel); }
+  .masuk-kotak h1 { margin: 0 0 4px; font-size: 22px; font-weight: 800; }
+  .masuk-kotak p { margin: 0 0 20px; color: var(--muted); }
+  .masuk-kotak .input { min-height: 46px; font-size: 16px; }
+
+  /* atas */
+  .atas { background: var(--ink); color: #fff; padding: 12px 24px; display: flex; flex-wrap: wrap; align-items: center; gap: 14px; justify-content: space-between; border-bottom: 3px solid var(--stempel); }
+  .atas h1 { margin: 0; font-size: 18px; font-weight: 800; }
+  .atas .sub { font-size: 12px; color: #B7C4D4; }
+  .atas-kanan { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .atas .btn-garis-terang { min-height: 34px; padding: 0 10px; font-size: 13px; border-color: #5F7794; }
+  .atas .btn-garis-terang:hover { background: var(--ink-2); }
+  .atas select.input { background: #1B2D44; color: #fff; border-color: #5F7794; min-height: 34px; }
+  .pengguna { font-size: 13px; color: #D6DFEA; }
+
+  .isi { max-width: 1280px; margin: 0 auto; padding: 18px 24px 48px; }
+
+  /* filter */
+  .filter { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: flex-end; margin-bottom: 16px; }
+  .filter label { display: block; font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 3px; }
+  .filter .grup { display: flex; gap: 6px; flex-wrap: wrap; align-items: flex-end; }
+  .btn-pilih { background: var(--surface); border: 1.5px solid var(--line-kuat); color: var(--ink); }
+  .btn-pilih[aria-pressed="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }
+  .btn-pilih.bahaya[aria-pressed="true"] { background: var(--bad); border-color: var(--bad); }
+
+  /* ringkasan: lembar buku besar, bukan kartu */
+  .ringkas { display: grid; grid-template-columns: repeat(4, 1fr); background: var(--surface); border: 1.5px solid var(--ink); border-radius: 4px; margin-bottom: 18px; }
+  .ringkas > div { padding: 14px 18px; border-left: 1px solid var(--line); }
+  .ringkas > div:first-child { border-left: 0; }
+  .ringkas .angka { font-size: 30px; font-weight: 800; line-height: 1.1; }
+  .ringkas .angka small { font-size: 16px; font-weight: 600; color: var(--muted); }
+  .ringkas .ket { font-size: 13px; color: var(--muted); font-weight: 600; margin-top: 2px; }
+  .ringkas .bad .angka { color: var(--bad); }
+  .bar-mini { height: 6px; background: var(--line); margin-top: 8px; border-radius: 3px; overflow: hidden; }
+  .bar-mini i { display: block; height: 100%; background: var(--ok); }
+  .bar-mini.tutup i { background: var(--tutup); }
+  .bar-mini.buka i { background: var(--buka); }
+
+  /* panel */
+  .dua-kolom { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 18px; }
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 4px; padding: 14px 16px; }
+  .panel h2 { margin: 0 0 10px; font-size: 14px; font-weight: 800; }
+  .baris-bar { display: grid; grid-template-columns: minmax(90px, 36%) 1fr 28px; gap: 8px; align-items: center; margin: 7px 0; font-size: 13px; }
+  .baris-bar .nama { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .baris-bar .batang { height: 12px; background: var(--bad); border-radius: 2px; }
+  .baris-bar .n { text-align: right; font-weight: 700; }
+  .donat-wrap { display: flex; align-items: center; gap: 18px; }
+  .donat { width: 110px; height: 110px; border-radius: 50%; position: relative; flex: none; }
+  .donat::after { content: ""; position: absolute; inset: 22px; background: var(--surface); border-radius: 50%; }
+  .legenda div { display: flex; align-items: center; gap: 8px; margin: 4px 0; font-size: 13px; }
+  .legenda i { width: 12px; height: 12px; border-radius: 2px; display: inline-block; }
+  .kosong-info { color: var(--muted); padding: 8px 0; }
+
+  /* tab */
+  .tab { display: flex; gap: 0; border-bottom: 2px solid var(--ink); margin-bottom: 0; flex-wrap: wrap; }
+  .tab button { font: inherit; font-weight: 700; padding: 11px 18px; background: transparent; border: 0; border-bottom: 5px solid transparent; margin-bottom: -2px; cursor: pointer; color: var(--muted); }
+  .tab button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--stempel); background: var(--surface); }
+  .tab .n { margin-left: 6px; font-size: 12px; background: var(--line); border-radius: 10px; padding: 1px 7px; }
+  .tab .n.bad { background: var(--bad); color: #fff; }
+
+  /* tabel */
+  .tabel-wrap { background: var(--surface); border: 1px solid var(--line); border-top: 0; overflow-x: auto; }
+  .tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; padding: 10px 12px; border-bottom: 1px solid var(--line); background: var(--surface); }
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; font-size: 12px; font-weight: 700; color: var(--muted); padding: 9px 12px; background: #F6F8FA; border-bottom: 1.5px solid var(--line-kuat); white-space: nowrap; }
+  td { padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+  tbody tr { cursor: pointer; }
+  tbody tr:hover { background: #F0F5FB; }
+  tbody tr:focus-visible { outline-offset: -3px; }
+  td.waktu { white-space: nowrap; font-weight: 600; }
+  td.ket { max-width: 340px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #2D3F55; }
+  .thumb { overflow: hidden; font-size: 9px; width: 44px; height: 44px; object-fit: cover; border-radius: 4px; border: 1px solid var(--line-kuat); display: block; background: #E5EAF0; }
+  .lencana { display: inline-block; font-size: 12px; font-weight: 700; padding: 3px 8px; border-radius: 4px; white-space: nowrap; }
+  .l-ok { background: var(--ok-bg); color: var(--ok); }
+  .l-bad { background: var(--bad-bg); color: var(--bad); }
+  .l-buka { background: var(--buka-bg); color: var(--buka); }
+  .l-tutup { background: var(--tutup-bg); color: var(--tutup); }
+  .l-abu { background: #E8ECF0; color: #3B4B5E; }
+  .l-warn { background: #FFF0CE; color: #7A4A00; }
+  .l-tinggi { background: var(--bad); color: #fff; }
+  .l-sedang { background: #B5601A; color: #fff; }
+  .l-rendah { background: #7A6A10; color: #fff; }
+  .halaman { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; gap: 10px; flex-wrap: wrap; }
+  .kosong-tabel { padding: 36px 16px; text-align: center; color: var(--muted); }
+
+  /* rekap tenant */
+  .rekap td.sel { white-space: nowrap; }
+  .rekap .belum { color: var(--bad); font-weight: 700; }
+  .rekap .jam { font-weight: 700; }
+  .rekap .oleh { font-size: 12px; color: var(--muted); }
+  .rekap tr { cursor: default; }
+  .rekap tr:hover { background: transparent; }
+
+  /* rincian (laci samping) */
+  .tirai { position: fixed; inset: 0; background: rgba(10,22,38,0.5); z-index: 60; }
+  .rincian { position: fixed; top: 0; right: 0; bottom: 0; width: min(520px, 100%); background: var(--surface); z-index: 70; overflow-y: auto; box-shadow: -12px 0 32px rgba(0,0,0,0.25); }
+  .rincian-kepala { position: sticky; top: 0; background: var(--ink); color: #fff; padding: 14px 18px; display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; border-bottom: 3px solid var(--stempel); }
+  .rincian-kepala h2 { margin: 0; font-size: 17px; font-weight: 800; }
+  .rincian-kepala .sub { font-size: 13px; color: #B7C4D4; }
+  .rincian-isi { padding: 16px 18px 28px; }
+  .rincian-isi h3 { font-size: 13px; margin: 20px 0 8px; color: var(--muted); font-weight: 700; }
+  .rincian-isi h3:first-child { margin-top: 0; }
+  .meta { display: grid; grid-template-columns: 130px 1fr; gap: 6px 12px; margin: 0; }
+  .meta dt { color: var(--muted); font-weight: 600; }
+  .meta dd { margin: 0; font-weight: 600; word-break: break-word; }
+  .cl-hasil { list-style: none; margin: 0; padding: 0; }
+  .cl-hasil li { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; padding: 8px 0; border-top: 1px solid var(--line); }
+  .cl-hasil li .cat { grid-column: 1 / -1; color: var(--bad); font-weight: 600; }
+  .foto-besar { display: flex; flex-wrap: wrap; gap: 8px; }
+  .foto-besar button { padding: 0; border: 0; background: none; cursor: zoom-in; }
+  .foto-besar img { width: 150px; height: 150px; object-fit: cover; border-radius: 6px; border: 1px solid var(--line-kuat); display: block; }
+  .flags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .lightbox { position: fixed; inset: 0; z-index: 90; background: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: center; padding: 16px; }
+  .lightbox img { max-width: 100%; max-height: 100%; object-fit: contain; }
+  .lightbox button { position: absolute; top: 14px; right: 14px; }
+
+  @media (max-width: 900px) {
+    .ringkas { grid-template-columns: 1fr 1fr; }
+    .ringkas > div:nth-child(3) { border-left: 0; }
+    .ringkas > div:nth-child(n+3) { border-top: 1px solid var(--line); }
+    .dua-kolom { grid-template-columns: 1fr; }
+    .isi { padding: 14px 12px 40px; }
+    .atas { padding: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<section class="masuk" id="masuk">
+  <form class="masuk-kotak" id="form-masuk">
+    <h1>Dashboard Patroli</h1>
+    <p>Mall 23Semarang. Masuk dengan akun admin.</p>
+    <div class="medan">
+      <label for="u">Username</label>
+      <input id="u" class="input" type="text" autocomplete="username" required maxlength="60">
+    </div>
+    <div class="medan">
+      <label for="p">Password</label>
+      <input id="p" class="input" type="password" autocomplete="current-password" required maxlength="200">
+    </div>
+    <p id="g-masuk" class="galat" role="alert" hidden></p>
+    <button type="submit" id="btn-masuk" class="btn btn-utama btn-lebar" style="min-height:46px;font-size:16px">Masuk</button>
+  </form>
+</section>
+
+<div id="app" hidden>
+  <header class="atas">
+    <div>
+      <h1>Dashboard Patroli</h1>
+      <div class="sub">Pusat data lapangan, Mall 23Semarang</div>
+    </div>
+    <div class="atas-kanan">
+      <span class="pengguna" id="pengguna"></span>
+      <label class="sr" for="oto" style="position:absolute;left:-9999px">Muat ulang otomatis</label>
+      <select id="oto" class="input" style="width:150px">
+        <option value="15">Segarkan 15 dtk</option>
+        <option value="60" selected>Segarkan 1 mnt</option>
+        <option value="300">Segarkan 5 mnt</option>
+        <option value="0">Manual</option>
+      </select>
+      <button type="button" class="btn btn-garis-terang" id="btn-alarm" aria-pressed="true">Alarm: nyala</button>
+      <button type="button" class="btn btn-garis-terang" id="btn-sandi">Ganti password</button>
+      <button type="button" class="btn btn-garis-terang" id="btn-keluar">Keluar</button>
+    </div>
+  </header>
+
+  <main class="isi">
+    <div class="filter">
+      <div class="grup">
+        <div><label for="dari">Dari</label><input id="dari" type="date" class="input"></div>
+        <div><label for="sampai">Sampai</label><input id="sampai" type="date" class="input"></div>
+      </div>
+      <div class="grup">
+        <button type="button" class="btn btn-pilih" data-rentang="hari">Hari ini</button>
+        <button type="button" class="btn btn-pilih" data-rentang="7">7 hari</button>
+        <button type="button" class="btn btn-pilih" data-rentang="bulan">Bulan ini</button>
+      </div>
+      <div style="flex:1;min-width:200px;max-width:340px">
+        <label for="cari">Cari</label>
+        <input id="cari" type="search" class="input" placeholder="Nama, zona, tenant, temuan" style="width:100%">
+      </div>
+      <div class="grup">
+        <button type="button" class="btn btn-pilih bahaya" id="btn-temuan" aria-pressed="false">Hanya temuan</button>
+        <button type="button" class="btn btn-utama" id="btn-segarkan">Segarkan</button>
+      </div>
+      <span id="status-muat" style="font-size:13px;color:var(--muted)"></span>
+    </div>
+
+    <div class="ringkas" id="ringkas"></div>
+
+    <div class="dua-kolom">
+      <div class="panel"><h2>Sesuai dan temuan (periode terpilih)</h2><div id="donat"></div></div>
+      <div class="panel"><h2>Lokasi dengan temuan terbanyak</h2><div id="top"></div></div>
+    </div>
+
+    <div class="tab" role="tablist" id="tab">
+      <button type="button" role="tab" id="tab-patroli" data-tab="patroli" aria-selected="true">Patroli<span class="n" id="n-patroli">0</span></button>
+      <button type="button" role="tab" id="tab-tenant" data-tab="tenant" aria-selected="false">Checklist tenant<span class="n" id="n-tenant">0</span></button>
+      <button type="button" role="tab" id="tab-rekap" data-tab="rekap" aria-selected="false">Rekap tenant hari ini</button>
+    </div>
+
+    <div class="tabel-wrap" id="panel"></div>
+  </main>
+</div>
+
+<div id="lapisan"></div>
+
+<dialog class="dialog" id="dlg-sandi">
+  <form id="form-sandi">
+    <h3>Ganti password</h3>
+    <div class="medan"><label for="s-lama">Password saat ini</label><input id="s-lama" class="input" type="password" autocomplete="current-password" required></div>
+    <div class="medan"><label for="s-baru">Password baru (minimal 8 karakter)</label><input id="s-baru" class="input" type="password" autocomplete="new-password" minlength="8" required></div>
+    <div class="medan"><label for="s-konf">Ulangi password baru</label><input id="s-konf" class="input" type="password" autocomplete="new-password" minlength="8" required></div>
+    <p id="g-sandi" class="galat" role="alert" hidden></p>
+    <div class="dialog-aksi">
+      <button type="button" class="btn btn-garis" id="s-batal">Batal</button>
+      <button type="submit" class="btn btn-utama" id="s-simpan">Simpan</button>
+    </div>
+  </form>
+</dialog>
+
+<script src="config.js"></script>
+<script src="core.js"></script>
+<script>
+(function () {
+  "use strict";
+  var PC = window.PC, h = PC.h;
+  var $ = function (id) { return document.getElementById(id); };
+  var KUNCI_SESI = "dp_admin_sesi";
+  var PER_HALAMAN = 15;
+
+  var S = {
+    token: "", user: null, hariIni: "", patroli: [], tenant: [], master: { tenant: [], zona: [], petugas: 0 },
+    tab: "patroli", hanyaTemuan: false, halaman: 1, sudahMuat: false, terlihat: {}, alarmAktif: true,
+    timer: null, memuat: false, audio: null
+  };
+
+  var LABEL_FLAG = {
+    WAKTU_TIDAK_SINKRON: "Jam foto tidak sinkron dengan server",
+    DI_LUAR_AREA: "Di luar area mall",
+    GPS_TIDAK_ADA: "Tanpa GPS",
+    AKURASI_RENDAH: "GPS kurang akurat",
+    FOTO_DARI_BERKAS: "Foto bukan dari kamera langsung",
+    KIRIM_TERTUNDA: "Dikirim setelah offline",
+    JAM_PERANGKAT: "Jam dari perangkat",
+    ULANG_HARI_INI: "Laporan ulang hari ini"
+  };
+  var FLAG_PENTING = { WAKTU_TIDAK_SINKRON: 1, DI_LUAR_AREA: 1, FOTO_DARI_BERKAS: 1 };
+
+  /* ---------------------------------------------------------- util */
+  function ymd(d) {
+    return d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2);
+  }
+  function tglWIB() { return PC.fmtWIB(new Date()).tgl.split("/").reverse().join("-"); }
+  function isTemuan(x) { return /temuan/i.test(x.kondisi || x.hasil || ""); }
+  function fotoList(s) {
+    return String(s || "").split("|").map(function (u) { return u.trim(); }).map(function (u) {
+      var m = u.match(/\/d\/([A-Za-z0-9_-]+)/) || u.match(/[?&]id=([A-Za-z0-9_-]+)/);
+      return m ? { thumb: "https://lh3.googleusercontent.com/d/" + m[1] + "=w300",
+        besar: "https://lh3.googleusercontent.com/d/" + m[1] + "=w1600", asli: "https://drive.google.com/file/d/" + m[1] + "/view" } : null;
+    }).filter(Boolean);
+  }
+  function flags(s) { return String(s || "").split(",").map(function (x) { return x.trim(); }).filter(Boolean); }
+  function lencana(teks, kls) { return h("span", { class: "lencana " + kls, text: teks }); }
+  function lencanaTingkat(t) {
+    if (!t || t === "-") return h("span", { class: "oleh", text: "-" });
+    return lencana(t, { Tinggi: "l-tinggi", Sedang: "l-sedang", Rendah: "l-rendah" }[t] || "l-abu");
+  }
+  function lencanaFlag(arr) {
+    var penting = arr.filter(function (f) { return FLAG_PENTING[f]; });
+    if (!arr.length) return h("span", { class: "oleh", text: "-" });
+    return h("span", { class: "lencana " + (penting.length ? "l-warn" : "l-abu"),
+      title: arr.map(function (f) { return LABEL_FLAG[f] || f; }).join("\n"), text: arr.length + " catatan" });
+  }
+  function peta(lat, lng) {
+    var a = parseFloat(lat), b = parseFloat(lng);
+    return isFinite(a) && isFinite(b) ? "https://www.google.com/maps?q=" + a + "," + b : "";
+  }
+  function dalamRentang(x) { return x.tgl >= $("dari").value && x.tgl <= $("sampai").value; }
+
+  function cocokCari(vals) {
+    var q = $("cari").value.toLowerCase().trim();
+    if (!q) return true;
+    return vals.join(" ").toLowerCase().indexOf(q) >= 0;
+  }
+
+  function dataPatroli() {
+    return S.patroli.filter(function (x) {
+      return dalamRentang(x) && (!S.hanyaTemuan || isTemuan(x)) &&
+        cocokCari([x.nama, x.zona, x.kondisi, x.catatan, x.tingkat, x.flag]);
+    });
+  }
+  function dataTenant() {
+    return S.tenant.filter(function (x) {
+      return dalamRentang(x) && (!S.hanyaTemuan || isTemuan(x)) &&
+        cocokCari([x.tenant, x.petugas, x.kategori, x.hasil, x.ringkasan, x.catatan, x.tingkat, x.flag]);
+    });
+  }
+
+  /* ---------------------------------------------------------- sesi */
+  function simpanSesi() { try { sessionStorage.setItem(KUNCI_SESI, JSON.stringify({ token: S.token, user: S.user })); } catch (e) { /* abaikan */ } }
+  function hapusSesi() { try { sessionStorage.removeItem(KUNCI_SESI); } catch (e) { /* abaikan */ } }
+
+  function tampilMasuk(pesan) {
+    S.token = ""; S.user = null; S.sudahMuat = false;
+    clearInterval(S.timer);
+    $("app").hidden = true; $("masuk").hidden = false;
+    var g = $("g-masuk");
+    g.hidden = !pesan; g.textContent = pesan || "";
+    $("p").value = "";
+  }
+
+  function tampilApp() {
+    $("masuk").hidden = true; $("app").hidden = false;
+    $("pengguna").textContent = S.user ? S.user.nama + " (" + S.user.role + ")" : "";
+    atur();
+  }
+
+  $("form-masuk").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var btn = $("btn-masuk");
+    btn.disabled = true; btn.textContent = "Memeriksa...";
+    siapkanAudio();
+    PC.api("login", { username: $("u").value, password: $("p").value }, 25000).then(function (r) {
+      if (r.status === "SUCCESS") {
+        S.token = r.token; S.user = r.user;
+        simpanSesi(); tampilApp();
+      } else {
+        tampilMasuk(r.message || "Gagal masuk.");
+      }
+    }).catch(function () { tampilMasuk("Tidak dapat terhubung ke server."); })
+      .then(function () { btn.disabled = false; btn.textContent = "Masuk"; });
+  });
+
+  function keluar() {
+    var t = S.token;
+    hapusSesi();
+    if (t) PC.api("logout", { token: t }, 8000).catch(function () { /* abaikan */ });
+    tampilMasuk("");
+  }
+  $("btn-keluar").addEventListener("click", keluar);
+
+  /* ---------------------------------------------------------- rentang */
+  function setRentang(jenis) {
+    var n = new Date(), a = new Date();
+    if (jenis === "7") a.setDate(n.getDate() - 6);
+    else if (jenis === "bulan") a = new Date(n.getFullYear(), n.getMonth(), 1);
+    $("dari").value = ymd(a); $("sampai").value = ymd(n);
+    Array.prototype.forEach.call(document.querySelectorAll("[data-rentang]"), function (b) {
+      b.setAttribute("aria-pressed", b.getAttribute("data-rentang") === jenis ? "true" : "false");
+    });
+  }
+
+  /* ---------------------------------------------------------- data */
+  function muatData(latar) {
+    if (S.memuat || !S.token) return;
+    S.memuat = true;
+    if (!latar) $("status-muat").textContent = "Memuat...";
+    var hari = tglWIB();
+    var dari = $("dari").value < hari ? $("dari").value : hari;
+    var sampai = $("sampai").value > hari ? $("sampai").value : hari;
+    PC.api("ambilData", { token: S.token, dari: dari, sampai: sampai }, 60000).then(function (r) {
+      if (r.status !== "SUCCESS") {
+        if (r.kode === "SESI") { hapusSesi(); tampilMasuk(r.message); return; }
+        $("status-muat").textContent = r.message || "Gagal memuat.";
+        return;
+      }
+      S.hariIni = r.hariIni; S.patroli = r.patroli; S.tenant = r.tenant; S.master = r.master;
+      if (r.user) { S.user = r.user; }
+      deteksiBaru(r.patroli.concat(r.tenant));
+      $("status-muat").textContent = "Diperbarui " + PC.fmtWIB(new Date()).jam + " WIB";
+      render();
+    }).catch(function () { $("status-muat").textContent = "Gagal terhubung ke server."; })
+      .then(function () { S.memuat = false; });
+  }
+
+  function kunciBaris(x) { return x.id || (x.ts + "|" + (x.nama || x.petugas) + "|" + (x.zona || x.tenant)); }
+
+  function deteksiBaru(semua) {
+    var baru = [];
+    semua.forEach(function (x) {
+      var k = kunciBaris(x);
+      if (!S.terlihat[k]) { S.terlihat[k] = 1; if (S.sudahMuat && isTemuan(x)) baru.push(x); }
+    });
+    S.sudahMuat = true;
+    if (baru.length) {
+      var x = baru[0];
+      PC.toast("Temuan baru: " + (x.zona || x.tenant) + (x.tingkat && x.tingkat !== "-" ? " (" + x.tingkat + ")" : ""), "bad");
+      bunyi();
+    }
+  }
+
+  function siapkanAudio() {
+    try { if (!S.audio) S.audio = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { /* abaikan */ }
+  }
+  function bunyi() {
+    if (!S.alarmAktif || !S.audio) return;
+    try {
+      if (S.audio.state === "suspended") S.audio.resume();
+      var o = S.audio.createOscillator(), g = S.audio.createGain();
+      o.type = "triangle"; o.frequency.value = 880; g.gain.value = 0.12;
+      o.connect(g); g.connect(S.audio.destination);
+      o.start(); o.stop(S.audio.currentTime + 0.35);
+    } catch (e) { /* abaikan */ }
+  }
+
+  function atur() {
+    clearInterval(S.timer);
+    var d = parseInt($("oto").value, 10);
+    if (d > 0) S.timer = setInterval(function () { muatData(true); }, d * 1000);
+    muatData(false);
+  }
+
+  /* ---------------------------------------------------------- render */
+  function render() {
+    renderRingkas();
+    renderGrafik();
+    renderPanel();
+  }
+
+  function renderRingkas() {
+    var p = dataPatroli(), t = dataTenant();
+    var tp = p.filter(isTemuan).length, tt = t.filter(isTemuan).length;
+    var total = S.master.tenant.length;
+    function hariIni(kat) {
+      var set = {};
+      S.tenant.forEach(function (x) { if (x.tgl === S.hariIni && x.kategori === kat) set[x.tenant] = 1; });
+      return Object.keys(set).length;
+    }
+    var buka = hariIni("BUKA"), tutup = hariIni("TUTUP");
+    function sel(angka, ket, kls, persen) {
+      return h("div", { class: kls || "" },
+        h("div", { class: "angka" }, angka),
+        h("div", { class: "ket", text: ket }),
+        persen === undefined ? null : h("div", { class: "bar-mini " + (kls || "") }, h("i", { style: "width:" + persen + "%" })));
+    }
+    var w = $("ringkas");
+    PC.kosongkan(w);
+    w.appendChild(sel(String(p.length), "Log patroli, periode terpilih"));
+    w.appendChild(sel(String(tp + tt), "Temuan (patroli " + tp + ", tenant " + tt + ")", (tp + tt) ? "bad" : ""));
+    w.appendChild(sel([String(buka), h("small", { text: " / " + total })], "Tenant sudah buka hari ini", "buka", total ? Math.round(buka * 100 / total) : 0));
+    w.appendChild(sel([String(tutup), h("small", { text: " / " + total })], "Tenant sudah tutup hari ini", "tutup", total ? Math.round(tutup * 100 / total) : 0));
+    $("n-patroli").textContent = p.length;
+    $("n-tenant").textContent = t.length;
+    $("n-tenant").className = "n" + (tt ? " bad" : "");
+    $("n-patroli").className = "n" + (tp ? " bad" : "");
+  }
+
+  function renderGrafik() {
+    var semua = dataPatroli().map(function (x) { return { t: isTemuan(x), lok: x.zona }; })
+      .concat(dataTenant().map(function (x) { return { t: isTemuan(x), lok: x.tenant }; }));
+    var temuan = semua.filter(function (x) { return x.t; }), aman = semua.length - temuan.length;
+    var d = $("donat"); PC.kosongkan(d);
+    if (!semua.length) { d.appendChild(h("div", { class: "kosong-info", text: "Belum ada data pada periode ini." })); }
+    else {
+      var pa = Math.round(aman * 360 / semua.length);
+      d.appendChild(h("div", { class: "donat-wrap" },
+        h("div", { class: "donat", role: "img", "aria-label": aman + " sesuai, " + temuan.length + " temuan",
+          style: "background:conic-gradient(var(--ok) 0 " + pa + "deg, var(--bad) " + pa + "deg 360deg)" }),
+        h("div", { class: "legenda" },
+          h("div", null, h("i", { style: "background:var(--ok)" }), "Sesuai: " + aman),
+          h("div", null, h("i", { style: "background:var(--bad)" }), "Temuan: " + temuan.length))));
+    }
+    var hitung = {};
+    temuan.forEach(function (x) { hitung[x.lok] = (hitung[x.lok] || 0) + 1; });
+    var urut = Object.keys(hitung).map(function (k) { return { k: k, n: hitung[k] }; })
+      .sort(function (a, b) { return b.n - a.n; }).slice(0, 5);
+    var t = $("top"); PC.kosongkan(t);
+    if (!urut.length) { t.appendChild(h("div", { class: "kosong-info", text: "Tidak ada temuan pada periode ini." })); return; }
+    var maks = urut[0].n;
+    urut.forEach(function (u) {
+      t.appendChild(h("div", { class: "baris-bar" },
+        h("div", { class: "nama", title: u.k, text: u.k }),
+        h("div", null, h("div", { class: "batang", style: "width:" + Math.max(6, Math.round(u.n * 100 / maks)) + "%" })),
+        h("div", { class: "n", text: u.n })));
+    });
+  }
+
+  function renderPanel() {
+    Array.prototype.forEach.call(document.querySelectorAll("#tab button"), function (b) {
+      b.setAttribute("aria-selected", b.getAttribute("data-tab") === S.tab ? "true" : "false");
+    });
+    var panel = $("panel");
+    PC.kosongkan(panel);
+    if (S.tab === "rekap") { panel.appendChild(buatRekap()); return; }
+    var baris = S.tab === "patroli" ? dataPatroli() : dataTenant();
+    var total = baris.length, halaman = Math.max(1, Math.ceil(total / PER_HALAMAN));
+    if (S.halaman > halaman) S.halaman = halaman;
+    var mulai = (S.halaman - 1) * PER_HALAMAN, potong = baris.slice(mulai, mulai + PER_HALAMAN);
+
+    panel.appendChild(h("div", { class: "tools" },
+      h("span", { text: total + " laporan" }),
+      h("button", { type: "button", class: "btn btn-garis", text: "Ekspor CSV", onclick: function () { ekspor(baris); } })));
+
+    if (!total) { panel.appendChild(h("div", { class: "kosong-tabel", text: "Tidak ada laporan untuk filter ini." })); return; }
+
+    var kolom = S.tab === "patroli"
+      ? ["Waktu", "Petugas", "Zona", "Kondisi", "Tingkat", "Temuan", "Foto", "Catatan sistem"]
+      : ["Waktu", "Kategori", "Tenant", "Petugas", "Hasil", "Tingkat", "Temuan", "Foto", "Catatan sistem"];
+    var tbody = h("tbody");
+    potong.forEach(function (x) {
+      var f = fotoList(x.foto), fl = flags(x.flag);
+      var thumb = f.length ? h("img", { class: "thumb", src: f[0].thumb, alt: "Foto " + (x.zona || x.tenant), loading: "lazy", referrerpolicy: "no-referrer" })
+        : h("span", { class: "oleh", text: "-" });
+      var sel;
+      if (S.tab === "patroli") {
+        sel = [h("td", { class: "waktu", text: x.ts }), h("td", { text: x.nama }), h("td", { text: x.zona }),
+          h("td", null, lencana(isTemuan(x) ? "Ada temuan" : "Aman", isTemuan(x) ? "l-bad" : "l-ok")),
+          h("td", null, lencanaTingkat(x.tingkat)),
+          h("td", { class: "ket", title: x.catatan, text: x.catatan }), h("td", null, thumb), h("td", null, lencanaFlag(fl))];
+      } else {
+        sel = [h("td", { class: "waktu", text: x.ts }),
+          h("td", null, lencana(x.kategori, x.kategori === "BUKA" ? "l-buka" : "l-tutup")),
+          h("td", { text: x.tenant }), h("td", { text: x.petugas }),
+          h("td", null, lencana(isTemuan(x) ? "Ada temuan" : "Sesuai", isTemuan(x) ? "l-bad" : "l-ok")),
+          h("td", null, lencanaTingkat(x.tingkat)),
+          h("td", { class: "ket", title: x.ringkasan, text: x.ringkasan }), h("td", null, thumb), h("td", null, lencanaFlag(fl))];
+      }
+      var tr = h("tr", { tabindex: "0", onclick: function () { rincian(x, S.tab); },
+        onkeydown: function (e) { if (e.key === "Enter") rincian(x, S.tab); } }, sel);
+      tbody.appendChild(tr);
+    });
+    panel.appendChild(h("table", null, h("thead", null, h("tr", null, kolom.map(function (k) { return h("th", { text: k }); }))), tbody));
+    panel.appendChild(h("div", { class: "halaman" },
+      h("span", { text: "Menampilkan " + (mulai + 1) + "-" + (mulai + potong.length) + " dari " + total }),
+      h("div", { class: "grup", style: "display:flex;gap:6px;align-items:center" },
+        h("button", { type: "button", class: "btn btn-garis", text: "Sebelumnya", disabled: S.halaman <= 1,
+          onclick: function () { S.halaman--; renderPanel(); } }),
+        h("span", { text: S.halaman + " / " + halaman }),
+        h("button", { type: "button", class: "btn btn-garis", text: "Berikutnya", disabled: S.halaman >= halaman,
+          onclick: function () { S.halaman++; renderPanel(); } }))));
+  }
+
+  function buatRekap() {
+    var peta = {};
+    S.tenant.forEach(function (x) {
+      if (x.tgl !== S.hariIni) return;
+      var k = x.tenant + "|" + x.kategori;
+      if (!peta[k] || x.ts > peta[k].ts) peta[k] = x;   // laporan terbaru
+    });
+    function sel(tenant, kat) {
+      var x = peta[tenant + "|" + kat];
+      if (!x) return h("td", { class: "sel" }, h("span", { class: "belum", text: "Belum dilaporkan" }));
+      return h("td", { class: "sel" },
+        h("div", null, h("span", { class: "jam", text: String(x.ts).slice(11, 16) }), " ",
+          lencana(isTemuan(x) ? "Temuan" : "Sesuai", isTemuan(x) ? "l-bad" : "l-ok")),
+        h("div", { class: "oleh", text: x.petugas }));
+    }
+    var daftar = S.master.tenant.slice().sort(function (a, b) {
+      function skor(t) { return (peta[t.n + "|BUKA"] ? 1 : 0) + (peta[t.n + "|TUTUP"] ? 1 : 0); }
+      return skor(a) - skor(b) || a.n.localeCompare(b.n);
+    });
+    var wadah = h("div");
+    wadah.appendChild(h("div", { class: "tools" }, h("span", { text: "Tenant yang belum lengkap tampil paling atas. Data hari ini: " + S.hariIni })));
+    if (!daftar.length) {
+      wadah.appendChild(h("div", { class: "kosong-tabel", text: "Daftar tenant kosong. Isi sheet 'Tenant' di spreadsheet." }));
+      return wadah;
+    }
+    wadah.appendChild(h("table", { class: "rekap" },
+      h("thead", null, h("tr", null, ["Tenant", "Lokasi", "Buka", "Tutup"].map(function (k) { return h("th", { text: k }); }))),
+      h("tbody", null, daftar.map(function (t) {
+        return h("tr", null, h("td", { text: t.n }), h("td", { text: t.l || "-" }), sel(t.n, "BUKA"), sel(t.n, "TUTUP"));
+      }))));
+    return wadah;
+  }
+
+  /* ---------------------------------------------------------- rincian */
+  function tutupRincian() { PC.kosongkan($("lapisan")); }
+
+  function rincian(x, jenis) {
+    var fl = flags(x.flag), foto = fotoList(x.foto), detail = [];
+    try { detail = JSON.parse(x.detail || "[]"); } catch (e) { detail = []; }
+    var judul = jenis === "patroli" ? x.zona : (x.kategori + " - " + x.tenant);
+    var petugas = jenis === "patroli" ? x.nama : x.petugas;
+    var link = peta(x.lat, x.lng);
+
+    var meta = [["Waktu server", x.ts], ["Waktu foto", x.waktuFoto || "-"], ["Petugas", petugas],
+      ["Hasil", isTemuan(x) ? "Ada temuan" : "Sesuai"], ["Tingkat", x.tingkat || "-"],
+      ["Akurasi GPS", x.akurasi ? "\u00B1" + x.akurasi + " m" : "-"], ["ID laporan", x.id || "-"]];
+    var dl = h("dl", { class: "meta" });
+    meta.forEach(function (m) { dl.appendChild(h("dt", { text: m[0] })); dl.appendChild(h("dd", { text: m[1] })); });
+
+    var cl = h("ul", { class: "cl-hasil" });
+    detail.forEach(function (d) {
+      var st = d.s === "OK" ? ["Sesuai", "l-ok"] : (d.s === "TEMUAN" ? ["Temuan", "l-bad"] : ["N/A", "l-abu"]);
+      cl.appendChild(h("li", null, h("span", { text: d.i }), lencana(st[0], st[1]), d.c ? h("div", { class: "cat", text: d.c }) : null));
+    });
+
+    var isi = h("div", { class: "rincian-isi" });
+    isi.appendChild(h("h3", { text: "Ringkasan" }));
+    isi.appendChild(dl);
+    if (jenis === "tenant" && x.catatan) { isi.appendChild(h("h3", { text: "Catatan petugas" })); isi.appendChild(h("div", { text: x.catatan })); }
+    if (jenis === "patroli" && x.catatan) { isi.appendChild(h("h3", { text: "Temuan dan catatan" })); isi.appendChild(h("div", { text: x.catatan })); }
+    if (detail.length) { isi.appendChild(h("h3", { text: "Checklist" })); isi.appendChild(cl); }
+    if (fl.length) {
+      isi.appendChild(h("h3", { text: "Catatan sistem" }));
+      isi.appendChild(h("div", { class: "flags" }, fl.map(function (f) { return lencana(LABEL_FLAG[f] || f, FLAG_PENTING[f] ? "l-warn" : "l-abu"); })));
+    }
+    isi.appendChild(h("h3", { text: "Foto (" + foto.length + ")" }));
+    if (foto.length) {
+      isi.appendChild(h("div", { class: "foto-besar" }, foto.map(function (f, i) {
+        return h("button", { type: "button", "aria-label": "Perbesar foto " + (i + 1), onclick: function () { lightbox(f); } },
+          h("img", { src: f.thumb, alt: "Foto " + (i + 1), referrerpolicy: "no-referrer" }));
+      })));
+    } else { isi.appendChild(h("div", { class: "oleh", text: "Tidak ada foto." })); }
+    if (link) {
+      isi.appendChild(h("h3", { text: "Lokasi" }));
+      isi.appendChild(h("a", { class: "btn btn-utama", href: link, target: "_blank", rel: "noopener noreferrer", text: "Buka di Google Maps" }));
+    }
+
+    var lap = $("lapisan");
+    PC.kosongkan(lap);
+    lap.appendChild(h("div", { class: "tirai", onclick: tutupRincian }));
+    lap.appendChild(h("aside", { class: "rincian", role: "dialog", "aria-modal": "true", "aria-label": "Detail laporan" },
+      h("div", { class: "rincian-kepala" },
+        h("div", null, h("h2", { text: judul }), h("div", { class: "sub", text: x.ts })),
+        h("button", { type: "button", class: "btn btn-garis-terang", text: "Tutup", onclick: tutupRincian })),
+      isi));
+  }
+
+  function lightbox(f) {
+    var lb = h("div", { class: "lightbox", role: "dialog", "aria-modal": "true", onclick: function () { lb.remove(); } },
+      h("img", { src: f.besar, alt: "Foto diperbesar", referrerpolicy: "no-referrer" }),
+      h("button", { type: "button", class: "btn btn-stempel", text: "Tutup", onclick: function () { lb.remove(); } }));
+    document.body.appendChild(lb);
+  }
+  document.addEventListener("keydown", function (e) {
+    if (e.key !== "Escape") return;
+    var lb = document.querySelector(".lightbox");
+    if (lb) lb.remove(); else tutupRincian();
+  });
+
+  /* ---------------------------------------------------------- ekspor */
+  function selCsv(v) {
+    v = String(v === null || v === undefined ? "" : v);
+    if (/^[=+\-@\t\r]/.test(v)) v = "'" + v;      // cegah formula injection di Excel
+    return '"' + v.replace(/"/g, '""') + '"';
+  }
+  function ekspor(baris) {
+    var kolom = S.tab === "patroli"
+      ? [["Waktu", "ts"], ["Petugas", "nama"], ["Zona", "zona"], ["Kondisi", "kondisi"], ["Tingkat", "tingkat"],
+        ["Temuan", "catatan"], ["Latitude", "lat"], ["Longitude", "lng"], ["Akurasi (m)", "akurasi"], ["Waktu foto", "waktuFoto"],
+        ["Catatan sistem", "flag"], ["Link foto", "foto"], ["ID", "id"]]
+      : [["Waktu", "ts"], ["Kategori", "kategori"], ["Tenant", "tenant"], ["Petugas", "petugas"], ["Hasil", "hasil"],
+        ["Tingkat", "tingkat"], ["Temuan", "ringkasan"], ["Catatan", "catatan"], ["Latitude", "lat"], ["Longitude", "lng"],
+        ["Akurasi (m)", "akurasi"], ["Waktu foto", "waktuFoto"], ["Catatan sistem", "flag"], ["Link foto", "foto"], ["ID", "id"]];
+    var csv = [kolom.map(function (k) { return selCsv(k[0]); }).join(",")]
+      .concat(baris.map(function (x) { return kolom.map(function (k) { return selCsv(x[k[1]]); }).join(","); })).join("\r\n");
+    var blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
+    var a = h("a", { href: URL.createObjectURL(blob), download: "log-" + S.tab + "-" + $("dari").value + "_" + $("sampai").value + ".csv" });
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 2000);
+  }
+
+  /* ---------------------------------------------------------- ganti password */
+  var dlg = $("dlg-sandi");
+  $("btn-sandi").addEventListener("click", function () {
+    $("form-sandi").reset(); $("g-sandi").hidden = true;
+    if (dlg.showModal) dlg.showModal(); else dlg.setAttribute("open", "");
+  });
+  $("s-batal").addEventListener("click", function () { dlg.close(); });
+  $("form-sandi").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var g = $("g-sandi");
+    if ($("s-baru").value !== $("s-konf").value) { g.textContent = "Konfirmasi password tidak cocok."; g.hidden = false; return; }
+    var btn = $("s-simpan"); btn.disabled = true;
+    PC.api("gantiPassword", { token: S.token, passLama: $("s-lama").value, passBaru: $("s-baru").value }, 25000).then(function (r) {
+      if (r.status === "SUCCESS") { dlg.close(); PC.toast("Password diperbarui.", "ok"); return; }
+      if (r.kode === "SESI") { dlg.close(); tampilMasuk(r.message); return; }
+      g.textContent = r.message || "Gagal mengganti password."; g.hidden = false;
+    }).catch(function () { g.textContent = "Tidak dapat terhubung ke server."; g.hidden = false; })
+      .then(function () { btn.disabled = false; });
+  });
+
+  /* ---------------------------------------------------------- kontrol */
+  Array.prototype.forEach.call(document.querySelectorAll("[data-rentang]"), function (b) {
+    b.addEventListener("click", function () { setRentang(b.getAttribute("data-rentang")); S.halaman = 1; muatData(false); });
+  });
+  ["dari", "sampai"].forEach(function (id) {
+    $(id).addEventListener("change", function () {
+      Array.prototype.forEach.call(document.querySelectorAll("[data-rentang]"), function (b) { b.setAttribute("aria-pressed", "false"); });
+      S.halaman = 1; muatData(false);
+    });
+  });
+  $("cari").addEventListener("input", function () { S.halaman = 1; render(); });
+  $("btn-temuan").addEventListener("click", function () {
+    S.hanyaTemuan = !S.hanyaTemuan;
+    $("btn-temuan").setAttribute("aria-pressed", S.hanyaTemuan ? "true" : "false");
+    S.halaman = 1; render();
+  });
+  $("btn-segarkan").addEventListener("click", function () { muatData(false); });
+  $("oto").addEventListener("change", atur);
+  $("btn-alarm").addEventListener("click", function () {
+    S.alarmAktif = !S.alarmAktif; siapkanAudio();
+    $("btn-alarm").textContent = "Alarm: " + (S.alarmAktif ? "nyala" : "mati");
+    $("btn-alarm").setAttribute("aria-pressed", S.alarmAktif ? "true" : "false");
+    if (S.alarmAktif) bunyi();
+  });
+  Array.prototype.forEach.call(document.querySelectorAll("#tab button"), function (b) {
+    b.addEventListener("click", function () { S.tab = b.getAttribute("data-tab"); S.halaman = 1; renderPanel(); });
+  });
+
+  /* ---------------------------------------------------------- mulai */
+  setRentang("hari");
+  var sesi = null;
+  try { sesi = JSON.parse(sessionStorage.getItem(KUNCI_SESI)); } catch (e) { /* abaikan */ }
+  if (sesi && sesi.token) { S.token = sesi.token; S.user = sesi.user; tampilApp(); }
+})();
+</script>
+</body>
+</html>
