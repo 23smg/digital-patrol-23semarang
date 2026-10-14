@@ -219,6 +219,7 @@
         <button type="button" class="btn btn-pilih" data-rentang="hari">Hari ini</button>
         <button type="button" class="btn btn-pilih" data-rentang="7">7 hari</button>
         <button type="button" class="btn btn-pilih" data-rentang="bulan">Bulan ini</button>
+        <button type="button" class="btn btn-pilih" data-rentang="90">90 hari</button>
       </div>
       <div style="flex:1;min-width:200px;max-width:340px">
         <label for="cari">Cari</label>
@@ -439,6 +440,7 @@
   function setRentang(jenis) {
     var n = new Date(), a = new Date();
     if (jenis === "7") a.setDate(n.getDate() - 6);
+    else if (jenis === "90") a.setDate(n.getDate() - 89);
     else if (jenis === "bulan") a = new Date(n.getFullYear(), n.getMonth(), 1);
     $("dari").value = ymd(a); $("sampai").value = ymd(n);
     Array.prototype.forEach.call(document.querySelectorAll("[data-rentang]"), function (b) {
