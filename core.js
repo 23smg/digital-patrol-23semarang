@@ -525,10 +525,10 @@
 
   /* ------------------------------------------------------- Checklist */
   function Checklist(wadah, o) {
-    var items = [], state = {}, baris = {};
+    var items = [], state = {}, baris = {}, mulaiIsi = 0;
     o = o || {};
 
-    function ubah() { if (o.onUbah) o.onUbah(); }
+    function ubah() { if (!mulaiIsi) mulaiIsi = Date.now(); if (o.onUbah) o.onUbah(); }
 
     function perbarui(nama) {
       var st = state[nama], b = baris[nama];
@@ -543,13 +543,12 @@
       baris = {};
       items.forEach(function (nama, i) {
         var st = state[nama], gn = "cl" + i;
+        var radios = {};
         function opsi(val, label, kls) {
           var id = gn + "_" + val;
-          return [
-            h("input", { type: "radio", name: gn, id: id, value: val, checked: st.s === val,
-              onchange: function () { st.s = val; perbarui(nama); ubah(); } }),
-            h("label", { for: id, class: "seg " + kls, text: label })
-          ];
+          radios[val] = h("input", { type: "radio", name: gn, id: id, value: val, checked: st.s === val,
+            onchange: function () { st.s = val; perbarui(nama); ubah(); } });
+          return [radios[val], h("label", { for: id, class: "seg " + kls, text: label })];
         }
         var cat = h("textarea", { rows: "2", maxlength: "200", class: "input cl-cat",
           placeholder: "Jelaskan temuan (wajib)", "aria-label": "Penjelasan temuan: " + nama,
@@ -562,7 +561,7 @@
             opsi("TEMUAN", "Temuan", "seg-bad"),
             o.izinNA === false ? null : opsi("NA", "N/A", "seg-na")),
           catWrap);
-        baris[nama] = { el: el, cat: cat, catWrap: catWrap };
+        baris[nama] = { el: el, cat: cat, catWrap: catWrap, radios: radios };
         wadah.appendChild(el);
         perbarui(nama);
       });
@@ -572,6 +571,7 @@
       set: function (daftar, awal) {
         items = daftar.slice();
         state = {};
+        mulaiIsi = 0;
         items.forEach(function (n) { state[n] = awal && awal[n] ? { s: awal[n].s || "", c: awal[n].c || "" } : { s: "", c: "" }; });
         render();
       },
@@ -587,8 +587,68 @@
           adaTemuan: adaTemuan, catatanKurang: catKurang };
       },
       ekspor: function () { return JSON.parse(JSON.stringify(state)); },
-      reset: function () { this.set(items); }
+      reset: function () { this.set(items); },
+      // Pintasan: hanya mengisi item yang BELUM dijawab. Jawaban Temuan / N/A yang sudah dipilih tidak diubah.
+      isiSemuaSesuai: function () {
+        var n = 0;
+        items.forEach(function (nama) {
+          if (state[nama].s) return;
+          state[nama].s = "OK";
+          baris[nama].radios.OK.checked = true;
+          perbarui(nama);
+          n++;
+        });
+        ubah();
+        return n;
+      },
+      durasiDetik: function () { return mulaiIsi ? Math.round((Date.now() - mulaiIsi) / 1000) : 0; }
     };
+  }
+
+  /* ----------------------------------------------------------- PWA */
+  // Mendaftarkan service worker dan menampilkan ajakan pasang ke layar utama (Android: tombol, iOS: petunjuk).
+  function pasangPWA(wadah) {
+    if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {
+      navigator.serviceWorker.register("sw.js").catch(function () { /* abaikan */ });
+    }
+    var mandiri = (w.matchMedia && w.matchMedia("(display-mode: standalone)").matches) || navigator.standalone === true;
+    if (mandiri) return;
+    try {
+      var tutup = Number(localStorage.getItem("dp_pwa_tutup") || 0);
+      if (tutup && Date.now() - tutup < 7 * 86400000) return;
+    } catch (e) { /* abaikan */ }
+
+    var panel = h("div", { class: "pasang", hidden: true });
+    wadah.appendChild(panel);
+    function sembunyikan(simpan) {
+      panel.hidden = true;
+      if (simpan) { try { localStorage.setItem("dp_pwa_tutup", String(Date.now())); } catch (e) { /* abaikan */ } }
+    }
+    function isi(teks, tombol) {
+      kosongkan(panel);
+      panel.appendChild(h("p", { text: teks }));
+      panel.appendChild(h("div", { class: "pasang-aksi" }, tombol,
+        h("button", { type: "button", class: "btn btn-kecil", text: "Nanti", onclick: function () { sembunyikan(true); } })));
+      panel.hidden = false;
+    }
+    var tunda = null;
+    w.addEventListener("beforeinstallprompt", function (e) {
+      e.preventDefault();
+      tunda = e;
+      isi("Pasang aplikasi di layar utama agar bisa dibuka satu ketukan dan tetap jalan saat sinyal lemah.",
+        h("button", { type: "button", class: "btn btn-utama btn-kecil", text: "Pasang",
+          onclick: function () {
+            if (!tunda) return;
+            tunda.prompt();
+            tunda.userChoice.then(function () { tunda = null; sembunyikan(false); });
+          } }));
+    });
+    w.addEventListener("appinstalled", function () { sembunyikan(false); toast("Aplikasi terpasang.", "ok"); });
+    var ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    if (ios) {
+      isi("Untuk memasang di iPhone: buka menu Bagikan di Safari, lalu pilih Tambah ke Layar Utama.",
+        h("span"));
+    }
   }
 
   /* ------------------------------------------------------ Eksport */
@@ -596,6 +656,6 @@
     h: h, kosongkan: kosongkan, buatId: buatId, api: api, Jam: Jam, sinkronJam: sinkronJam, fmtWIB: fmtWIB,
     namaHari: namaHari, toast: toast, tanya: tanya, Lokasi: Lokasi, teksGps: teksGps, pasangStempel: pasangStempel,
     Kamera: Kamera, FotoGrid: FotoGrid, Antrean: Antrean, pasangAntrean: pasangAntrean, Combobox: Combobox,
-    Checklist: Checklist, CFG: CFG
+    Checklist: Checklist, pasangPWA: pasangPWA, CFG: CFG
   };
 })(window);

@@ -4,8 +4,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#10243B">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src https://script.google.com https://script.googleusercontent.com; media-src blob:; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src https://script.google.com https://script.googleusercontent.com; media-src blob:; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Patrol 23">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
 <title>Patroli - Mall 23Semarang</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -20,7 +27,7 @@
       <div class="judul">Patroli</div>
       <div class="sub">Mall 23Semarang</div>
     </div>
-    <a class="tautan" href="Tenant.html">Checklist tenant</a>
+    <a class="tautan" href="tenant.html">Checklist tenant</a>
   </div>
 </header>
 <div class="stempel" id="stempel" aria-label="Stempel waktu dan lokasi"></div>
@@ -61,6 +68,8 @@
     <section class="bagian">
       <h2>Kondisi area <small id="progres">0 dari 0</small></h2>
       <p class="petunjuk">Jawab setiap item. Pilih Temuan jika ada yang tidak normal, lalu jelaskan.</p>
+      <button type="button" id="btn-semua" class="btn btn-semua">Tandai semua sesuai</button>
+      <p class="petunjuk" style="margin:6px 0 4px">Pintasan untuk item yang belum dijawab. Setelah itu ubah hanya item yang bermasalah.</p>
       <div id="checklist"></div>
       <div id="blok-temuan" hidden>
         <div class="medan" style="margin-top:18px">
@@ -109,6 +118,7 @@
   PC.pasangStempel($("stempel"));
   PC.Lokasi.mulai();
   var antrean = PC.pasangAntrean($("antrean-wadah"));
+  PC.pasangPWA($("antrean-wadah"));
   setInterval(PC.sinkronJam, 300000);
   document.addEventListener("visibilitychange", function () { if (!document.hidden) PC.sinkronJam(); });
 
@@ -170,6 +180,10 @@
     });
     $("pin").addEventListener("input", function () { $("g-pin").hidden = true; $("pin").classList.remove("invalid"); ubah(); });
     $("catatan").addEventListener("input", ubah);
+    $("btn-semua").addEventListener("click", function () {
+      var n = cl.isiSemuaSesuai();
+      PC.toast(n ? n + " item ditandai Sesuai. Ubah yang bermasalah." : "Semua item sudah dijawab.", n ? "ok" : "");
+    });
     $("btn-foto").addEventListener("click", ambilFoto);
     $("btn-kirim").addEventListener("click", kirim);
     ubah();
@@ -266,7 +280,7 @@
       checklist: c.daftar, tingkat: c.adaTemuan ? tingkat : "", catatan: $("catatan").value.trim(),
       lat: gps ? gps.lat : null, lng: gps ? gps.lng : null, akurasi: gps ? gps.akurasi : null,
       fotos: foto.daftar().map(function (f) { return { b64: f.b64, t: f.t, sumber: f.sumber }; }),
-      jamPerangkat: !PC.Jam.terpercaya()
+      jamPerangkat: !PC.Jam.terpercaya(), durasiDetik: cl.durasiDetik()
     };
     var zonaTeks = payload.zona;
     setMengirim(true);
