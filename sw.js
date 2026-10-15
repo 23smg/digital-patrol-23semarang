@@ -3,10 +3,10 @@
      jatuh ke salinan tersimpan saat sinyal lemah atau offline.
    - Permintaan ke API Google dan foto TIDAK pernah di-cache.
    - dashboard.html sengaja tidak ditangani (data admin tidak disimpan di perangkat). */
-const VERSI = "dp-v2";
+const VERSI = "dp-v3";
 const FONT = "dp-font-v1";
 const SHELL = ["./", "index.html", "tenant.html", "core.js", "petugas.css", "config.js", "manifest.webmanifest",
-  "icons/icon-192.png", "icons/icon-512.png"];
+  "icons/icon-192.png", "icons/icon-512.png", "icons/apple-touch-icon.png"];
 
 self.addEventListener("install", function (e) {
   e.waitUntil(caches.open(VERSI).then(function (c) {

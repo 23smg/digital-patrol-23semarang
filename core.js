@@ -424,6 +424,13 @@
     function simpan(item) { return tx("readwrite", function (s) { return s.put(item); }); }
     function hapus(id) { return tx("readwrite", function (s) { return s.delete(id); }); }
 
+    // Kode galat yang bersifat sementara: laporan tetap antre dan dicoba lagi nanti.
+    //  - SIBUK / SERVER: server sedang penuh atau error, hentikan putaran ini.
+    //  - TERKUNCI: PIN petugas ini terkunci 15 menit, lewati dan lanjutkan laporan lain.
+    //  - SETUP: sheet belum siap (admin belum menjalankan Setup awal), lewati.
+    var KODE_HENTI = { SIBUK: 1, SERVER: 1 };
+    var KODE_TUNGGU = { TERKUNCI: 1, SETUP: 1 };
+
     function proses() {
       if (sibuk) return Promise.resolve();
       sibuk = true;
@@ -437,9 +444,15 @@
             var payload = Object.assign({}, item.payload, { tertunda: true, konfirmasiUlang: true });
             return api(item.aksi, { payload: payload }).then(function (r) {
               if (r.status === "SUCCESS") return hapus(item.id).then(function () { return true; });
-              if (r.kode === "SIBUK" || r.kode === "SERVER") return false;
+              if (KODE_HENTI[r.kode]) return false;
+              if (KODE_TUNGGU[r.kode]) {
+                item.tunggu = r.message || "Menunggu, dicoba lagi otomatis.";
+                return simpan(item).then(function () { return true; });
+              }
               item.status = "ditolak";
+              item.kode = r.kode || "";
               item.pesan = r.message || "Ditolak server.";
+              delete item.tunggu;
               return simpan(item).then(function () { return true; });
             }).catch(function () { return false; });
           });
@@ -448,7 +461,20 @@
       }).catch(function () { /* IndexedDB tidak tersedia */ }).then(function () { sibuk = false; });
     }
 
-    return { semua: semua, simpan: simpan, hapus: hapus, proses: proses };
+    // Laporan ditolak karena PIN: petugas boleh memasukkan PIN yang benar lalu mengirim ulang
+    // tanpa kehilangan foto dan checklist. pin === undefined berarti coba lagi dengan PIN yang sama.
+    function ulangi(id, pin) {
+      return semua().then(function (list) {
+        var item = list.filter(function (x) { return x.id === id; })[0];
+        if (!item) return;
+        if (pin !== undefined) item.payload = Object.assign({}, item.payload, { pin: String(pin).trim() });
+        item.status = "menunggu";
+        delete item.kode; delete item.pesan; delete item.tunggu;
+        return simpan(item);
+      });
+    }
+
+    return { semua: semua, simpan: simpan, hapus: hapus, proses: proses, ulangi: ulangi };
   })();
 
   function pasangAntrean(wadah) {
@@ -461,16 +487,46 @@
         var ditolak = list.filter(function (x) { return x.status === "ditolak"; });
         panel.hidden = !list.length;
         if (menunggu.length) {
+          var tertahan = menunggu.filter(function (x) { return x.tunggu; })[0];
           panel.appendChild(h("div", { class: "antrean-baris" },
-            h("span", { text: menunggu.length + " laporan menunggu terkirim. Akan dikirim otomatis saat sinyal tersedia." }),
+            h("span", { text: menunggu.length + " laporan menunggu terkirim. " +
+              (tertahan ? tertahan.tunggu : "Akan dikirim otomatis saat sinyal tersedia.") }),
             h("button", { type: "button", class: "btn btn-kecil", text: "Kirim sekarang",
               onclick: function () { Antrean.proses().then(segarkan); } })));
         }
         ditolak.forEach(function (it) {
-          panel.appendChild(h("div", { class: "antrean-baris bad" },
-            h("span", { text: (it.label || "Laporan") + " ditolak server: " + it.pesan }),
-            h("button", { type: "button", class: "btn btn-kecil", text: "Buang",
-              onclick: function () { Antrean.hapus(it.id).then(segarkan); } })));
+          var judul = (it.label || "Laporan") + " ditolak server: " + it.pesan;
+          var buang = h("button", { type: "button", class: "btn btn-kecil", text: "Buang laporan",
+            onclick: function () {
+              tanya("Buang laporan ini?", "Foto dan checklist akan dihapus dari perangkat dan tidak akan terkirim.",
+                "Buang", "Batal").then(function (ya) { if (ya) Antrean.hapus(it.id).then(segarkan); });
+            } });
+          if (it.kode === "PIN") {
+            // Foto dan checklist masih tersimpan: cukup masukkan PIN yang benar.
+            var pin = h("input", { type: "password", inputmode: "numeric", autocomplete: "off", maxlength: "12",
+              class: "input input-kecil", placeholder: "PIN yang benar", "aria-label": "PIN baru untuk " + (it.label || "laporan") });
+            var kirimUlang = function () {
+              if (!pin.value.trim()) { pin.focus(); return; }
+              Antrean.ulangi(it.id, pin.value).then(function () { return Antrean.proses(); }).then(segarkan);
+            };
+            pin.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); kirimUlang(); } });
+            panel.appendChild(h("div", { class: "antrean-tolak" },
+              h("span", { text: judul }),
+              h("div", { class: "antrean-aksi" }, pin,
+                h("button", { type: "button", class: "btn btn-kecil btn-utama", text: "Kirim ulang", onclick: kirimUlang }),
+                buang)));
+          } else if (it.kode === "PIN_KOSONG") {
+            panel.appendChild(h("div", { class: "antrean-tolak" },
+              h("span", { text: judul }),
+              h("div", { class: "antrean-aksi" },
+                h("button", { type: "button", class: "btn btn-kecil btn-utama", text: "Coba lagi",
+                  onclick: function () { Antrean.ulangi(it.id).then(function () { return Antrean.proses(); }).then(segarkan); } }),
+                buang)));
+          } else {
+            panel.appendChild(h("div", { class: "antrean-tolak" },
+              h("span", { text: judul }),
+              h("div", { class: "antrean-aksi" }, buang)));
+          }
         });
       }).catch(function () { panel.hidden = true; });
     }
