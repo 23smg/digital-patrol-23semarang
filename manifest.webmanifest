@@ -1,21 +1,14 @@
 {
   "name": "Digital Patrol Mall 23Semarang",
-  "short_name": "Patrol 23",
-  "description": "Patroli petugas dan checklist buka/tutup tenant",
-  "lang": "id",
+  "short_name": "Digital Patrol",
   "start_url": "./index.html",
-  "scope": "./",
   "display": "standalone",
+  "background_color": "#0a1128",
+  "theme_color": "#0a1128",
   "orientation": "portrait",
-  "background_color": "#10243B",
-  "theme_color": "#10243B",
   "icons": [
-    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
-  ],
-  "shortcuts": [
-    { "name": "Checklist tenant", "short_name": "Tenant", "url": "./tenant.html" },
-    { "name": "Patroli", "short_name": "Patroli", "url": "./index.html" }
+    { "src": "./icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "./icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" },
+    { "src": "./icons/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" }
   ]
 }
