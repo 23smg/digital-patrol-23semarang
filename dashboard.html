@@ -2,952 +2,368 @@
 <html lang="id">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#10243B">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://lh3.googleusercontent.com https://drive.google.com; connect-src https://script.google.com https://script.googleusercontent.com; base-uri 'none'; form-action 'none'">
-<meta name="referrer" content="no-referrer">
-<title>Dashboard - Digital Patrol Mall 23Semarang</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700;800&display=swap">
-<link rel="stylesheet" href="petugas.css">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dashboard Admin - Mall 23Semarang</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  body { font-size: 14px; }
-  .btn { min-height: 38px; font-size: 14px; padding: 0 14px; }
-  .input { min-height: 38px; padding: 6px 10px; font-size: 14px; border-radius: 8px; }
-  select.input { padding-right: 6px; }
-  .oleh { font-size: 12px; color: var(--muted); }
-
-  /* masuk */
-  .masuk { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; background: var(--ink); }
-  .masuk-kotak { background: var(--surface); width: 100%; max-width: 400px; padding: 30px 28px 28px; border-radius: 16px; border-top: 6px solid var(--stempel); box-shadow: 0 24px 60px rgba(0, 0, 0, 0.38); }
-  .merek-latar { display: inline-flex; background: var(--ink); border-radius: 12px; padding: 6px; margin-bottom: 16px; }
-  .masuk-kotak h1 { margin: 0 0 4px; font-size: 24px; font-weight: 800; letter-spacing: -0.015em; }
-  .masuk-kotak p { margin: 0 0 22px; color: var(--muted); }
-  .masuk-kotak .input { min-height: 48px; font-size: 16px; border-radius: 10px; }
-  .masuk-kotak .galat { margin: 0 0 12px; }
-
-  /* atas */
-  .atas { background: var(--ink); color: #fff; padding: 12px 24px; display: flex; flex-wrap: wrap; align-items: center; gap: 14px; justify-content: space-between; border-bottom: 3px solid var(--stempel); }
-  .atas .merek { width: 34px; height: 34px; }
-  .atas h1 { margin: 0; font-size: 18px; font-weight: 800; letter-spacing: -0.01em; line-height: 1.2; }
-  .atas .sub { font-size: 12px; color: #B7C4D4; }
-  .atas-kanan { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-  .atas .btn-garis-terang { min-height: 36px; padding: 0 12px; font-size: 13px; border-radius: 8px; }
-  .atas .btn-garis-terang:hover { background: rgba(255, 255, 255, 0.12); }
-  .atas .btn-garis-terang[aria-pressed="false"] { opacity: 0.7; }
-  .atas select.input { background: #1B2D44; color: #fff; border-color: rgba(255, 255, 255, 0.4); min-height: 36px; }
-  .pengguna { font-size: 13px; color: #D6DFEA; padding-right: 4px; }
-
-  .isi { max-width: 1280px; margin: 0 auto; padding: 20px 24px 56px; }
-
-  /* filter */
-  .filter { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: flex-end; margin-bottom: 16px; padding: 14px 16px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-panel); box-shadow: var(--bayang); }
-  .filter label { display: block; font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 4px; }
-  .filter .grup { display: flex; gap: 6px; flex-wrap: wrap; align-items: flex-end; }
-  .btn-pilih { background: var(--surface); border: 1.5px solid var(--line-kuat); color: var(--ink); }
-  .btn-pilih:hover { background: var(--surface-2); }
-  .btn-pilih[aria-pressed="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }
-  .btn-pilih.bahaya[aria-pressed="true"] { background: var(--bad); border-color: var(--bad); }
-
-  /* ringkasan: lembar buku besar, bukan kartu terpisah */
-  .ringkas { display: grid; grid-template-columns: repeat(4, 1fr); background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-panel); box-shadow: var(--bayang); margin-bottom: 18px; overflow: hidden; }
-  .ringkas > div { padding: 16px 20px; border-left: 1px solid var(--line); }
-  .ringkas > div:first-child { border-left: 0; }
-  .ringkas .angka { font-size: 32px; font-weight: 800; line-height: 1.1; letter-spacing: -0.02em; }
-  .ringkas .angka small { font-size: 16px; font-weight: 600; color: var(--muted); letter-spacing: 0; }
-  .ringkas .ket { font-size: 13px; color: var(--muted); font-weight: 600; margin-top: 3px; }
-  .ringkas > .bad { background: var(--bad-bg); }
-  .ringkas .bad .angka { color: var(--bad); }
-  .bar-mini { height: 6px; background: var(--line); margin-top: 10px; border-radius: 3px; overflow: hidden; }
-  .bar-mini i { display: block; height: 100%; background: var(--ok); border-radius: 3px; }
-  .bar-mini.tutup i { background: var(--tutup); }
-  .bar-mini.buka i { background: var(--buka); }
-
-  /* panel */
-  .dua-kolom { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 18px; }
-  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-panel); box-shadow: var(--bayang); padding: 16px 18px; }
-  .panel h2 { margin: 0 0 12px; font-size: 15px; font-weight: 800; letter-spacing: -0.005em; }
-  .baris-bar { display: grid; grid-template-columns: minmax(90px, 36%) 1fr 28px; gap: 8px; align-items: center; margin: 8px 0; font-size: 13px; }
-  .baris-bar .nama { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .baris-bar .batang { height: 12px; background: var(--bad); border-radius: 3px; }
-  .baris-bar .n { text-align: right; font-weight: 700; }
-  .donat-wrap { display: flex; align-items: center; gap: 20px; }
-  .donat { width: 112px; height: 112px; border-radius: 50%; position: relative; flex: none; }
-  .donat::after { content: ""; position: absolute; inset: 24px; background: var(--surface); border-radius: 50%; }
-  .legenda div { display: flex; align-items: center; gap: 8px; margin: 5px 0; font-size: 13px; font-weight: 600; }
-  .legenda i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
-  .kosong-info { color: var(--muted); padding: 8px 0; }
-
-  /* tab */
-  .tab { display: flex; gap: 4px; border-bottom: 1px solid var(--line-kuat); margin-bottom: 0; flex-wrap: wrap; padding: 0 4px; }
-  .tab button { font: inherit; font-weight: 700; padding: 11px 18px; background: transparent; border: 1px solid transparent; border-bottom: 0; border-radius: 10px 10px 0 0; margin-bottom: -1px; cursor: pointer; color: var(--muted); position: relative; transition: color 0.15s, background 0.15s; }
-  .tab button:hover { color: var(--ink); background: rgba(255, 255, 255, 0.6); }
-  .tab button[aria-selected="true"] { color: var(--ink); background: var(--surface); border-color: var(--line-kuat); }
-  .tab button[aria-selected="true"]::after { content: ""; position: absolute; left: 0; right: 0; top: -1px; height: 4px; background: var(--stempel); border-radius: 10px 10px 0 0; }
-  .tab .n { margin-left: 8px; font-size: 12px; background: var(--line); border-radius: 10px; padding: 1px 8px; }
-  .tab .n.bad { background: var(--bad); color: #fff; }
-
-  /* tabel */
-  .tabel-wrap { background: var(--surface); border: 1px solid var(--line); border-top: 0; border-radius: 0 0 var(--r-panel) var(--r-panel); box-shadow: var(--bayang); overflow-x: auto; }
-  .tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; padding: 10px 14px; border-bottom: 1px solid var(--line); background: var(--surface); font-weight: 600; }
-  table { width: 100%; border-collapse: collapse; }
-  th { text-align: left; font-size: 12px; font-weight: 700; color: var(--muted); padding: 10px 12px; background: var(--surface-2); border-bottom: 1.5px solid var(--line-kuat); white-space: nowrap; }
-  td { padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: middle; }
-  tbody tr { cursor: pointer; transition: background 0.1s; }
-  tbody tr:hover { background: #EEF4FB; }
-  tbody tr:focus-visible { outline-offset: -3px; }
-  td.waktu { white-space: nowrap; font-weight: 600; }
-  td.ket { max-width: 340px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #2D3F55; }
-  .thumb { overflow: hidden; font-size: 9px; width: 44px; height: 44px; object-fit: cover; border-radius: 8px; border: 1px solid var(--line-kuat); display: block; background: #E5EAF0; }
-  .lencana { display: inline-block; font-size: 12px; font-weight: 700; padding: 3px 9px; border-radius: 999px; white-space: nowrap; }
-  .l-ok { background: var(--ok-bg); color: var(--ok); }
-  .l-bad { background: var(--bad-bg); color: var(--bad); }
-  .l-buka { background: var(--buka-bg); color: var(--buka); }
-  .l-tutup { background: var(--tutup-bg); color: var(--tutup); }
-  .l-abu { background: #E8ECF0; color: #3B4B5E; }
-  .l-warn { background: #FFF0CE; color: #7A4A00; }
-  .l-tinggi { background: var(--bad); color: #fff; }
-  .l-sedang { background: #B5601A; color: #fff; }
-  .l-rendah { background: #7A6A10; color: #fff; }
-  .halaman { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; gap: 10px; flex-wrap: wrap; font-weight: 600; }
-  .kosong-tabel { padding: 44px 16px; text-align: center; color: var(--muted); }
-
-  /* rekap tenant */
-  .rekap td.sel { white-space: nowrap; }
-  .rekap .belum { color: var(--bad); font-weight: 700; }
-  .rekap .jam { font-weight: 700; }
-  .rekap tr { cursor: default; }
-  .rekap tr:hover { background: transparent; }
-
-  /* rincian (laci samping) */
-  .tirai { position: fixed; inset: 0; background: rgba(10, 22, 38, 0.5); z-index: 60; }
-  .rincian { position: fixed; top: 0; right: 0; bottom: 0; width: min(520px, 100%); background: var(--surface); z-index: 70; overflow-y: auto; box-shadow: -14px 0 36px rgba(0, 0, 0, 0.28); }
-  .rincian-kepala { position: sticky; top: 0; background: var(--ink); color: #fff; padding: 16px 20px; display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; border-bottom: 3px solid var(--stempel); }
-  .rincian-kepala h2 { margin: 0; font-size: 18px; font-weight: 800; letter-spacing: -0.01em; }
-  .rincian-kepala .sub { font-size: 13px; color: #B7C4D4; }
-  .rincian-isi { padding: 18px 20px 32px; }
-  .rincian-isi h3 { font-size: 13px; margin: 22px 0 8px; color: var(--muted); font-weight: 700; padding-bottom: 6px; border-bottom: 1px solid var(--line); }
-  .rincian-isi h3:first-child { margin-top: 0; }
-  .meta { display: grid; grid-template-columns: 130px 1fr; gap: 7px 12px; margin: 0; }
-  .meta dt { color: var(--muted); font-weight: 600; }
-  .meta dd { margin: 0; font-weight: 600; word-break: break-word; }
-  .cl-hasil { list-style: none; margin: 0; padding: 0; }
-  .cl-hasil li { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; padding: 9px 0; border-top: 1px solid var(--line); }
-  .cl-hasil li .cat { grid-column: 1 / -1; color: var(--bad); font-weight: 600; }
-  .foto-besar { display: flex; flex-wrap: wrap; gap: 8px; }
-  .foto-besar button { padding: 0; border: 0; background: none; cursor: zoom-in; }
-  .foto-besar img { width: 150px; height: 150px; object-fit: cover; border-radius: 10px; border: 1px solid var(--line-kuat); display: block; }
-  .flags { display: flex; flex-wrap: wrap; gap: 6px; }
-  .lightbox { position: fixed; inset: 0; z-index: 90; background: rgba(0, 0, 0, 0.9); display: flex; align-items: center; justify-content: center; padding: 16px; }
-  .lightbox img { max-width: 100%; max-height: 100%; object-fit: contain; }
-  .lightbox button { position: absolute; top: 14px; right: 14px; }
-
-  /* tindak lanjut */
-  .tl { margin-bottom: 18px; border: 1px solid var(--line); border-top: 4px solid var(--ink); border-radius: var(--r-panel); padding: 0; overflow: hidden; }
-  .tl-kepala { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; padding: 13px 18px; border-bottom: 1px solid var(--line); background: var(--surface-2); }
-  .tl-kepala h2 { margin: 0; font-size: 15px; font-weight: 800; }
-  .tl-hitung { font-weight: 800; font-size: 13px; color: var(--ok); }
-  .tl-hitung.bad { color: var(--bad); }
-  .tl > .kosong-info, .tl > .btn { margin: 12px 18px; }
-  .tl-baris { display: grid; grid-template-columns: 80px minmax(150px, 1fr) minmax(0, 2fr) 84px 96px 176px; gap: 8px 12px; align-items: center; padding: 11px 18px; border-top: 1px solid var(--line); cursor: pointer; transition: background 0.1s; }
-  .tl-kepala + .tl-baris { border-top: 0; }
-  .tl-baris:hover { background: #EEF4FB; }
-  .tl-lokasi { font-weight: 700; }
-  .tl-ringkas { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #2D3F55; }
-  .tl-aksi { display: flex; gap: 6px; justify-content: flex-end; flex-wrap: wrap; }
-  .tl-drawer { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-  .btn-kecil.utama { background: var(--ink); color: #fff; border-color: var(--ink); }
-  .btn-kecil.utama:hover { background: var(--ink-2); }
-  .l-baru { background: #fff; color: var(--bad); border: 1.5px solid var(--bad); padding: 1.5px 7.5px; }
-  .l-proses { background: #FFF0CE; color: #7A4A00; }
-  dialog.dialog textarea.input { min-height: 90px; }
-  dialog.dialog .info { margin: 0 0 12px; color: var(--muted); font-weight: 600; }
-  dialog.dialog .medan > label { font-size: 13px; }
-
-  @media (max-width: 900px) {
-    .tl-baris { grid-template-columns: 70px 1fr auto; }
-    .tl-ringkas { grid-column: 1 / -1; white-space: normal; }
-    .tl-aksi { grid-column: 1 / -1; justify-content: flex-start; }
-    .ringkas { grid-template-columns: 1fr 1fr; }
-    .ringkas > div:nth-child(3) { border-left: 0; }
-    .ringkas > div:nth-child(n+3) { border-top: 1px solid var(--line); }
-    .dua-kolom { grid-template-columns: 1fr; }
-    .isi { padding: 14px 12px 40px; }
-    .atas { padding: 12px; }
-    .filter { padding: 12px; }
-  }
+:root{--navy:#0a1128;--navy2:#1c2541;--blue:#0066cc;--border:#e2e8f0;--bg:#f8fafc}
+body{background:#f4f6f9;font-family:'Plus Jakarta Sans',sans-serif;color:var(--navy);margin:0}
+.nav{background:var(--navy);color:#fff;padding:14px 20px;border-bottom:4px solid var(--blue)}
+.nav h4{margin:0;font-weight:700;font-size:18px}
+.nav p{margin:2px 0 0;font-size:12px;color:#a4b0be}
+.container{max-width:1200px;margin:24px auto;padding:0 16px}
+.card-w{background:#fff;border-radius:12px;border:1px solid var(--border);padding:20px;margin-bottom:20px}
+.tabs-w{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+.tabs-w button{background:#fff;border:1px solid var(--border);padding:10px 18px;border-radius:10px;font-weight:600;font-size:13.5px;cursor:pointer;font-family:inherit}
+.tabs-w button.active{background:var(--blue);border-color:var(--blue);color:#fff}
+.stat{display:flex;gap:14px;align-items:center}
+.stat .ic{width:46px;height:46px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px}
+.stat h3{margin:0;font-size:22px;font-weight:700}
+.stat p{margin:0;font-size:12.5px;color:#64748b}
+table{width:100%;font-size:13px}
+table thead th{background:var(--bg);padding:11px;font-size:12px;text-transform:uppercase;font-weight:600;text-align:center;border-bottom:2px solid var(--border)}
+table tbody td{padding:11px;text-align:center;border-bottom:1px solid #f1f5f9}
+.badge-s{padding:3px 9px;border-radius:6px;font-size:11px;font-weight:600}
+.b-BARU{background:#dbeafe;color:#1e40af}
+.b-DITANGANI{background:#fef3c7;color:#92400e}
+.b-SELESAI{background:#d1fae5;color:#065f46}
+#lockScreen{position:fixed;inset:0;background:var(--navy);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px}
+.lock-box{background:var(--navy2);padding:32px;border-radius:16px;border:1px solid #2e3a5f;max-width:380px;width:100%;color:#fff}
+.lock-box h5{font-weight:700;text-align:center}
+.lock-box input{background:#0d1527;border:1px solid #2e3a5f;color:#fff;border-radius:10px;padding:11px 14px;width:100%;margin-bottom:10px;font-family:inherit}
+.lock-box input:focus{outline:none;border-color:var(--blue)}
+.btn-p{background:var(--blue);color:#fff;border:none;padding:11px;border-radius:10px;font-weight:600;width:100%;cursor:pointer;font-family:inherit}
+.btn-p:hover{background:#0052a3}
+.form-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.form-row input,.form-row select,.form-row textarea{flex:1;min-width:140px;padding:9px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:13.5px;font-family:inherit}
+.form-row button{background:var(--blue);color:#fff;border:none;padding:9px 18px;border-radius:8px;font-weight:600;cursor:pointer;font-family:inherit}
+.btn-x{background:#ef4444;color:#fff;border:none;padding:5px 11px;border-radius:6px;font-size:11.5px;font-weight:600;cursor:pointer;font-family:inherit}
+.mini{font-size:12px;color:#64748b}
 </style>
 </head>
 <body>
 
-<section class="masuk" id="masuk">
-  <form class="masuk-kotak" id="form-masuk">
-    <span class="merek-latar"><svg class="merek" viewBox="0 0 48 48" aria-hidden="true"><path d="M24 3 8 9v13c0 9.6 6.6 16.8 16 19.5C33.4 38.8 40 31.6 40 22V9L24 3Z" fill="#fff"/><path d="m16.5 23.5 5.5 5.5 10-11.5" fill="none" stroke="#0F2237" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><rect x="8" y="44.5" width="32" height="3" rx="1.5" fill="#E8A92B"/></svg></span>
-    <h1>Dashboard Patroli</h1>
-    <p>Mall 23Semarang. Masuk dengan akun admin.</p>
-    <div class="medan">
-      <label for="u">Username</label>
-      <input id="u" class="input" type="text" autocomplete="username" required maxlength="60">
-    </div>
-    <div class="medan">
-      <label for="p">Password</label>
-      <input id="p" class="input" type="password" autocomplete="current-password" required maxlength="200">
-    </div>
-    <p id="g-masuk" class="galat" role="alert" hidden></p>
-    <button type="submit" id="btn-masuk" class="btn btn-utama btn-lebar" style="min-height:46px;font-size:16px">Masuk</button>
-  </form>
-</section>
-
-<div id="app" hidden>
-  <header class="atas">
-    <div class="merek-grup">
-      <svg class="merek" viewBox="0 0 48 48" aria-hidden="true"><path d="M24 3 8 9v13c0 9.6 6.6 16.8 16 19.5C33.4 38.8 40 31.6 40 22V9L24 3Z" fill="#fff"/><path d="m16.5 23.5 5.5 5.5 10-11.5" fill="none" stroke="#0F2237" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><rect x="8" y="44.5" width="32" height="3" rx="1.5" fill="#E8A92B"/></svg>
-      <div>
-        <h1>Dashboard Patroli</h1>
-        <div class="sub">Pusat data lapangan, Mall 23Semarang</div>
-      </div>
-    </div>
-    <div class="atas-kanan">
-      <span class="pengguna" id="pengguna"></span>
-      <label class="sr" for="oto" style="position:absolute;left:-9999px">Muat ulang otomatis</label>
-      <select id="oto" class="input" style="width:150px">
-        <option value="15">Segarkan 15 dtk</option>
-        <option value="60" selected>Segarkan 1 mnt</option>
-        <option value="300">Segarkan 5 mnt</option>
-        <option value="0">Manual</option>
-      </select>
-      <button type="button" class="btn btn-garis-terang" id="btn-alarm" aria-pressed="true">Alarm: nyala</button>
-      <button type="button" class="btn btn-garis-terang" id="btn-sandi">Ganti password</button>
-      <button type="button" class="btn btn-garis-terang" id="btn-keluar">Keluar</button>
-    </div>
-  </header>
-
-  <main class="isi">
-    <div class="filter">
-      <div class="grup">
-        <div><label for="dari">Dari</label><input id="dari" type="date" class="input"></div>
-        <div><label for="sampai">Sampai</label><input id="sampai" type="date" class="input"></div>
-      </div>
-      <div class="grup">
-        <button type="button" class="btn btn-pilih" data-rentang="hari">Hari ini</button>
-        <button type="button" class="btn btn-pilih" data-rentang="7">7 hari</button>
-        <button type="button" class="btn btn-pilih" data-rentang="bulan">Bulan ini</button>
-        <button type="button" class="btn btn-pilih" data-rentang="90">90 hari</button>
-      </div>
-      <div style="flex:1;min-width:200px;max-width:340px">
-        <label for="cari">Cari</label>
-        <input id="cari" type="search" class="input" placeholder="Nama, zona, tenant, temuan" style="width:100%">
-      </div>
-      <div class="grup">
-        <button type="button" class="btn btn-pilih bahaya" id="btn-temuan" aria-pressed="false">Hanya temuan</button>
-        <button type="button" class="btn btn-utama" id="btn-segarkan">Segarkan</button>
-      </div>
-      <span id="status-muat" style="font-size:13px;color:var(--muted)"></span>
-    </div>
-
-    <div class="ringkas" id="ringkas"></div>
-
-    <section class="panel tl" id="tl" aria-labelledby="tl-judul"></section>
-
-    <div class="dua-kolom">
-      <div class="panel"><h2>Sesuai dan temuan (periode terpilih)</h2><div id="donat"></div></div>
-      <div class="panel"><h2>Lokasi dengan temuan terbanyak</h2><div id="top"></div></div>
-    </div>
-
-    <div class="tab" role="tablist" id="tab">
-      <button type="button" role="tab" id="tab-patroli" data-tab="patroli" aria-selected="true">Patroli<span class="n" id="n-patroli">0</span></button>
-      <button type="button" role="tab" id="tab-tenant" data-tab="tenant" aria-selected="false">Checklist tenant<span class="n" id="n-tenant">0</span></button>
-      <button type="button" role="tab" id="tab-rekap" data-tab="rekap" aria-selected="false">Rekap tenant hari ini</button>
-    </div>
-
-    <div class="tabel-wrap" id="panel"></div>
-  </main>
+<div id="lockScreen">
+  <div class="lock-box">
+    <div style="text-align:center;font-size:36px;margin-bottom:12px"><i class="fa-solid fa-shield-halved"></i></div>
+    <h5>Login Dashboard Admin</h5>
+    <p style="font-size:12px;color:#94a3b8;text-align:center;margin-bottom:20px">Masukkan kredensial akun Anda</p>
+    <input type="text" id="loginUser" placeholder="Username" autocomplete="username">
+    <input type="password" id="loginPass" placeholder="Password" autocomplete="current-password">
+    <button class="btn-p" onclick="loginAdmin()">MASUK</button>
+    <div id="loginErr" style="color:#fca5a5;font-size:12px;text-align:center;margin-top:10px;display:none"></div>
+  </div>
 </div>
 
-<div id="lapisan"></div>
-
-<dialog class="dialog" id="dlg-sandi">
-  <form id="form-sandi">
-    <h3>Ganti password</h3>
-    <div class="medan"><label for="s-lama">Password saat ini</label><input id="s-lama" class="input" type="password" autocomplete="current-password" required></div>
-    <div class="medan"><label for="s-baru">Password baru (minimal 8 karakter)</label><input id="s-baru" class="input" type="password" autocomplete="new-password" minlength="8" required></div>
-    <div class="medan"><label for="s-konf">Ulangi password baru</label><input id="s-konf" class="input" type="password" autocomplete="new-password" minlength="8" required></div>
-    <p id="g-sandi" class="galat" role="alert" hidden></p>
-    <div class="dialog-aksi">
-      <button type="button" class="btn btn-garis" id="s-batal">Batal</button>
-      <button type="submit" class="btn btn-utama" id="s-simpan">Simpan</button>
+<div id="app" style="display:none">
+  <div class="nav">
+    <div style="max-width:1200px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+      <div>
+        <h4>DASHBOARD PATROLI</h4>
+        <p>Mall 23Semarang • <span id="whoami"></span></p>
+      </div>
+      <button class="btn-p" style="width:auto;padding:8px 16px;font-size:13px" onclick="logoutAdmin()">
+        <i class="fa-solid fa-right-from-bracket"></i> Keluar
+      </button>
     </div>
-  </form>
-</dialog>
+  </div>
 
-<dialog class="dialog" id="dlg-status">
-  <form id="form-status">
-    <h3 id="st-judul">Ubah status</h3>
-    <p class="info" id="st-info"></p>
-    <div class="medan"><label for="st-catatan" id="st-label">Catatan</label><textarea id="st-catatan" class="input" maxlength="300" rows="3"></textarea></div>
-    <p id="g-status" class="galat" role="alert" hidden></p>
-    <div class="dialog-aksi">
-      <button type="button" class="btn btn-garis" id="st-batal">Batal</button>
-      <button type="submit" class="btn btn-utama" id="st-simpan">Simpan</button>
+  <div class="container">
+    <div class="tabs-w">
+      <button id="tabMon" class="active" onclick="switchTab('mon')"><i class="fa-solid fa-chart-line"></i> Monitoring</button>
+      <button id="tabMaster" onclick="switchTab('master')"><i class="fa-solid fa-database"></i> Kelola Master</button>
     </div>
-  </form>
-</dialog>
+
+    <div id="viewMon">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:20px">
+        <div class="card-w" style="margin:0"><div class="stat"><div class="ic" style="background:#dbeafe;color:#1e40af"><i class="fa-solid fa-clipboard-list"></i></div><div><h3 id="sPatroli">0</h3><p>Laporan Patroli</p></div></div></div>
+        <div class="card-w" style="margin:0"><div class="stat"><div class="ic" style="background:#d1fae5;color:#065f46"><i class="fa-solid fa-store"></i></div><div><h3 id="sTenant">0</h3><p>Checklist Tenant</p></div></div></div>
+        <div class="card-w" style="margin:0"><div class="stat"><div class="ic" style="background:#fef3c7;color:#92400e"><i class="fa-solid fa-triangle-exclamation"></i></div><div><h3 id="sTemuan">0</h3><p>Temuan Terbuka</p></div></div></div>
+      </div>
+
+      <div class="card-w">
+        <div class="form-row">
+          <input type="date" id="fDari">
+          <input type="date" id="fSampai">
+          <button onclick="muatDashboard()"><i class="fa-solid fa-filter"></i> Terapkan</button>
+          <button onclick="window.location.reload()" style="background:#64748b">Reset</button>
+        </div>
+      </div>
+
+      <div class="card-w">
+        <h5 style="font-weight:700;margin-bottom:14px"><i class="fa-solid fa-list"></i> Riwayat Laporan</h5>
+        <div style="overflow-x:auto">
+          <table>
+            <thead><tr><th>Waktu</th><th>Jenis</th><th>Petugas</th><th>Lokasi</th><th>Kondisi</th><th>Foto</th><th>Peta</th><th>Tindak Lanjut</th></tr></thead>
+            <tbody id="tbodyLog"><tr><td colspan="8" style="text-align:center;color:#94a3b8;padding:30px">Memuat...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div id="viewMaster" style="display:none">
+      <div class="card-w">
+        <h5 style="font-weight:700;margin-bottom:6px"><i class="fa-solid fa-store"></i> Master Tenant</h5>
+        <p class="mini" style="margin-bottom:14px">Tenant yang muncul di form petugas.</p>
+        <div class="form-row">
+          <input type="text" id="mtNama" placeholder="Nama tenant" maxlength="80">
+          <input type="text" id="mtLokasi" placeholder="Lantai / Unit (mis. L1 05)" maxlength="60">
+          <button onclick="simpanTenant()"><i class="fa-solid fa-plus"></i> Simpan</button>
+        </div>
+        <div class="form-row">
+          <textarea id="mtBulk" placeholder="Import massal — paste dari Excel, satu baris satu tenant. Format: Nama TAB Lokasi" style="min-height:100px;font-family:monospace;font-size:12px"></textarea>
+        </div>
+        <div class="form-row">
+          <button onclick="importBulkTenant()" style="background:#10b981"><i class="fa-solid fa-file-import"></i> Import Massal</button>
+        </div>
+        <div style="max-height:400px;overflow:auto;margin-top:14px">
+          <table>
+            <thead><tr><th>Nama</th><th>Lokasi</th><th>Aksi</th></tr></thead>
+            <tbody id="tbodyTenant"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card-w">
+        <h5 style="font-weight:700;margin-bottom:6px"><i class="fa-solid fa-user-shield"></i> Master Petugas</h5>
+        <p class="mini" style="margin-bottom:14px">Nama yang muncul di dropdown form petugas.</p>
+        <div class="form-row">
+          <input type="text" id="mpNama" placeholder="Nama petugas" maxlength="80">
+          <input type="text" id="mpZona" placeholder="Zona (mis. Lobby Utama)" maxlength="80">
+          <button onclick="simpanPetugas()"><i class="fa-solid fa-plus"></i> Simpan</button>
+        </div>
+        <div style="max-height:400px;overflow:auto;margin-top:14px">
+          <table>
+            <thead><tr><th>Nama</th><th>Zona</th><th>Aksi</th></tr></thead>
+            <tbody id="tbodyPetugas"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <script src="config.js"></script>
 <script src="core.js"></script>
 <script>
-(function () {
-  "use strict";
-  var PC = window.PC, h = PC.h;
-  var $ = function (id) { return document.getElementById(id); };
-  var KUNCI_SESI = "dp_admin_sesi";
-  var PER_HALAMAN = 15;
+var TOKEN = sessionStorage.getItem('dp_token') || '';
+var USER = null;
 
-  var S = {
-    token: "", user: null, hariIni: "", patroli: [], tenant: [], master: { tenant: [], zona: [], petugas: 0 },
-    tab: "patroli", hanyaTemuan: false, halaman: 1, sudahMuat: false, terlihat: {}, alarmAktif: true,
-    timer: null, memuat: false, audio: null,
-    tindak: {}, terbuka: { patroli: [], tenant: [] }, tlSemua: false, rincianAktif: null, aksiStatus: null
-  };
-  var STATUS_LABEL = { BARU: "Baru", DITANGANI: "Ditangani", SELESAI: "Selesai" };
-  var STATUS_KLS = { BARU: "l-baru", DITANGANI: "l-proses", SELESAI: "l-ok" };
-  var RANK_TINGKAT = { Tinggi: 0, Sedang: 1, Rendah: 2 };
-  var RANK_STATUS = { BARU: 0, DITANGANI: 1 };
+function el(id){return document.getElementById(id)}
 
-  var LABEL_FLAG = {
-    WAKTU_TIDAK_SINKRON: "Jam foto tidak sinkron dengan server",
-    DI_LUAR_AREA: "Di luar area mall",
-    GPS_TIDAK_ADA: "Tanpa GPS",
-    AKURASI_RENDAH: "GPS kurang akurat",
-    FOTO_DARI_BERKAS: "Foto bukan dari kamera langsung",
-    KIRIM_TERTUNDA: "Dikirim setelah offline",
-    JAM_PERANGKAT: "Jam dari perangkat",
-    ULANG_HARI_INI: "Laporan ulang hari ini",
-    ISI_TERLALU_CEPAT: "Checklist diisi sangat cepat, periksa kemungkinan asal tandai"
-  };
-  var FLAG_PENTING = { WAKTU_TIDAK_SINKRON: 1, DI_LUAR_AREA: 1, FOTO_DARI_BERKAS: 1 };
+el('loginPass').addEventListener('keypress', function(e){ if(e.key==='Enter') loginAdmin(); });
+el('loginUser').addEventListener('keypress', function(e){ if(e.key==='Enter') loginAdmin(); });
 
-  /* ---------------------------------------------------------- util */
-  function tglWIB() { return PC.fmtWIB(new Date()).tgl.split("/").reverse().join("-"); }
-  // Geser tanggal "yyyy-mm-dd" sebanyak n hari. Hitungan murni kalender (UTC), tidak terpengaruh zona waktu perangkat.
-  function geserHari(tgl, n) {
-    var p = tgl.split("-"), d = new Date(Date.UTC(+p[0], +p[1] - 1, +p[2] + n));
-    return d.getUTCFullYear() + "-" + ("0" + (d.getUTCMonth() + 1)).slice(-2) + "-" + ("0" + d.getUTCDate()).slice(-2);
-  }
-  function isTemuan(x) { return /temuan/i.test(x.kondisi || x.hasil || ""); }
-  function fotoList(s) {
-    return String(s || "").split("|").map(function (u) { return u.trim(); }).map(function (u) {
-      var m = u.match(/\/d\/([A-Za-z0-9_-]+)/) || u.match(/[?&]id=([A-Za-z0-9_-]+)/);
-      return m ? { thumb: "https://lh3.googleusercontent.com/d/" + m[1] + "=w300",
-        besar: "https://lh3.googleusercontent.com/d/" + m[1] + "=w1600", asli: "https://drive.google.com/file/d/" + m[1] + "/view" } : null;
-    }).filter(Boolean);
-  }
-  function flags(s) { return String(s || "").split(",").map(function (x) { return x.trim(); }).filter(Boolean); }
-  function lencana(teks, kls) { return h("span", { class: "lencana " + kls, text: teks }); }
-  function lencanaTingkat(t) {
-    if (!t || t === "-") return h("span", { class: "oleh", text: "-" });
-    return lencana(t, { Tinggi: "l-tinggi", Sedang: "l-sedang", Rendah: "l-rendah" }[t] || "l-abu");
-  }
-  function lencanaFlag(arr) {
-    var penting = arr.filter(function (f) { return FLAG_PENTING[f]; });
-    if (!arr.length) return h("span", { class: "oleh", text: "-" });
-    return h("span", { class: "lencana " + (penting.length ? "l-warn" : "l-abu"),
-      title: arr.map(function (f) { return LABEL_FLAG[f] || f; }).join("\n"), text: arr.length + " catatan" });
-  }
-  function peta(lat, lng) {
-    var a = parseFloat(lat), b = parseFloat(lng);
-    return isFinite(a) && isFinite(b) ? "https://www.google.com/maps?q=" + a + "," + b : "";
-  }
-  function epoch(ts) {
-    var m = String(ts || "").match(/^(\d{1,2})\/(\d{1,2})\/(\d{4}) (\d{2}):(\d{2}):(\d{2})/);
-    return m ? Date.UTC(+m[3], +m[2] - 1, +m[1], +m[4] - 7, +m[5], +m[6]) : 0;
-  }
-  function umur(ts) {
-    var e = epoch(ts);
-    if (!e) return "-";
-    var d = Math.max(0, Math.round((Date.now() - e) / 1000));
-    if (d < 3600) return Math.max(1, Math.round(d / 60)) + " mnt lalu";
-    if (d < 86400) return Math.floor(d / 3600) + " jam lalu";
-    return Math.floor(d / 86400) + " hari lalu";
-  }
-  function statusTL(x) {
-    if (!x.id) return "";
-    var t = S.tindak[x.id];
-    return t && t.status ? t.status : "BARU";
-  }
-  // Whitelist: hanya role ini yang boleh mengubah status tindak lanjut. Harus sama dengan ROLE_BOLEH_UBAH di Code.gs.
-  var ROLE_BOLEH_UBAH = ["admin", "supervisor", "manager"];
-  function bisaUbah() { return !!S.user && ROLE_BOLEH_UBAH.indexOf(String(S.user.role || "").trim().toLowerCase()) >= 0; }
-  function lencanaStatus(st) { return lencana(STATUS_LABEL[st], STATUS_KLS[st]); }
-  function semuaTerbuka() {
-    var a = (S.terbuka.patroli || []).map(function (x) { return { x: x, jenis: "patroli" }; })
-      .concat((S.terbuka.tenant || []).map(function (x) { return { x: x, jenis: "tenant" }; }));
-    return a.filter(function (o) { return statusTL(o.x) && statusTL(o.x) !== "SELESAI"; })
-      .sort(function (p, q) {
-        var rp = RANK_TINGKAT[p.x.tingkat] === undefined ? 3 : RANK_TINGKAT[p.x.tingkat];
-        var rq = RANK_TINGKAT[q.x.tingkat] === undefined ? 3 : RANK_TINGKAT[q.x.tingkat];
-        return rp - rq || RANK_STATUS[statusTL(p.x)] - RANK_STATUS[statusTL(q.x)] || epoch(q.x.ts) - epoch(p.x.ts);
-      });
-  }
-  function dalamRentang(x) { return x.tgl >= $("dari").value && x.tgl <= $("sampai").value; }
-
-  function cocokCari(vals) {
-    var q = $("cari").value.toLowerCase().trim();
-    if (!q) return true;
-    return vals.join(" ").toLowerCase().indexOf(q) >= 0;
-  }
-
-  function dataPatroli() {
-    return S.patroli.filter(function (x) {
-      return dalamRentang(x) && (!S.hanyaTemuan || isTemuan(x)) &&
-        cocokCari([x.nama, x.zona, x.kondisi, x.catatan, x.tingkat, x.flag]);
-    });
-  }
-  function dataTenant() {
-    return S.tenant.filter(function (x) {
-      return dalamRentang(x) && (!S.hanyaTemuan || isTemuan(x)) &&
-        cocokCari([x.tenant, x.petugas, x.kategori, x.hasil, x.ringkasan, x.catatan, x.tingkat, x.flag]);
-    });
-  }
-
-  /* ---------------------------------------------------------- sesi */
-  function simpanSesi() { try { sessionStorage.setItem(KUNCI_SESI, JSON.stringify({ token: S.token, user: S.user })); } catch (e) { /* abaikan */ } }
-  function hapusSesi() { try { sessionStorage.removeItem(KUNCI_SESI); } catch (e) { /* abaikan */ } }
-
-  function tampilMasuk(pesan) {
-    S.token = ""; S.user = null; S.sudahMuat = false;
-    clearInterval(S.timer);
-    $("app").hidden = true; $("masuk").hidden = false;
-    var g = $("g-masuk");
-    g.hidden = !pesan; g.textContent = pesan || "";
-    $("p").value = "";
-  }
-
-  function tampilApp() {
-    $("masuk").hidden = true; $("app").hidden = false;
-    $("pengguna").textContent = S.user ? S.user.nama + " (" + S.user.role + ")" : "";
-    atur();
-  }
-
-  $("form-masuk").addEventListener("submit", function (e) {
-    e.preventDefault();
-    var btn = $("btn-masuk");
-    btn.disabled = true; btn.textContent = "Memeriksa...";
-    siapkanAudio();
-    PC.api("login", { username: $("u").value, password: $("p").value }, 25000).then(function (r) {
-      if (r.status === "SUCCESS") {
-        S.token = r.token; S.user = r.user;
-        simpanSesi(); tampilApp();
+function loginAdmin() {
+  var u = el('loginUser').value.trim();
+  var p = el('loginPass').value;
+  if (!u || !p) { el('loginErr').textContent = 'Isi username & password.'; el('loginErr').style.display='block'; return; }
+  el('loginErr').style.display = 'none';
+  DP.api({ aksi: 'login', username: u, password: p })
+    .then(function (res) {
+      if (res.status === 'SUCCESS' && res.token) {
+        TOKEN = res.token; USER = res.user;
+        sessionStorage.setItem('dp_token', TOKEN);
+        el('lockScreen').style.display = 'none';
+        el('app').style.display = 'block';
+        el('whoami').textContent = USER.nama + ' (' + USER.role + ')';
+        muatDashboard();
+        muatMasterAdmin();
       } else {
-        tampilMasuk(r.message || "Gagal masuk.");
+        el('loginErr').textContent = res.message || 'Login gagal.';
+        el('loginErr').style.display = 'block';
       }
-    }).catch(function () { tampilMasuk("Tidak dapat terhubung ke server."); })
-      .then(function () { btn.disabled = false; btn.textContent = "Masuk"; });
-  });
+    })
+    .catch(function () { el('loginErr').textContent = 'Gangguan jaringan.'; el('loginErr').style.display='block'; });
+}
 
-  function keluar() {
-    var t = S.token;
-    hapusSesi();
-    if (t) PC.api("logout", { token: t }, 8000).catch(function () { /* abaikan */ });
-    tampilMasuk("");
-  }
-  $("btn-keluar").addEventListener("click", keluar);
+function logoutAdmin() {
+  DP.api({ aksi: 'logout', token: TOKEN }).catch(function(){});
+  sessionStorage.removeItem('dp_token');
+  window.location.reload();
+}
 
-  /* ---------------------------------------------------------- rentang */
-  function setRentang(jenis) {
-    var hari = tglWIB(), awal = hari;      // semua tanggal dihitung dalam WIB, bukan jam perangkat admin
-    if (jenis === "7") awal = geserHari(hari, -6);
-    else if (jenis === "90") awal = geserHari(hari, -89);
-    else if (jenis === "bulan") awal = hari.slice(0, 8) + "01";
-    $("dari").value = awal; $("sampai").value = hari;
-    Array.prototype.forEach.call(document.querySelectorAll("[data-rentang]"), function (b) {
-      b.setAttribute("aria-pressed", b.getAttribute("data-rentang") === jenis ? "true" : "false");
-    });
-  }
-
-  /* ---------------------------------------------------------- data */
-  function muatData(latar) {
-    if (S.memuat || !S.token) return;
-    S.memuat = true;
-    if (!latar) $("status-muat").textContent = "Memuat...";
-    var hari = tglWIB();
-    var dari = $("dari").value < hari ? $("dari").value : hari;
-    var sampai = $("sampai").value > hari ? $("sampai").value : hari;
-    PC.api("ambilData", { token: S.token, dari: dari, sampai: sampai }, 60000).then(function (r) {
-      if (r.status !== "SUCCESS") {
-        if (r.kode === "SESI") { hapusSesi(); tampilMasuk(r.message); return; }
-        $("status-muat").textContent = r.message || "Gagal memuat.";
-        return;
+if (TOKEN) {
+  DP.api({ aksi: 'ambilData', token: TOKEN })
+    .then(function (res) {
+      if (res.status === 'SUCCESS') {
+        USER = res.user;
+        el('lockScreen').style.display = 'none';
+        el('app').style.display = 'block';
+        el('whoami').textContent = USER.nama + ' (' + USER.role + ')';
+        muatDashboard(true);
+        muatMasterAdmin();
       }
-      S.hariIni = r.hariIni; S.patroli = r.patroli; S.tenant = r.tenant; S.master = r.master;
-      S.tindak = r.tindak || {}; S.terbuka = r.terbuka || { patroli: [], tenant: [] };
-      if (r.user) { S.user = r.user; }
-      deteksiBaru(r.patroli.concat(r.tenant));
-      $("status-muat").textContent = "Diperbarui " + PC.fmtWIB(new Date()).jam + " WIB";
-      render();
-    }).catch(function () { $("status-muat").textContent = "Gagal terhubung ke server."; })
-      .then(function () { S.memuat = false; });
+    }).catch(function(){});
+}
+
+function switchTab(t) {
+  el('tabMon').classList.toggle('active', t === 'mon');
+  el('tabMaster').classList.toggle('active', t === 'master');
+  el('viewMon').style.display = t === 'mon' ? 'block' : 'none';
+  el('viewMaster').style.display = t === 'master' ? 'block' : 'none';
+}
+
+function muatDashboard(silent) {
+  var dari = el('fDari').value;
+  var sampai = el('fSampai').value;
+  if (!silent) el('tbodyLog').innerHTML = '<tr><td colspan="8" style="text-align:center;padding:30px;color:#94a3b8">Memuat...</td></tr>';
+  DP.api({ aksi: 'ambilData', token: TOKEN, dari: dari, sampai: sampai })
+    .then(function (res) {
+      if (res.status !== 'SUCCESS') { alert('Sesi berakhir: ' + res.message); logoutAdmin(); return; }
+      renderDashboard(res);
+    })
+    .catch(function () { el('tbodyLog').innerHTML = '<tr><td colspan="8" style="text-align:center;color:#ef4444;padding:30px">Gagal memuat.</td></tr>'; });
+}
+
+function renderDashboard(res) {
+  var patroli = res.patroli || [];
+  var tenant = res.tenant || [];
+  var tindak = res.tindak || {};
+  var terbuka = (res.terbuka && (res.terbuka.patroli || []).concat(res.terbuka.tenant || [])) || [];
+
+  el('sPatroli').textContent = patroli.length;
+  el('sTenant').textContent = tenant.length;
+  el('sTemuan').textContent = terbuka.length;
+
+  var rows = [];
+  patroli.forEach(function (p) { rows.push(Object.assign({}, p, { jenis: 'PATROLI' })); });
+  tenant.forEach(function (t) { rows.push(Object.assign({}, t, { jenis: 'TENANT' })); });
+  rows.sort(function (a, b) { return (b.tgl + b.ts).localeCompare(a.tgl + a.ts); });
+
+  var tb = el('tbodyLog');
+  if (!rows.length) {
+    tb.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#94a3b8;padding:30px">Tidak ada data.</td></tr>';
+    return;
   }
+  tb.innerHTML = '';
+  rows.slice(0, 500).forEach(function (r) {
+    var id = r.id || '';
+    var st = tindak[id] || { status: 'BARU' };
+    var lokasi = r.jenis === 'PATROLI' ? (r.zona || '-') : (r.tenant || '-');
+    var kondisi = r.jenis === 'PATROLI' ? (r.kondisi || '-') : (r.hasil || '-');
+    var foto = r.foto && r.foto !== '-' ? '<a href="' + DP.esc(r.foto.split(' | ')[0]) + '" target="_blank" class="badge-s" style="background:#dbeafe;color:#1e40af;text-decoration:none"><i class="fa-solid fa-image"></i> Lihat</a>' : '-';
+    var peta = (r.lat && r.lat !== '-') ? '<a href="https://maps.google.com/?q=' + r.lat + ',' + r.lng + '" target="_blank" class="badge-s" style="background:#e0e7ff;color:#3730a3;text-decoration:none"><i class="fa-solid fa-location-dot"></i> Peta</a>' : '-';
+    var bisaUbah = USER && ['admin','supervisor','manager'].indexOf((USER.role||'').toLowerCase()) >= 0;
+    var tindakHtml = '<span class="badge-s b-' + st.status + '">' + st.status + '</span>' +
+      (bisaUbah ? ' <button class="btn-x" onclick="ubahStatus(\'' + id + '\',\'' + r.jenis + '\')">Ubah</button>' : '');
+    var tr = document.createElement('tr');
+    tr.innerHTML = '<td>' + DP.esc(r.ts || '-') + '</td>' +
+      '<td><span class="badge-s" style="background:#f1f5f9;color:#334155">' + r.jenis + '</span></td>' +
+      '<td>' + DP.esc(r.nama || r.petugas || '-') + '</td>' +
+      '<td>' + DP.esc(lokasi) + '</td>' +
+      '<td>' + DP.esc(kondisi) + '</td>' +
+      '<td>' + foto + '</td>' +
+      '<td>' + peta + '</td>' +
+      '<td>' + tindakHtml + '</td>';
+    tb.appendChild(tr);
+  });
+}
 
-  function kunciBaris(x) { return x.id || (x.ts + "|" + (x.nama || x.petugas) + "|" + (x.zona || x.tenant)); }
-
-  function deteksiBaru(semua) {
-    var baru = [];
-    semua.forEach(function (x) {
-      var k = kunciBaris(x);
-      if (!S.terlihat[k]) { S.terlihat[k] = 1; if (S.sudahMuat && isTemuan(x)) baru.push(x); }
+function ubahStatus(id, jenis) {
+  var st = prompt('Status baru (BARU / DITANGANI / SELESAI):', 'DITANGANI');
+  if (!st) return;
+  var cat = prompt('Catatan tindakan (wajib diisi jika SELESAI):', '');
+  if (cat === null) return;
+  DP.api({ aksi: 'ubahStatus', token: TOKEN, id: id, jenis: jenis, status: st.toUpperCase(), catatan: cat })
+    .then(function (res) {
+      if (res.status === 'SUCCESS') muatDashboard(); else alert('Gagal: ' + res.message);
     });
-    S.sudahMuat = true;
-    if (baru.length) {
-      var x = baru[0];
-      PC.toast("Temuan baru: " + (x.zona || x.tenant) + (x.tingkat && x.tingkat !== "-" ? " (" + x.tingkat + ")" : ""), "bad");
-      bunyi();
-    }
-  }
+}
 
-  function siapkanAudio() {
-    try { if (!S.audio) S.audio = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { /* abaikan */ }
-    try { if (S.audio && S.audio.state === "suspended") S.audio.resume(); } catch (e) { /* abaikan */ }
-  }
-  // Setelah halaman dimuat ulang dengan sesi tersimpan, browser memblokir suara sampai ada interaksi pertama.
-  // Buka kuncinya pada sentuhan atau tombol pertama supaya alarm temuan baru tetap berbunyi.
-  ["pointerdown", "keydown"].forEach(function (nama) {
-    document.addEventListener(nama, siapkanAudio, { once: true, capture: true });
-  });
-  function bunyi() {
-    if (!S.alarmAktif || !S.audio) return;
-    try {
-      if (S.audio.state === "suspended") S.audio.resume();
-      var o = S.audio.createOscillator(), g = S.audio.createGain();
-      o.type = "triangle"; o.frequency.value = 880; g.gain.value = 0.12;
-      o.connect(g); g.connect(S.audio.destination);
-      o.start(); o.stop(S.audio.currentTime + 0.35);
-    } catch (e) { /* abaikan */ }
-  }
-
-  function atur() {
-    clearInterval(S.timer);
-    var d = parseInt($("oto").value, 10);
-    if (d > 0) S.timer = setInterval(function () { muatData(true); }, d * 1000);
-    muatData(false);
-  }
-
-  /* ---------------------------------------------------------- render */
-  function render() {
-    renderRingkas();
-    renderTL();
-    renderGrafik();
-    renderPanel();
-  }
-
-  function renderRingkas() {
-    var p = dataPatroli(), t = dataTenant();
-    var tp = p.filter(isTemuan).length, tt = t.filter(isTemuan).length;
-    var total = S.master.tenant.length;
-    function hariIni(kat) {
-      var set = {};
-      S.tenant.forEach(function (x) { if (x.tgl === S.hariIni && x.kategori === kat) set[x.tenant] = 1; });
-      return Object.keys(set).length;
-    }
-    var buka = hariIni("BUKA"), tutup = hariIni("TUTUP");
-    function sel(angka, ket, kls, persen) {
-      return h("div", { class: kls || "" },
-        h("div", { class: "angka" }, angka),
-        h("div", { class: "ket", text: ket }),
-        persen === undefined ? null : h("div", { class: "bar-mini " + (kls || "") }, h("i", { style: "width:" + persen + "%" })));
-    }
-    var w = $("ringkas");
-    PC.kosongkan(w);
-    w.appendChild(sel(String(p.length), "Log patroli, periode terpilih"));
-    var terbuka = semuaTerbuka();
-    var tinggi = terbuka.filter(function (o) { return o.x.tingkat === "Tinggi"; }).length;
-    w.appendChild(sel(String(terbuka.length), "Temuan perlu tindak lanjut" + (tinggi ? " (" + tinggi + " tinggi)" : ""),
-      terbuka.length ? "bad" : ""));
-    w.appendChild(sel([String(buka), h("small", { text: " / " + total })], "Tenant sudah buka hari ini", "buka", total ? Math.round(buka * 100 / total) : 0));
-    w.appendChild(sel([String(tutup), h("small", { text: " / " + total })], "Tenant sudah tutup hari ini", "tutup", total ? Math.round(tutup * 100 / total) : 0));
-    $("n-patroli").textContent = p.length;
-    $("n-tenant").textContent = t.length;
-    $("n-tenant").className = "n" + (tt ? " bad" : "");
-    $("n-patroli").className = "n" + (tp ? " bad" : "");
-  }
-
-  function kontrolStatus(x, jenis) {
-    if (!bisaUbah() || !x.id) return null;
-    var st = statusTL(x);
-    function tombol(label, baru, kls) {
-      return h("button", { type: "button", class: "btn btn-kecil " + (kls || ""), text: label,
-        onclick: function (e) { e.stopPropagation(); bukaStatus(x, jenis, baru); } });
-    }
-    if (st === "BARU") return [tombol("Tangani", "DITANGANI"), tombol("Selesai", "SELESAI", "utama")];
-    if (st === "DITANGANI") return [tombol("Selesai", "SELESAI", "utama")];
-    return [tombol("Buka kembali", "BARU")];
-  }
-
-  function barisTL(o) {
-    var x = o.x, jenis = o.jenis, st = statusTL(x);
-    var lokasi = jenis === "patroli" ? x.zona : x.tenant;
-    var judul = jenis === "patroli" ? "Patroli" : "Tenant " + String(x.kategori || "").toLowerCase();
-    var oleh = jenis === "patroli" ? x.nama : x.petugas;
-    var ringkas = jenis === "patroli" ? x.catatan : x.ringkasan;
-    return h("div", { class: "tl-baris", tabindex: "0", onclick: function () { rincian(x, jenis); },
-        onkeydown: function (e) { if (e.key === "Enter" && e.target === e.currentTarget) rincian(x, jenis); } },
-      h("div", null, lencanaTingkat(x.tingkat)),
-      h("div", null, h("div", { class: "tl-lokasi", text: lokasi }), h("div", { class: "oleh", text: judul + ", " + oleh })),
-      h("div", { class: "tl-ringkas", title: ringkas, text: ringkas }),
-      h("div", { class: "oleh", text: umur(x.ts) }),
-      h("div", null, lencanaStatus(st)),
-      h("div", { class: "tl-aksi" }, kontrolStatus(x, jenis)));
-  }
-
-  function renderTL() {
-    var w = $("tl");
-    PC.kosongkan(w);
-    var daftar = semuaTerbuka();
-    var tinggi = daftar.filter(function (o) { return o.x.tingkat === "Tinggi"; }).length;
-    w.appendChild(h("div", { class: "tl-kepala" },
-      h("h2", { id: "tl-judul", text: "Perlu tindak lanjut" }),
-      h("span", { class: "tl-hitung" + (daftar.length ? " bad" : ""),
-        text: daftar.length ? daftar.length + " terbuka" + (tinggi ? ", " + tinggi + " tingkat tinggi" : "") : "Semua selesai" }),
-      h("span", { class: "oleh", text: "Temuan 30 hari terakhir yang belum ditandai selesai, apa pun filter tanggalnya" })));
-    if (!daftar.length) {
-      w.appendChild(h("div", { class: "kosong-info", text: "Tidak ada temuan terbuka." }));
-      return;
-    }
-    (S.tlSemua ? daftar : daftar.slice(0, 6)).forEach(function (o) { w.appendChild(barisTL(o)); });
-    if (daftar.length > 6) {
-      w.appendChild(h("button", { type: "button", class: "btn btn-garis",
-        text: S.tlSemua ? "Tampilkan lebih sedikit" : "Lihat semua (" + daftar.length + ")",
-        onclick: function () { S.tlSemua = !S.tlSemua; renderTL(); } }));
-    }
-  }
-
-  var dlgS = $("dlg-status");
-  function bukaStatus(x, jenis, baru) {
-    S.aksiStatus = { x: x, jenis: jenis, baru: baru };
-    $("st-judul").textContent = { DITANGANI: "Tandai sedang ditangani", SELESAI: "Tandai selesai", BARU: "Buka kembali temuan" }[baru];
-    $("st-info").textContent = (jenis === "patroli" ? x.zona : x.tenant) + ", " + x.ts;
-    $("st-label").textContent = baru === "SELESAI" ? "Tindakan yang dilakukan (wajib)"
-      : (baru === "DITANGANI" ? "Catatan, misalnya siapa yang menangani (opsional)" : "Alasan dibuka kembali (opsional)");
-    $("st-catatan").value = "";
-    $("g-status").hidden = true;
-    if (dlgS.showModal) dlgS.showModal(); else dlgS.setAttribute("open", "");
-    $("st-catatan").focus();
-  }
-  $("st-batal").addEventListener("click", function () { dlgS.close(); });
-  $("form-status").addEventListener("submit", function (e) {
-    e.preventDefault();
-    var a = S.aksiStatus;
-    if (!a) return;
-    var cat = $("st-catatan").value.trim(), g = $("g-status"), btn = $("st-simpan");
-    if (a.baru === "SELESAI" && cat.length < 3) { g.textContent = "Tuliskan tindakan yang dilakukan."; g.hidden = false; return; }
-    btn.disabled = true;
-    PC.api("ubahStatus", { token: S.token, id: a.x.id, jenis: a.jenis.toUpperCase(), status: a.baru, catatan: cat }, 30000)
-      .then(function (r) {
-        if (r.status === "SUCCESS") {
-          S.tindak[r.tindak.id] = r.tindak;
-          dlgS.close();
-          PC.toast("Status diperbarui: " + STATUS_LABEL[r.tindak.status] + ".", "ok");
-          render();
-          if (S.rincianAktif) rincian(S.rincianAktif.x, S.rincianAktif.jenis);
-          muatData(true);
-          return;
-        }
-        if (r.kode === "SESI") { dlgS.close(); tampilMasuk(r.message); return; }
-        g.textContent = r.message || "Gagal menyimpan status."; g.hidden = false;
-      })
-      .catch(function () { g.textContent = "Tidak dapat terhubung ke server."; g.hidden = false; })
-      .then(function () { btn.disabled = false; });
-  });
-
-  function renderGrafik() {
-    var semua = dataPatroli().map(function (x) { return { t: isTemuan(x), lok: x.zona }; })
-      .concat(dataTenant().map(function (x) { return { t: isTemuan(x), lok: x.tenant }; }));
-    var temuan = semua.filter(function (x) { return x.t; }), aman = semua.length - temuan.length;
-    var d = $("donat"); PC.kosongkan(d);
-    if (!semua.length) { d.appendChild(h("div", { class: "kosong-info", text: "Belum ada data pada periode ini." })); }
-    else {
-      var pa = Math.round(aman * 360 / semua.length);
-      d.appendChild(h("div", { class: "donat-wrap" },
-        h("div", { class: "donat", role: "img", "aria-label": aman + " sesuai, " + temuan.length + " temuan",
-          style: "background:conic-gradient(var(--ok) 0 " + pa + "deg, var(--bad) " + pa + "deg 360deg)" }),
-        h("div", { class: "legenda" },
-          h("div", null, h("i", { style: "background:var(--ok)" }), "Sesuai: " + aman),
-          h("div", null, h("i", { style: "background:var(--bad)" }), "Temuan: " + temuan.length))));
-    }
-    var hitung = {};
-    temuan.forEach(function (x) { hitung[x.lok] = (hitung[x.lok] || 0) + 1; });
-    var urut = Object.keys(hitung).map(function (k) { return { k: k, n: hitung[k] }; })
-      .sort(function (a, b) { return b.n - a.n; }).slice(0, 5);
-    var t = $("top"); PC.kosongkan(t);
-    if (!urut.length) { t.appendChild(h("div", { class: "kosong-info", text: "Tidak ada temuan pada periode ini." })); return; }
-    var maks = urut[0].n;
-    urut.forEach(function (u) {
-      t.appendChild(h("div", { class: "baris-bar" },
-        h("div", { class: "nama", title: u.k, text: u.k }),
-        h("div", null, h("div", { class: "batang", style: "width:" + Math.max(6, Math.round(u.n * 100 / maks)) + "%" })),
-        h("div", { class: "n", text: u.n })));
+function muatMasterAdmin() {
+  DP.api({ aksi: 'ambilDropdown' })
+    .then(function (d) {
+      renderTenantList(d.daftarTenant || []);
+      renderPetugasList(d.daftarNama || [], d.daftarZona || []);
     });
-  }
+}
 
-  function renderPanel() {
-    Array.prototype.forEach.call(document.querySelectorAll("#tab button"), function (b) {
-      b.setAttribute("aria-selected", b.getAttribute("data-tab") === S.tab ? "true" : "false");
-    });
-    var panel = $("panel");
-    PC.kosongkan(panel);
-    if (S.tab === "rekap") { panel.appendChild(buatRekap()); return; }
-    var baris = S.tab === "patroli" ? dataPatroli() : dataTenant();
-    var total = baris.length, halaman = Math.max(1, Math.ceil(total / PER_HALAMAN));
-    if (S.halaman > halaman) S.halaman = halaman;
-    var mulai = (S.halaman - 1) * PER_HALAMAN, potong = baris.slice(mulai, mulai + PER_HALAMAN);
-
-    panel.appendChild(h("div", { class: "tools" },
-      h("span", { text: total + " laporan" }),
-      h("button", { type: "button", class: "btn btn-garis", text: "Ekspor CSV", onclick: function () { ekspor(baris); } })));
-
-    if (!total) { panel.appendChild(h("div", { class: "kosong-tabel", text: "Tidak ada laporan untuk filter ini." })); return; }
-
-    var kolom = S.tab === "patroli"
-      ? ["Waktu", "Petugas", "Zona", "Kondisi", "Tingkat", "Tindak lanjut", "Temuan", "Foto", "Catatan sistem"]
-      : ["Waktu", "Kategori", "Tenant", "Petugas", "Hasil", "Tingkat", "Tindak lanjut", "Temuan", "Foto", "Catatan sistem"];
-    var tbody = h("tbody");
-    potong.forEach(function (x) {
-      var f = fotoList(x.foto), fl = flags(x.flag);
-      var thumb = f.length ? h("img", { class: "thumb", src: f[0].thumb, alt: "Foto " + (x.zona || x.tenant), loading: "lazy", referrerpolicy: "no-referrer" })
-        : h("span", { class: "oleh", text: "-" });
-      var sel;
-      if (S.tab === "patroli") {
-        sel = [h("td", { class: "waktu", text: x.ts }), h("td", { text: x.nama }), h("td", { text: x.zona }),
-          h("td", null, lencana(isTemuan(x) ? "Ada temuan" : "Aman", isTemuan(x) ? "l-bad" : "l-ok")),
-          h("td", null, lencanaTingkat(x.tingkat)), celTL(x),
-          h("td", { class: "ket", title: x.catatan, text: x.catatan }), h("td", null, thumb), h("td", null, lencanaFlag(fl))];
-      } else {
-        sel = [h("td", { class: "waktu", text: x.ts }),
-          h("td", null, lencana(x.kategori, x.kategori === "BUKA" ? "l-buka" : "l-tutup")),
-          h("td", { text: x.tenant }), h("td", { text: x.petugas }),
-          h("td", null, lencana(isTemuan(x) ? "Ada temuan" : "Sesuai", isTemuan(x) ? "l-bad" : "l-ok")),
-          h("td", null, lencanaTingkat(x.tingkat)), celTL(x),
-          h("td", { class: "ket", title: x.ringkasan, text: x.ringkasan }), h("td", null, thumb), h("td", null, lencanaFlag(fl))];
-      }
-      var tr = h("tr", { tabindex: "0", onclick: function () { rincian(x, S.tab); },
-        onkeydown: function (e) { if (e.key === "Enter") rincian(x, S.tab); } }, sel);
-      tbody.appendChild(tr);
-    });
-    panel.appendChild(h("table", null, h("thead", null, h("tr", null, kolom.map(function (k) { return h("th", { text: k }); }))), tbody));
-    panel.appendChild(h("div", { class: "halaman" },
-      h("span", { text: "Menampilkan " + (mulai + 1) + "-" + (mulai + potong.length) + " dari " + total }),
-      h("div", { class: "grup", style: "display:flex;gap:6px;align-items:center" },
-        h("button", { type: "button", class: "btn btn-garis", text: "Sebelumnya", disabled: S.halaman <= 1,
-          onclick: function () { S.halaman--; renderPanel(); } }),
-        h("span", { text: S.halaman + " / " + halaman }),
-        h("button", { type: "button", class: "btn btn-garis", text: "Berikutnya", disabled: S.halaman >= halaman,
-          onclick: function () { S.halaman++; renderPanel(); } }))));
-  }
-
-  function celTL(x) {
-    var st = isTemuan(x) ? statusTL(x) : "";
-    return h("td", null, st ? lencanaStatus(st) : h("span", { class: "oleh", text: "-" }));
-  }
-
-  function buatRekap() {
-    var peta = {};
-    S.tenant.forEach(function (x) {
-      if (x.tgl !== S.hariIni) return;
-      var k = x.tenant + "|" + x.kategori;
-      if (!peta[k] || x.ts > peta[k].ts) peta[k] = x;   // laporan terbaru
-    });
-    function sel(tenant, kat) {
-      var x = peta[tenant + "|" + kat];
-      if (!x) return h("td", { class: "sel" }, h("span", { class: "belum", text: "Belum dilaporkan" }));
-      return h("td", { class: "sel" },
-        h("div", null, h("span", { class: "jam", text: String(x.ts).slice(11, 16) }), " ",
-          lencana(isTemuan(x) ? "Temuan" : "Sesuai", isTemuan(x) ? "l-bad" : "l-ok")),
-        h("div", { class: "oleh", text: x.petugas }));
-    }
-    var daftar = S.master.tenant.slice().sort(function (a, b) {
-      function skor(t) { return (peta[t.n + "|BUKA"] ? 1 : 0) + (peta[t.n + "|TUTUP"] ? 1 : 0); }
-      return skor(a) - skor(b) || a.n.localeCompare(b.n);
-    });
-    var wadah = h("div");
-    wadah.appendChild(h("div", { class: "tools" }, h("span", { text: "Tenant yang belum lengkap tampil paling atas. Data hari ini: " + S.hariIni })));
-    if (!daftar.length) {
-      wadah.appendChild(h("div", { class: "kosong-tabel", text: "Daftar tenant kosong. Isi sheet 'Tenant' di spreadsheet." }));
-      return wadah;
-    }
-    wadah.appendChild(h("table", { class: "rekap" },
-      h("thead", null, h("tr", null, ["Tenant", "Lokasi", "Buka", "Tutup"].map(function (k) { return h("th", { text: k }); }))),
-      h("tbody", null, daftar.map(function (t) {
-        return h("tr", null, h("td", { text: t.n }), h("td", { text: t.l || "-" }), sel(t.n, "BUKA"), sel(t.n, "TUTUP"));
-      }))));
-    return wadah;
-  }
-
-  /* ---------------------------------------------------------- rincian */
-  function tutupRincian() { S.rincianAktif = null; PC.kosongkan($("lapisan")); }
-
-  function rincian(x, jenis) {
-    var fl = flags(x.flag), foto = fotoList(x.foto), detail = [];
-    try { detail = JSON.parse(x.detail || "[]"); } catch (e) { detail = []; }
-    S.rincianAktif = { x: x, jenis: jenis };
-    var judul = jenis === "patroli" ? x.zona : (x.kategori + " - " + x.tenant);
-    var petugas = jenis === "patroli" ? x.nama : x.petugas;
-    var link = peta(x.lat, x.lng);
-
-    var meta = [["Waktu server", x.ts], ["Waktu foto", x.waktuFoto || "-"], ["Petugas", petugas],
-      ["Hasil", isTemuan(x) ? "Ada temuan" : "Sesuai"], ["Tingkat", x.tingkat || "-"],
-      ["Akurasi GPS", x.akurasi ? "\u00B1" + x.akurasi + " m" : "-"], ["ID laporan", x.id || "-"]];
-    var dl = h("dl", { class: "meta" });
-    meta.forEach(function (m) { dl.appendChild(h("dt", { text: m[0] })); dl.appendChild(h("dd", { text: m[1] })); });
-
-    var cl = h("ul", { class: "cl-hasil" });
-    detail.forEach(function (d) {
-      var st = d.s === "OK" ? ["Sesuai", "l-ok"] : (d.s === "TEMUAN" ? ["Temuan", "l-bad"] : ["N/A", "l-abu"]);
-      cl.appendChild(h("li", null, h("span", { text: d.i }), lencana(st[0], st[1]), d.c ? h("div", { class: "cat", text: d.c }) : null));
-    });
-
-    var isi = h("div", { class: "rincian-isi" });
-    isi.appendChild(h("h3", { text: "Ringkasan" }));
-    isi.appendChild(dl);
-    if (isTemuan(x)) {
-      isi.appendChild(h("h3", { text: "Tindak lanjut" }));
-      var stx = statusTL(x), tl = S.tindak[x.id] || {};
-      if (!stx) {
-        isi.appendChild(h("div", { class: "oleh", text: "Laporan lama tanpa ID, tidak bisa dilacak." }));
-      } else {
-        isi.appendChild(h("div", { class: "tl-drawer" }, lencanaStatus(stx),
-          tl.oleh ? h("span", { class: "oleh", text: tl.oleh + ", " + tl.waktu }) : h("span", { class: "oleh", text: "Belum ada tindakan" })));
-        if (tl.catatan) isi.appendChild(h("div", { style: "margin-top:6px", text: tl.catatan }));
-        var kk = kontrolStatus(x, jenis);
-        if (kk) isi.appendChild(h("div", { class: "tl-aksi", style: "margin-top:10px;justify-content:flex-start" }, kk));
-      }
-    }
-    if (jenis === "tenant" && x.catatan) { isi.appendChild(h("h3", { text: "Catatan petugas" })); isi.appendChild(h("div", { text: x.catatan })); }
-    if (jenis === "patroli" && x.catatan) { isi.appendChild(h("h3", { text: "Temuan dan catatan" })); isi.appendChild(h("div", { text: x.catatan })); }
-    if (detail.length) { isi.appendChild(h("h3", { text: "Checklist" })); isi.appendChild(cl); }
-    if (fl.length) {
-      isi.appendChild(h("h3", { text: "Catatan sistem" }));
-      isi.appendChild(h("div", { class: "flags" }, fl.map(function (f) { return lencana(LABEL_FLAG[f] || f, FLAG_PENTING[f] ? "l-warn" : "l-abu"); })));
-    }
-    isi.appendChild(h("h3", { text: "Foto (" + foto.length + ")" }));
-    if (foto.length) {
-      isi.appendChild(h("div", { class: "foto-besar" }, foto.map(function (f, i) {
-        return h("button", { type: "button", "aria-label": "Perbesar foto " + (i + 1), onclick: function () { lightbox(f); } },
-          h("img", { src: f.thumb, alt: "Foto " + (i + 1), referrerpolicy: "no-referrer" }));
-      })));
-    } else { isi.appendChild(h("div", { class: "oleh", text: "Tidak ada foto." })); }
-    if (link) {
-      isi.appendChild(h("h3", { text: "Lokasi" }));
-      isi.appendChild(h("a", { class: "btn btn-utama", href: link, target: "_blank", rel: "noopener noreferrer", text: "Buka di Google Maps" }));
-    }
-
-    var lap = $("lapisan");
-    PC.kosongkan(lap);
-    lap.appendChild(h("div", { class: "tirai", onclick: tutupRincian }));
-    lap.appendChild(h("aside", { class: "rincian", role: "dialog", "aria-modal": "true", "aria-label": "Detail laporan" },
-      h("div", { class: "rincian-kepala" },
-        h("div", null, h("h2", { text: judul }), h("div", { class: "sub", text: x.ts })),
-        h("button", { type: "button", class: "btn btn-garis-terang", text: "Tutup", onclick: tutupRincian })),
-      isi));
-  }
-
-  function lightbox(f) {
-    var lb = h("div", { class: "lightbox", role: "dialog", "aria-modal": "true", onclick: function () { lb.remove(); } },
-      h("img", { src: f.besar, alt: "Foto diperbesar", referrerpolicy: "no-referrer" }),
-      h("button", { type: "button", class: "btn btn-stempel", text: "Tutup", onclick: function () { lb.remove(); } }));
-    document.body.appendChild(lb);
-  }
-  document.addEventListener("keydown", function (e) {
-    if (e.key !== "Escape") return;
-    var lb = document.querySelector(".lightbox");
-    if (lb) lb.remove(); else tutupRincian();
+function renderTenantList(arr) {
+  var tb = el('tbodyTenant');
+  if (!arr.length) { tb.innerHTML = '<tr><td colspan="3" style="text-align:center;color:#94a3b8;padding:20px">Belum ada tenant.</td></tr>'; return; }
+  tb.innerHTML = '';
+  arr.forEach(function (t) {
+    var tr = document.createElement('tr');
+    var namaEsc = t.n.replace(/'/g, "\\'");
+    tr.innerHTML = '<td style="text-align:left">' + DP.esc(t.n) + '</td>' +
+      '<td style="text-align:left">' + DP.esc(t.l || '-') + '</td>' +
+      '<td><button class="btn-x" onclick="hapusTenant(\'' + namaEsc + '\')">Hapus</button></td>';
+    tb.appendChild(tr);
   });
+}
 
-  /* ---------------------------------------------------------- ekspor */
-  function selCsv(v) {
-    v = String(v === null || v === undefined ? "" : v);
-    if (/^[=+\-@\t\r]/.test(v)) v = "'" + v;      // cegah formula injection di Excel
-    return '"' + v.replace(/"/g, '""') + '"';
-  }
-  function ekspor(baris0) {
-    var baris = baris0.map(function (x) {
-      var t = S.tindak[x.id] || {};
-      return Object.assign({}, x, {
-        tlStatus: isTemuan(x) && x.id ? STATUS_LABEL[statusTL(x)] : "", tlCatatan: t.catatan || "",
-        tlOleh: t.oleh || "", tlWaktu: t.waktu || ""
-      });
-    });
-    var kolom = S.tab === "patroli"
-      ? [["Waktu", "ts"], ["Petugas", "nama"], ["Zona", "zona"], ["Kondisi", "kondisi"], ["Tingkat", "tingkat"],
-        ["Temuan", "catatan"], ["Latitude", "lat"], ["Longitude", "lng"], ["Akurasi (m)", "akurasi"], ["Waktu foto", "waktuFoto"],
-        ["Catatan sistem", "flag"], ["Status tindak lanjut", "tlStatus"], ["Catatan tindak lanjut", "tlCatatan"],
-        ["Diubah oleh", "tlOleh"], ["Diubah pada", "tlWaktu"], ["Link foto", "foto"], ["ID", "id"]]
-      : [["Waktu", "ts"], ["Kategori", "kategori"], ["Tenant", "tenant"], ["Petugas", "petugas"], ["Hasil", "hasil"],
-        ["Tingkat", "tingkat"], ["Temuan", "ringkasan"], ["Catatan", "catatan"], ["Latitude", "lat"], ["Longitude", "lng"],
-        ["Akurasi (m)", "akurasi"], ["Waktu foto", "waktuFoto"], ["Catatan sistem", "flag"], ["Status tindak lanjut", "tlStatus"],
-        ["Catatan tindak lanjut", "tlCatatan"], ["Diubah oleh", "tlOleh"], ["Diubah pada", "tlWaktu"], ["Link foto", "foto"], ["ID", "id"]];
-    var csv = [kolom.map(function (k) { return selCsv(k[0]); }).join(",")]
-      .concat(baris.map(function (x) { return kolom.map(function (k) { return selCsv(x[k[1]]); }).join(","); })).join("\r\n");
-    var blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
-    var a = h("a", { href: URL.createObjectURL(blob), download: "log-" + S.tab + "-" + $("dari").value + "_" + $("sampai").value + ".csv" });
-    document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(function () { URL.revokeObjectURL(a.href); }, 2000);
-  }
+function renderPetugasList(nama, zona) {
+  var tb = el('tbodyPetugas');
+  tb.innerHTML = '';
+  nama.forEach(function (n, i) {
+    var tr = document.createElement('tr');
+    var namaEsc = n.replace(/'/g, "\\'");
+    tr.innerHTML = '<td style="text-align:left">' + DP.esc(n) + '</td>' +
+      '<td style="text-align:left">' + DP.esc(zona[i] || '-') + '</td>' +
+      '<td><button class="btn-x" onclick="hapusPetugas(\'' + namaEsc + '\')">Hapus</button></td>';
+    tb.appendChild(tr);
+  });
+}
 
-  /* ---------------------------------------------------------- ganti password */
-  var dlg = $("dlg-sandi");
-  $("btn-sandi").addEventListener("click", function () {
-    $("form-sandi").reset(); $("g-sandi").hidden = true;
-    if (dlg.showModal) dlg.showModal(); else dlg.setAttribute("open", "");
+function simpanTenant() {
+  var nama = el('mtNama').value.trim(), lokasi = el('mtLokasi').value.trim();
+  if (!nama) { alert('Nama tenant wajib.'); return; }
+  api({ aksi: 'tambahTenant', nama: nama, lokasi: lokasi }, function () {
+    el('mtNama').value = ''; el('mtLokasi').value = '';
+    muatMasterAdmin();
   });
-  $("s-batal").addEventListener("click", function () { dlg.close(); });
-  $("form-sandi").addEventListener("submit", function (e) {
-    e.preventDefault();
-    var g = $("g-sandi");
-    if ($("s-baru").value !== $("s-konf").value) { g.textContent = "Konfirmasi password tidak cocok."; g.hidden = false; return; }
-    var btn = $("s-simpan"); btn.disabled = true;
-    PC.api("gantiPassword", { token: S.token, passLama: $("s-lama").value, passBaru: $("s-baru").value }, 25000).then(function (r) {
-      if (r.status === "SUCCESS") { dlg.close(); PC.toast("Password diperbarui.", "ok"); return; }
-      if (r.kode === "SESI") { dlg.close(); tampilMasuk(r.message); return; }
-      g.textContent = r.message || "Gagal mengganti password."; g.hidden = false;
-    }).catch(function () { g.textContent = "Tidak dapat terhubung ke server."; g.hidden = false; })
-      .then(function () { btn.disabled = false; });
-  });
+}
 
-  /* ---------------------------------------------------------- kontrol */
-  Array.prototype.forEach.call(document.querySelectorAll("[data-rentang]"), function (b) {
-    b.addEventListener("click", function () { setRentang(b.getAttribute("data-rentang")); S.halaman = 1; muatData(false); });
-  });
-  ["dari", "sampai"].forEach(function (id) {
-    $(id).addEventListener("change", function () {
-      Array.prototype.forEach.call(document.querySelectorAll("[data-rentang]"), function (b) { b.setAttribute("aria-pressed", "false"); });
-      S.halaman = 1; muatData(false);
-    });
-  });
-  $("cari").addEventListener("input", function () { S.halaman = 1; render(); });
-  $("btn-temuan").addEventListener("click", function () {
-    S.hanyaTemuan = !S.hanyaTemuan;
-    $("btn-temuan").setAttribute("aria-pressed", S.hanyaTemuan ? "true" : "false");
-    S.halaman = 1; render();
-  });
-  $("btn-segarkan").addEventListener("click", function () { muatData(false); });
-  $("oto").addEventListener("change", atur);
-  $("btn-alarm").addEventListener("click", function () {
-    S.alarmAktif = !S.alarmAktif; siapkanAudio();
-    $("btn-alarm").textContent = "Alarm: " + (S.alarmAktif ? "nyala" : "mati");
-    $("btn-alarm").setAttribute("aria-pressed", S.alarmAktif ? "true" : "false");
-    if (S.alarmAktif) bunyi();
-  });
-  Array.prototype.forEach.call(document.querySelectorAll("#tab button"), function (b) {
-    b.addEventListener("click", function () { S.tab = b.getAttribute("data-tab"); S.halaman = 1; renderPanel(); });
-  });
+function hapusTenant(nama) {
+  if (!confirm('Nonaktifkan tenant "' + nama + '"?')) return;
+  api({ aksi: 'hapusTenant', nama: nama }, function () { muatMasterAdmin(); });
+}
 
-  /* ---------------------------------------------------------- mulai */
-  setRentang("hari");
-  var sesi = null;
-  try { sesi = JSON.parse(sessionStorage.getItem(KUNCI_SESI)); } catch (e) { /* abaikan */ }
-  if (sesi && sesi.token) { S.token = sesi.token; S.user = sesi.user; tampilApp(); }
-})();
+function simpanPetugas() {
+  var nama = el('mpNama').value.trim(), zona = el('mpZona').value.trim();
+  if (!nama || !zona) { alert('Nama & zona wajib.'); return; }
+  api({ aksi: 'tambahPetugas', nama: nama, zona: zona }, function () {
+    el('mpNama').value = ''; el('mpZona').value = '';
+    muatMasterAdmin();
+  });
+}
+
+function hapusPetugas(nama) {
+  if (!confirm('Hapus petugas "' + nama + '"?')) return;
+  api({ aksi: 'hapusPetugas', nama: nama }, function () { muatMasterAdmin(); });
+}
+
+function importBulkTenant() {
+  var raw = el('mtBulk').value.trim();
+  if (!raw) { alert('Paste data dulu.'); return; }
+  var list = [];
+  raw.split('\n').forEach(function (line) {
+    line = line.trim();
+    if (!line) return;
+    var p = line.split(/\t|,/);
+    if (p[0]) list.push({ n: p[0].trim(), l: (p[1] || '').trim() });
+  });
+  if (!list.length) { alert('Tidak ada data valid.'); return; }
+  api({ aksi: 'importTenant', list: list }, function (res) {
+    alert(res.message);
+    el('mtBulk').value = '';
+    muatMasterAdmin();
+  });
+}
+
+function api(payload, cb) {
+  payload.token = payload.token || TOKEN;
+  DP.api(payload)
+    .then(function (res) {
+      if (res.status === 'SUCCESS') { if (cb) cb(res); }
+      else if (res.kode === 'SESI') { alert('Sesi berakhir.'); logoutAdmin(); }
+      else alert('Gagal: ' + res.message);
+    })
+    .catch(function () { alert('Gangguan jaringan.'); });
+}
 </script>
 </body>
 </html>
