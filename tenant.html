@@ -2,402 +2,386 @@
 <html lang="id">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#10243B">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src https://script.google.com https://script.googleusercontent.com; media-src blob:; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'">
-<meta name="referrer" content="no-referrer">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Patrol 23">
-<link rel="manifest" href="manifest.webmanifest">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-<link rel="icon" type="image/png" href="icons/icon-192.png">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Checklist Tenant - Mall 23Semarang</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700;800&display=swap">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="petugas.css">
+<link rel="manifest" href="manifest.webmanifest">
 </head>
 <body>
+<div class="wrap">
+  <div class="brand">
+    <div class="icon"><i class="fa-solid fa-store"></i></div>
+    <h1>CHECKLIST TENANT</h1>
+    <p>Mall 23Semarang • BUKA / TUTUP</p>
+  </div>
 
-<header class="kepala">
-  <div class="kepala-isi">
-    <div class="merek-grup">
-      <svg class="merek" viewBox="0 0 48 48" aria-hidden="true"><path d="M24 3 8 9v13c0 9.6 6.6 16.8 16 19.5C33.4 38.8 40 31.6 40 22V9L24 3Z" fill="#fff"/><path d="m16.5 23.5 5.5 5.5 10-11.5" fill="none" stroke="#0F2237" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><rect x="8" y="44.5" width="32" height="3" rx="1.5" fill="#E8A92B"/></svg>
-      <div>
-        <div class="judul">Checklist tenant</div>
-        <div class="sub">Buka dan tutup toko, Mall 23Semarang</div>
-      </div>
+  <div class="card-app">
+    <div id="loadingInit" style="text-align:center;padding:24px 0">
+      <div class="spinner-border text-primary spinner-border-sm"></div>
+      <div style="font-size:12.5px;color:var(--muted);margin-top:10px">Menyelaraskan data komponen...</div>
     </div>
-    <a class="tautan" href="index.html">Patroli</a>
+
+    <div id="alertBox" class="alert-inline"></div>
+
+    <form id="formTenant" onsubmit="kirimTenant(event)" style="display:none">
+      <div class="mb-3">
+        <label class="lbl">Nama Personel Satpam</label>
+        <div class="search-wrap">
+          <input type="text" id="tNama" class="form-control" placeholder="Ketik & cari nama..." required autocomplete="off" oninput="filterNama(this.value)" onfocus="bukaHasil(this.value)">
+          <i class="fa-solid fa-magnifying-glass search-icon"></i>
+          <div id="tHasil" class="result-box"></div>
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label class="lbl">Kategori Laporan</label>
+        <select id="tKategori" class="form-select" required onchange="muatChecklist()">
+          <option value="" disabled selected>-- Pilih kategori --</option>
+          <option value="BUKA">BUKA — Awal Operasional</option>
+          <option value="TUTUP">TUTUP — Akhir Operasional</option>
+        </select>
+      </div>
+
+      <div class="mb-3">
+        <label class="lbl">Tenant</label>
+        <div class="search-wrap">
+          <input type="text" id="tTenant" class="form-control" placeholder="Ketik & cari nama tenant..." required autocomplete="off" oninput="filterTenant(this.value)" onfocus="bukaHasilTenant()">
+          <i class="fa-solid fa-magnifying-glass search-icon"></i>
+          <div id="tTenantHasil" class="result-box"></div>
+        </div>
+        <div id="tFloorInfo" class="hint" style="display:none"></div>
+      </div>
+
+      <div class="section-title"><i class="fa-solid fa-list-check"></i> Checklist Tenant</div>
+      <div id="tChecklist">
+        <div style="font-size:12.5px;color:var(--muted);padding:12px 0">Pilih kategori laporan terlebih dahulu.</div>
+      </div>
+
+      <div class="mb-3" style="margin-top:16px">
+        <label class="lbl">Catatan Tambahan (opsional)</label>
+        <textarea id="tCatatan" class="form-control" rows="2" placeholder="Tambahkan info lain..." maxlength="500"></textarea>
+      </div>
+
+      <div id="tTingkatWrap" class="mb-3" style="display:none">
+        <label class="lbl" style="color:#fca5a5">Tingkat Temuan</label>
+        <select id="tTingkat" class="form-select">
+          <option value="">-- Pilih tingkat --</option>
+          <option value="Rendah">Rendah</option>
+          <option value="Sedang">Sedang</option>
+          <option value="Tinggi">Tinggi</option>
+        </select>
+      </div>
+
+      <div class="mb-3">
+        <label class="lbl">Foto Bukti (wajib)</label>
+        <input type="file" id="tFoto" class="form-control" accept="image/*" capture="environment" onchange="prosesFoto(this)" required>
+        <img id="tPreview" class="foto-preview" alt="Preview">
+      </div>
+
+      <div class="gps" id="tGpsBox">
+        <i class="fa-solid fa-location-crosshairs" style="color:var(--accent)" id="tGpsIcon"></i>
+        <span id="tGpsText" style="color:var(--muted)">Mengunci titik koordinat GPS...</span>
+      </div>
+
+      <button type="submit" id="tBtn" class="btn-submit" disabled>
+        <i class="fa-solid fa-cloud-arrow-up"></i> SIMPAN CHECKLIST TENANT
+      </button>
+    </form>
   </div>
-</header>
-<div class="stempel" id="stempel" aria-label="Stempel waktu dan lokasi"></div>
 
-<main class="app">
-  <div id="antrean-wadah"></div>
-  <div id="hasil" class="hasil" role="status" hidden></div>
-  <div id="muat" class="muat">Memuat daftar tenant...</div>
-
-  <form id="form" hidden novalidate>
-    <section class="bagian">
-      <h2>Kategori</h2>
-      <div class="ubin-grup" role="radiogroup" aria-label="Kategori checklist">
-        <div>
-          <input type="radio" name="kategori" id="k-buka" value="BUKA">
-          <label class="ubin ubin-buka" for="k-buka">Buka<small>Sebelum beroperasi</small></label>
-        </div>
-        <div>
-          <input type="radio" name="kategori" id="k-tutup" value="TUTUP">
-          <label class="ubin ubin-tutup" for="k-tutup">Tutup<small>Setelah tutup</small></label>
-        </div>
-      </div>
-    </section>
-
-    <section class="bagian">
-      <h2>Tenant dan petugas</h2>
-      <div class="medan">
-        <label for="tenant">Nama tenant</label>
-        <div class="kombo">
-          <input id="tenant" class="input" type="text" autocomplete="off" placeholder="Ketik untuk mencari tenant" aria-controls="daftar-tenant">
-          <ul id="daftar-tenant" class="daftar" role="listbox" hidden></ul>
-        </div>
-        <p id="lokasi-tenant" class="petunjuk" style="margin:6px 0 0" hidden></p>
-      </div>
-      <div class="medan">
-        <label for="nama">Nama petugas</label>
-        <div class="kombo">
-          <input id="nama" class="input" type="text" autocomplete="off" placeholder="Ketik untuk mencari nama" aria-controls="daftar-nama">
-          <ul id="daftar-nama" class="daftar" role="listbox" hidden></ul>
-        </div>
-      </div>
-      <div class="medan">
-        <label for="pin">PIN</label>
-        <input id="pin" class="input" type="password" inputmode="numeric" autocomplete="off" maxlength="12" placeholder="PIN dari admin">
-        <p id="g-pin" class="galat" hidden></p>
-      </div>
-    </section>
-
-    <section class="bagian" id="bagian-cl" hidden>
-      <h2><span id="judul-cl">Checklist</span> <small id="progres">0 dari 0</small></h2>
-      <p class="petunjuk">Jawab setiap item. N/A untuk item yang tidak berlaku pada tenant ini.</p>
-      <button type="button" id="btn-semua" class="btn btn-semua">Tandai semua sesuai</button>
-      <p class="petunjuk" style="margin:6px 0 4px">Pintasan untuk item yang belum dijawab. Setelah itu ubah hanya item yang bermasalah.</p>
-      <div id="checklist"></div>
-      <div id="blok-temuan" hidden>
-        <div class="medan" style="margin-top:18px">
-          <span class="label" id="lbl-tingkat">Tingkat temuan</span>
-          <div class="tingkat" role="radiogroup" aria-labelledby="lbl-tingkat">
-            <input type="radio" name="tingkat" id="t1" value="Rendah"><label class="seg t-rendah" for="t1">Rendah</label>
-            <input type="radio" name="tingkat" id="t2" value="Sedang"><label class="seg t-sedang" for="t2">Sedang</label>
-            <input type="radio" name="tingkat" id="t3" value="Tinggi"><label class="seg t-tinggi" for="t3">Tinggi</label>
-          </div>
-        </div>
-      </div>
-      <div class="medan" style="margin-top:18px">
-        <label for="catatan">Catatan tambahan (opsional)</label>
-        <textarea id="catatan" class="input" rows="2" maxlength="500" placeholder="Misalnya nama penanggung jawab tenant atau tindak lanjut"></textarea>
-      </div>
-    </section>
-
-    <section class="bagian" id="bagian-foto" hidden>
-      <h2>Foto bukti <small id="jml-foto">0 dari 3</small></h2>
-      <p class="petunjuk" id="petunjuk-foto"></p>
-      <div id="foto-grid" class="foto-grid"></div>
-      <button type="button" id="btn-foto" class="btn btn-foto">Ambil foto</button>
-      <p id="hint-foto" class="petunjuk" style="margin:8px 0 0"></p>
-    </section>
-  </form>
-</main>
-
-<div class="bar-kirim" id="bar-kirim" hidden>
-  <div class="bar-isi">
-    <p id="kurang" class="kurang"></p>
-    <button type="button" id="btn-kirim" class="btn btn-utama btn-lebar" disabled>Kirim checklist</button>
-  </div>
+  <div class="watermark">Digital Patrol System v3.0 • Mall 23Semarang</div>
 </div>
 
 <script src="config.js"></script>
 <script src="core.js"></script>
 <script>
-(function () {
-  "use strict";
-  var PC = window.PC, h = PC.h;
-  var $ = function (id) { return document.getElementById(id); };
-  var KUNCI_DRAFT = "dp_draft_tenant_v1", KUNCI_MASTER = "dp_master_v1", KUNCI_NAMA = "dp_nama";
-  var PETUNJUK_FOTO = {
-    BUKA: "Foto bagian depan tenant yang sudah siap beroperasi (pintu terbuka, etalase terlihat).",
-    TUTUP: "Foto pintu atau rolling door yang sudah terkunci, dan area depan tenant."
+var master = { daftarNama: [], daftarTenant: [], checklist: { BUKA: [], TUTUP: [] } };
+var gps = { lat: "-", lng: "-", akurasi: "" };
+var foto = null;
+var checklist = [];
+var mulai = Date.now();
+
+function alertBox(msg, tipe) {
+  var a = DP.el('alertBox');
+  a.textContent = msg;
+  if (tipe === 'ok') {
+    a.style.background = 'rgba(16,185,129,.12)';
+    a.style.border = '1px solid var(--ok)';
+    a.style.color = '#6ee7b7';
+  } else {
+    a.style.background = 'rgba(239,68,68,.12)';
+    a.style.border = '1px solid var(--err)';
+    a.style.color = '#fca5a5';
+  }
+  a.style.display = 'block';
+  clearTimeout(a._t);
+  a._t = setTimeout(function () { a.style.display = 'none'; }, 5000);
+}
+
+window.addEventListener('load', function () {
+  DP.api({ aksi: 'ambilDropdown' })
+    .then(function (d) {
+      if (d.status === 'ERROR') throw new Error(d.message);
+      master.daftarNama = d.daftarNama || [];
+      master.daftarTenant = d.daftarTenant || [];
+      master.checklist = d.checklist || { BUKA: [], TUTUP: [] };
+      DP.show('loadingInit', 'none');
+      DP.el('formTenant').style.display = 'block';
+      DP.sinkronJam();
+    })
+    .catch(function (err) {
+      DP.el('loadingInit').innerHTML = '<div style="color:#fca5a5;font-size:12.5px">Gagal memuat: ' + (err.message || 'error') + '</div>';
+    });
+
+  kunciGps();
+
+  document.addEventListener('click', function (e) {
+    if (!e.target.closest('.search-wrap')) {
+      DP.show('tHasil', 'none');
+      DP.show('tTenantHasil', 'none');
+    }
+  });
+});
+
+function renderHasilNama(arr, boxId, inputId) {
+  var box = DP.el(boxId);
+  box.innerHTML = '';
+  if (!arr.length) {
+    box.innerHTML = '<div class="result-item empty">Nama tidak ditemukan</div>';
+  } else {
+    arr.forEach(function (n) {
+      var d = document.createElement('div');
+      d.className = 'result-item';
+      d.textContent = n;
+      d.onclick = function () { DP.el(inputId).value = n; box.style.display = 'none'; };
+      box.appendChild(d);
+    });
+  }
+  box.style.display = 'block';
+}
+
+function filterNama(q) {
+  var k = q.toLowerCase().trim();
+  var hasil = master.daftarNama.filter(function (n) { return n.toLowerCase().indexOf(k) >= 0; });
+  renderHasilNama(hasil, 'tHasil', 'tNama');
+}
+
+function bukaHasil(q) {
+  if (q.trim()) filterNama(q);
+  else renderHasilNama(master.daftarNama, 'tHasil', 'tNama');
+}
+
+function renderTenantHasil(arr) {
+  var box = DP.el('tTenantHasil');
+  box.innerHTML = '';
+  if (!arr.length) {
+    box.innerHTML = '<div class="result-item empty">Tenant tidak ditemukan</div>';
+  } else {
+    arr.forEach(function (t) {
+      var d = document.createElement('div');
+      d.className = 'result-item';
+      d.innerHTML = '<strong>' + DP.esc(t.n) + '</strong>' + (t.l ? '<span class="sub">' + DP.esc(t.l) + '</span>' : '');
+      d.onclick = function () {
+        DP.el('tTenant').value = t.n;
+        box.style.display = 'none';
+        var info = DP.el('tFloorInfo');
+        if (t.l) { info.textContent = 'Lokasi: ' + t.l; info.style.display = 'block'; }
+        else info.style.display = 'none';
+      };
+      box.appendChild(d);
+    });
+  }
+  box.style.display = 'block';
+}
+
+function filterTenant(q) {
+  var k = q.toLowerCase().trim();
+  var hasil = master.daftarTenant.filter(function (t) { return t.n.toLowerCase().indexOf(k) >= 0; }).slice(0, 60);
+  renderTenantHasil(hasil);
+}
+
+function bukaHasilTenant() {
+  var q = DP.el('tTenant').value;
+  if (q.trim()) filterTenant(q);
+  else renderTenantHasil(master.daftarTenant.slice(0, 60));
+}
+
+function muatChecklist() {
+  var k = DP.el('tKategori').value;
+  if (!k) return;
+  renderChecklist(master.checklist[k] || []);
+}
+
+function renderChecklist(items) {
+  var w = DP.el('tChecklist');
+  w.innerHTML = '';
+  checklist = items.map(function (i) { return { i: i, s: '', c: '' }; });
+  if (!items.length) {
+    w.innerHTML = '<div style="font-size:12.5px;color:var(--muted);padding:12px 0">Tidak ada item checklist.</div>';
+    return;
+  }
+  items.forEach(function (item, idx) {
+    var d = document.createElement('div');
+    d.className = 'checklist-item';
+    d.dataset.idx = idx;
+    d.innerHTML =
+      '<div class="head">' +
+        '<div class="name">' + DP.esc(item) + '</div>' +
+        '<div class="opts">' +
+          '<button type="button" class="opt" data-v="OK" onclick="setOpt(' + idx + ',\'OK\')">OK</button>' +
+          '<button type="button" class="opt" data-v="TEMUAN" onclick="setOpt(' + idx + ',\'TEMUAN\')">Temuan</button>' +
+          '<button type="button" class="opt" data-v="NA" onclick="setOpt(' + idx + ',\'NA\')">N/A</button>' +
+        '</div>' +
+      '</div>' +
+      '<input type="text" class="catatan" placeholder="Jelaskan temuan..." oninput="setCatatan(' + idx + ',this.value)">';
+    w.appendChild(d);
+  });
+}
+
+function setOpt(idx, val) {
+  checklist[idx].s = val;
+  var item = document.querySelector('#tChecklist .checklist-item[data-idx="' + idx + '"]');
+  item.querySelectorAll('.opt').forEach(function (b) { b.classList.toggle('active', b.dataset.v === val); });
+  item.classList.toggle('temuan', val === 'TEMUAN');
+  if (val === 'TEMUAN') item.querySelector('.catatan').focus();
+  updateTingkat();
+}
+
+function setCatatan(idx, val) { checklist[idx].c = val; }
+
+function updateTingkat() {
+  var ada = checklist.some(function (x) { return x.s === 'TEMUAN'; });
+  DP.show('tTingkatWrap', ada ? 'block' : 'none');
+  if (!ada) DP.el('tTingkat').value = '';
+}
+
+function kunciGps() {
+  if (!navigator.geolocation) {
+    setGpsStatus('err', 'GPS tidak didukung.');
+    DP.el('tBtn').disabled = false;
+    return;
+  }
+  navigator.geolocation.getCurrentPosition(
+    function (pos) {
+      gps.lat = pos.coords.latitude;
+      gps.lng = pos.coords.longitude;
+      gps.akurasi = Math.round(pos.coords.accuracy || 0);
+      setGpsStatus('ok', 'GPS terkunci • akurasi ±' + gps.akurasi + ' m');
+      DP.el('tBtn').disabled = false;
+    },
+    function () {
+      setGpsStatus('err', 'Izin GPS ditolak. Laporan tetap bisa dikirim.');
+      DP.el('tBtn').disabled = false;
+    },
+    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+  );
+}
+
+function setGpsStatus(status, text) {
+  var box = DP.el('tGpsBox'), icon = DP.el('tGpsIcon'), txt = DP.el('tGpsText');
+  box.classList.remove('ok', 'err');
+  box.classList.add(status);
+  icon.className = status === 'ok' ? 'fa-solid fa-circle-check' : 'fa-solid fa-triangle-exclamation';
+  icon.style.color = status === 'ok' ? 'var(--ok)' : 'var(--warn)';
+  txt.textContent = text;
+  txt.style.color = status === 'ok' ? '#6ee7b7' : '#fcd34d';
+}
+
+function prosesFoto(input) {
+  if (!input.files || !input.files[0]) return;
+  DP.kompresFoto(input.files[0], 800, 0.75)
+    .then(function (f) {
+      foto = f;
+      var prev = DP.el('tPreview');
+      prev.src = 'data:image/jpeg;base64,' + f.b64;
+      prev.style.display = 'block';
+    })
+    .catch(function () { alertBox('Gagal memproses foto.', 'err'); });
+}
+
+function kirimTenant(e, konfirmasiUlang) {
+  if (e) e.preventDefault();
+  var nama = DP.el('tNama').value.trim();
+  var btn = DP.el('tBtn');
+
+  if (master.daftarNama.length && master.daftarNama.indexOf(nama) < 0) {
+    alertBox('Nama personel tidak terdaftar.');
+    return;
+  }
+  if (!DP.el('tKategori').value) { alertBox('Pilih kategori.'); return; }
+  if (!DP.el('tTenant').value.trim()) { alertBox('Pilih tenant.'); return; }
+  if (!checklist.length) { alertBox('Checklist belum dimuat.'); return; }
+  for (var i = 0; i < checklist.length; i++) {
+    var c = checklist[i];
+    if (!c.s) { alertBox('Item "' + c.i + '" belum dijawab.'); return; }
+    if (c.s === 'TEMUAN' && c.c.trim().length < 3) { alertBox('Jelaskan temuan "' + c.i + '".'); return; }
+  }
+  if (!foto) { alertBox('Foto bukti wajib diambil.'); return; }
+
+  var adaTemuan = checklist.some(function (x) { return x.s === 'TEMUAN'; });
+  var tingkat = adaTemuan ? DP.el('tTingkat').value : '-';
+  if (adaTemuan && !tingkat) { alertBox('Pilih tingkat temuan.'); return; }
+
+  var payload = {
+    nama: nama,
+    kategori: DP.el('tKategori').value,
+    tenant: DP.el('tTenant').value.trim(),
+    checklist: checklist,
+    catatan: DP.el('tCatatan').value.trim(),
+    tingkat: tingkat,
+    lat: gps.lat, lng: gps.lng, akurasi: gps.akurasi,
+    fotos: [foto],
+    id: DP.buatId(),
+    durasiDetik: Math.round((Date.now() - mulai) / 1000),
+    jamPerangkat: false, tertunda: false,
+    konfirmasiUlang: konfirmasiUlang === true
   };
-  var master = null, kategori = "", idLaporan = PC.buatId(), tingkat = "", mengirim = false, timerDraft = null;
-  var cbTenant, cbNama, cl, foto;
 
-  PC.pasangStempel($("stempel"));
-  PC.Lokasi.mulai();
-  var antrean = PC.pasangAntrean($("antrean-wadah"));
-  PC.pasangPWA($("antrean-wadah"));
-  setInterval(PC.sinkronJam, 300000);
-  document.addEventListener("visibilitychange", function () { if (!document.hidden) PC.sinkronJam(); });
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner-border spinner-border-sm"></div> Memproses...';
 
-  function namaTenant() { return master.daftarTenant.map(function (t) { return t.n; }); }
-
-  /* ------------------------------------------------ memuat master */
-  function muat() {
-    var muatEl = $("muat");
-    muatEl.hidden = false;
-    PC.kosongkan(muatEl);
-    muatEl.textContent = "Memuat daftar tenant...";
-    var t0 = Date.now();
-    PC.api("ambilDropdown", {}, 25000).then(function (r) {
-      if (r.status !== "SUCCESS") throw new Error(r.message);
-      PC.Jam.sinkron(r.waktuServer + (Date.now() - t0) / 2);
-      master = r;
-      try { localStorage.setItem(KUNCI_MASTER, JSON.stringify(r)); } catch (e) { /* abaikan */ }
-    }).catch(function () {
-      try {
-        var c = JSON.parse(localStorage.getItem(KUNCI_MASTER));
-        if (c && c.daftarTenant) { master = c; PC.toast("Tanpa sinyal. Memakai daftar yang tersimpan.", "bad"); }
-      } catch (e) { /* abaikan */ }
-    }).then(function () {
-      if (master) { mulai(); return; }
-      PC.kosongkan(muatEl);
-      muatEl.appendChild(h("p", { text: "Daftar belum bisa dimuat. Periksa sinyal, lalu coba lagi." }));
-      muatEl.appendChild(h("button", { type: "button", class: "btn btn-utama", text: "Coba lagi", onclick: muat }));
-    });
-  }
-
-  function mulai() {
-    $("muat").hidden = true;
-    $("form").hidden = false;
-    $("bar-kirim").hidden = false;
-    if (!master.daftarTenant.length) {
-      $("hasil").textContent = "Daftar tenant masih kosong. Minta admin mengisi sheet 'Tenant'.";
-      $("hasil").hidden = false;
-    }
-
-    cbTenant = PC.Combobox({ input: $("tenant"), list: $("daftar-tenant"), kosong: "Tenant tidak terdaftar",
-      items: namaTenant,
-      onPick: function (v) {
-        var t = v && master.daftarTenant.filter(function (x) { return x.n === v; })[0];
-        $("lokasi-tenant").hidden = !(t && t.l);
-        $("lokasi-tenant").textContent = t && t.l ? "Lokasi: " + t.l : "";
-        ubah();
-      } });
-    cbNama = PC.Combobox({ input: $("nama"), list: $("daftar-nama"), kosong: "Nama tidak terdaftar",
-      items: function () { return master.daftarNama; },
-      onPick: function (v) { if (v) { try { localStorage.setItem(KUNCI_NAMA, v); } catch (e) { /* abaikan */ } } ubah(); } });
-    foto = PC.FotoGrid($("foto-grid"), { maks: 3, onUbah: ubah });
-    cl = PC.Checklist($("checklist"), { onUbah: ubah });
-
-    var tersimpan = null;
-    try { tersimpan = localStorage.getItem(KUNCI_NAMA); } catch (e) { /* abaikan */ }
-    if (tersimpan && master.daftarNama.indexOf(tersimpan) >= 0) $("nama").value = tersimpan;
-
-    Array.prototype.forEach.call(document.querySelectorAll('input[name="kategori"]'), function (r) {
-      r.addEventListener("change", function () { gantiKategori(r.value, r); });
-    });
-    Array.prototype.forEach.call(document.querySelectorAll('input[name="tingkat"]'), function (r) {
-      r.addEventListener("change", function () { tingkat = r.value; ubah(); });
-    });
-    $("pin").addEventListener("input", function () { $("g-pin").hidden = true; $("pin").classList.remove("invalid"); ubah(); });
-    $("catatan").addEventListener("input", ubah);
-    $("btn-semua").addEventListener("click", function () {
-      var n = cl.isiSemuaSesuai();
-      PC.toast(n ? n + " item ditandai Sesuai. Ubah yang bermasalah." : "Semua item sudah dijawab.", n ? "ok" : "");
-    });
-    $("btn-foto").addEventListener("click", ambilFoto);
-    $("btn-kirim").addEventListener("click", kirim);
-
-    var d = bacaDraft();
-    if (d && d.kategori) {
-      var r = document.querySelector('input[name="kategori"][value="' + d.kategori + '"]');
-      if (r) {
-        r.checked = true;
-        tampilkanKategori(d.kategori, d.cl);
-        if (d.tenant) $("tenant").value = d.tenant;
-        $("catatan").value = d.catatan || "";
-        if (d.tingkat) {
-          tingkat = d.tingkat;
-          var rt = document.querySelector('input[name="tingkat"][value="' + d.tingkat + '"]');
-          if (rt) rt.checked = true;
+  DP.api({ aksi: 'simpanTenant', payload: payload })
+    .then(function (res) {
+      if (res.status === 'SUCCESS') {
+        alertBox('✓ Tersimpan ' + (res.waktu || ''), 'ok');
+        resetForm();
+      } else if (res.status === 'KONFIRMASI') {
+        if (confirm(res.message)) {
+          return kirimTenant(null, true);
         }
+      } else {
+        alertBox('Gagal: ' + res.message);
       }
-    }
-    ubah();
-  }
-
-  /* ------------------------------------------------ kategori */
-  function tampilkanKategori(k, awal) {
-    kategori = k;
-    $("bagian-cl").hidden = false;
-    $("bagian-foto").hidden = false;
-    $("judul-cl").textContent = "Checklist " + (k === "BUKA" ? "buka" : "tutup");
-    $("petunjuk-foto").textContent = PETUNJUK_FOTO[k] + " Tanggal, jam, tenant, petugas, dan GPS tercetak otomatis.";
-    cl.set(master.checklist[k], awal);
-  }
-
-  function gantiKategori(k, radio) {
-    var lama = kategori;
-    if (lama && lama !== k && cl.nilai().terisi > 0) {
-      PC.tanya("Ganti kategori?", "Jawaban checklist " + lama + " akan dihapus karena itemnya berbeda.", "Ganti", "Batal")
-        .then(function (ya) {
-          if (ya) { tampilkanKategori(k); ubah(); return; }
-          var asal = document.querySelector('input[name="kategori"][value="' + lama + '"]');
-          if (asal) asal.checked = true;
-        });
-      return;
-    }
-    tampilkanKategori(k);
-    ubah();
-  }
-
-  /* ------------------------------------------------ draft lokal */
-  function bacaDraft() {
-    try {
-      var d = JSON.parse(localStorage.getItem(KUNCI_DRAFT));
-      if (d && Date.now() - d.t < 12 * 3600 * 1000) return d;
-    } catch (e) { /* abaikan */ }
-    return null;
-  }
-  function simpanDraft() {
-    if (!kategori) return;
-    try {
-      localStorage.setItem(KUNCI_DRAFT, JSON.stringify({
-        t: Date.now(), kategori: kategori, tenant: cbTenant.nilai(), cl: cl.ekspor(), tingkat: tingkat,
-        catatan: $("catatan").value
-      }));
-    } catch (e) { /* abaikan */ }
-  }
-
-  /* ------------------------------------------------ status form */
-  function kekurangan() {
-    var k = [], c = cl.nilai();
-    if (!kategori) { k.push("kategori buka/tutup"); return k; }
-    if (!cbTenant.nilai()) k.push("tenant");
-    if (!cbNama.nilai()) k.push("nama petugas");
-    if (!$("pin").value.trim()) k.push("PIN");
-    if (!c.lengkap) k.push("checklist (" + c.terisi + "/" + c.total + ")");
-    if (c.adaTemuan) {
-      if (c.catatanKurang) k.push("penjelasan temuan");
-      if (!tingkat) k.push("tingkat temuan");
-    }
-    if (!foto.daftar().length) k.push("foto");
-    return k;
-  }
-
-  function ubah() {
-    if (!cl) return;
-    var c = cl.nilai(), k = kekurangan();
-    $("progres").textContent = c.terisi + " dari " + c.total;
-    $("blok-temuan").hidden = !c.adaTemuan;
-    if (!c.adaTemuan) {
-      tingkat = "";
-      Array.prototype.forEach.call(document.querySelectorAll('input[name="tingkat"]'), function (r) { r.checked = false; });
-    }
-    $("jml-foto").textContent = foto.daftar().length + " dari 3";
-    var siapFoto = !!kategori && !!cbTenant.nilai() && !!cbNama.nilai();
-    $("btn-foto").disabled = !siapFoto || foto.penuh();
-    $("btn-foto").textContent = foto.penuh() ? "Foto sudah 3 (maksimal)" : (foto.daftar().length ? "Tambah foto" : "Ambil foto");
-    $("hint-foto").textContent = siapFoto ? "" : "Pilih tenant dan nama petugas dulu. Keduanya dicetak pada foto.";
-    $("kurang").textContent = k.length ? "Lengkapi: " + k.join(", ") : "Semua isian lengkap.";
-    $("kurang").className = "kurang" + (k.length ? "" : " siap");
-    $("btn-kirim").disabled = mengirim || k.length > 0;
-    clearTimeout(timerDraft);
-    timerDraft = setTimeout(simpanDraft, 500);
-  }
-
-  /* ------------------------------------------------ foto */
-  function ambilFoto() {
-    PC.Kamera.buka({
-      baris: function (now) {
-        var f = PC.fmtWIB(now);
-        return [f.tgl + "  " + f.jam + " WIB", kategori + ": " + (cbTenant.nilai() || "-"),
-          "Petugas: " + (cbNama.nilai() || "-"), PC.teksGps()];
-      },
-      onFoto: function (f) { foto.tambah(f); }
+    })
+    .catch(function () { alertBox('Gangguan jaringan.'); })
+    .finally(function () {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> SIMPAN CHECKLIST TENANT';
     });
-  }
+}
 
-  /* ------------------------------------------------ kirim */
-  function setMengirim(v) {
-    mengirim = v;
-    $("btn-kirim").textContent = v ? "Mengirim..." : "Kirim checklist";
-    ubah();
-  }
+function resetForm() {
+  DP.el('tNama').value = '';
+  DP.el('tKategori').value = '';
+  DP.el('tTenant').value = '';
+  DP.el('tCatatan').value = '';
+  DP.el('tFoto').value = '';
+  DP.el('tPreview').style.display = 'none';
+  DP.el('tPreview').src = '';
+  DP.el('tFloorInfo').style.display = 'none';
+  DP.el('tChecklist').innerHTML = '<div style="font-size:12.5px;color:var(--muted);padding:12px 0">Pilih kategori laporan terlebih dahulu.</div>';
+  foto = null;
+  checklist = [];
+  mulai = Date.now();
+  updateTingkat();
+}
 
-  function reset() {
-    $("tenant").value = ""; $("lokasi-tenant").hidden = true; $("catatan").value = "";
-    cl.set(master.checklist[kategori]);
-    tingkat = "";
-    foto.kosongkan();
-    idLaporan = PC.buatId();
-    try { localStorage.removeItem(KUNCI_DRAFT); } catch (e) { /* abaikan */ }
-    window.scrollTo({ top: 0, behavior: "smooth" });
-    ubah();
-  }
-
-  function susunPayload() {
-    var c = cl.nilai(), gps = PC.Lokasi.saatIni();
-    return {
-      id: idLaporan, kategori: kategori, tenant: cbTenant.nilai(), nama: cbNama.nilai(), pin: $("pin").value.trim(),
-      checklist: c.daftar, tingkat: c.adaTemuan ? tingkat : "", catatan: $("catatan").value.trim(),
-      lat: gps ? gps.lat : null, lng: gps ? gps.lng : null, akurasi: gps ? gps.akurasi : null,
-      fotos: foto.daftar().map(function (f) { return { b64: f.b64, t: f.t, sumber: f.sumber }; }),
-      jamPerangkat: !PC.Jam.terpercaya(), durasiDetik: cl.durasiDetik()
-    };
-  }
-
-  function kirim() {
-    var k = kekurangan();
-    if (mengirim || k.length) { if (k.length) PC.toast("Lengkapi: " + k.join(", "), "bad"); return; }
-    kirimPayload(susunPayload());
-  }
-
-  function kirimPayload(payload) {
-    var label = payload.kategori + " " + payload.tenant;
-    var ulangi = false;
-    setMengirim(true);
-    PC.api("simpanTenant", { payload: payload }).then(function (r) {
-      if (r.status === "SUCCESS") {
-        var hasil = $("hasil");
-        hasil.textContent = "Checklist " + payload.kategori + " tercatat" + (r.waktu ? " pukul " + r.waktu + " WIB" : "") +
-          ". Tenant: " + payload.tenant + ".";
-        hasil.hidden = false;
-        PC.toast("Checklist tersimpan.", "ok");
-        reset();
-        return;
-      }
-      if (r.status === "KONFIRMASI") {
-        return PC.tanya("Laporan sudah ada", r.message, "Kirim lagi", "Batal").then(function (ya) {
-          ulangi = true && ya;
-        });
-      }
-      PC.toast(r.message || "Laporan ditolak.", "bad");
-      if (["PIN", "PIN_KOSONG", "TERKUNCI", "NAMA"].indexOf(r.kode) >= 0) {
-        var g = $("g-pin");
-        g.textContent = r.message; g.hidden = false;
-        $("pin").classList.add("invalid"); $("pin").focus();
-      }
-    }).catch(function (e) {
-      if (!e.jaringan) { PC.toast("Gagal mengirim. Coba lagi.", "bad"); return; }
-      PC.Antrean.simpan({ id: payload.id, aksi: "simpanTenant", payload: payload, dibuat: Date.now(),
-        status: "menunggu", label: label }).then(function () {
-        PC.toast("Tidak ada sinyal. Laporan disimpan di perangkat dan dikirim otomatis nanti.", "ok");
-        $("hasil").hidden = true;
-        reset();
-        antrean.segarkan();
-      }).catch(function () {
-        PC.toast("Tidak ada sinyal dan penyimpanan perangkat gagal. Isian tetap di layar, coba kirim lagi.", "bad");
-      });
-    }).then(function () {
-      setMengirim(false);
-      if (ulangi) { payload.konfirmasiUlang = true; kirimPayload(payload); }
-    });
-  }
-
-  muat();
-})();
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(function () {});
+}
 </script>
 </body>
 </html>
