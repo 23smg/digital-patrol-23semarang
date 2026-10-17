@@ -401,6 +401,7 @@ dialog.dialog h3, dialog.dialog-lebar h3 { font: 700 18px/1.2 var(--jam); }
 
 /* Menu samping bisa diminimalkan di layar lebar */
 .btn-menu { display: flex; }
-.rangka.sisi-tutup { grid-template-columns: 0 minmax(0, 1fr); }
+.rangka.sisi-tutup { grid-template-columns: minmax(0, 1fr); }
 .rangka.sisi-tutup .sisi { display: none; }
 @media (max-width: 860px) { .rangka.sisi-tutup { display: block; } .rangka.sisi-tutup .sisi { display: flex; } }
+.rangka.sisi-tutup .isi { max-width: none; }

@@ -470,7 +470,7 @@
   }
 
   function formAkun(o, segar) {
-    var ubah = !!o, role = (K.data.roleTersedia || ["Admin", "Supervisor", "Manager", "Viewer"]);
+    var ubah = !!o, role = (K.data.roleTersedia || ["Admin", "Super Admin", "Supervisor", "Manager", "Viewer"]);
     var bidang = [];
     if (!ubah) bidang.push({ id: "username", label: "Username", maks: 40, placeholder: "huruf kecil, angka, titik, strip", mode: "text", bantuan: "Dipakai untuk masuk. 3 sampai 40 karakter." });
     bidang.push({ id: "nama", label: "Nama lengkap", nilai: ubah ? o.nama : "", maks: 60, separuh: true });
