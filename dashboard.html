@@ -2,368 +2,115 @@
 <html lang="id">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#FFFFFF">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https://lh3.googleusercontent.com https://drive.google.com; connect-src https://script.google.com https://script.googleusercontent.com; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
 <title>Dashboard Admin - Mall 23Semarang</title>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-<style>
-:root{--navy:#0a1128;--navy2:#1c2541;--blue:#0066cc;--border:#e2e8f0;--bg:#f8fafc}
-body{background:#f4f6f9;font-family:'Plus Jakarta Sans',sans-serif;color:var(--navy);margin:0}
-.nav{background:var(--navy);color:#fff;padding:14px 20px;border-bottom:4px solid var(--blue)}
-.nav h4{margin:0;font-weight:700;font-size:18px}
-.nav p{margin:2px 0 0;font-size:12px;color:#a4b0be}
-.container{max-width:1200px;margin:24px auto;padding:0 16px}
-.card-w{background:#fff;border-radius:12px;border:1px solid var(--border);padding:20px;margin-bottom:20px}
-.tabs-w{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
-.tabs-w button{background:#fff;border:1px solid var(--border);padding:10px 18px;border-radius:10px;font-weight:600;font-size:13.5px;cursor:pointer;font-family:inherit}
-.tabs-w button.active{background:var(--blue);border-color:var(--blue);color:#fff}
-.stat{display:flex;gap:14px;align-items:center}
-.stat .ic{width:46px;height:46px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px}
-.stat h3{margin:0;font-size:22px;font-weight:700}
-.stat p{margin:0;font-size:12.5px;color:#64748b}
-table{width:100%;font-size:13px}
-table thead th{background:var(--bg);padding:11px;font-size:12px;text-transform:uppercase;font-weight:600;text-align:center;border-bottom:2px solid var(--border)}
-table tbody td{padding:11px;text-align:center;border-bottom:1px solid #f1f5f9}
-.badge-s{padding:3px 9px;border-radius:6px;font-size:11px;font-weight:600}
-.b-BARU{background:#dbeafe;color:#1e40af}
-.b-DITANGANI{background:#fef3c7;color:#92400e}
-.b-SELESAI{background:#d1fae5;color:#065f46}
-#lockScreen{position:fixed;inset:0;background:var(--navy);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px}
-.lock-box{background:var(--navy2);padding:32px;border-radius:16px;border:1px solid #2e3a5f;max-width:380px;width:100%;color:#fff}
-.lock-box h5{font-weight:700;text-align:center}
-.lock-box input{background:#0d1527;border:1px solid #2e3a5f;color:#fff;border-radius:10px;padding:11px 14px;width:100%;margin-bottom:10px;font-family:inherit}
-.lock-box input:focus{outline:none;border-color:var(--blue)}
-.btn-p{background:var(--blue);color:#fff;border:none;padding:11px;border-radius:10px;font-weight:600;width:100%;cursor:pointer;font-family:inherit}
-.btn-p:hover{background:#0052a3}
-.form-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
-.form-row input,.form-row select,.form-row textarea{flex:1;min-width:140px;padding:9px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:13.5px;font-family:inherit}
-.form-row button{background:var(--blue);color:#fff;border:none;padding:9px 18px;border-radius:8px;font-weight:600;cursor:pointer;font-family:inherit}
-.btn-x{background:#ef4444;color:#fff;border:none;padding:5px 11px;border-radius:6px;font-size:11.5px;font-weight:600;cursor:pointer;font-family:inherit}
-.mini{font-size:12px;color:#64748b}
-</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="dashboard.css">
 </head>
 <body>
 
-<div id="lockScreen">
-  <div class="lock-box">
-    <div style="text-align:center;font-size:36px;margin-bottom:12px"><i class="fa-solid fa-shield-halved"></i></div>
-    <h5>Login Dashboard Admin</h5>
-    <p style="font-size:12px;color:#94a3b8;text-align:center;margin-bottom:20px">Masukkan kredensial akun Anda</p>
-    <input type="text" id="loginUser" placeholder="Username" autocomplete="username">
-    <input type="password" id="loginPass" placeholder="Password" autocomplete="current-password">
-    <button class="btn-p" onclick="loginAdmin()">MASUK</button>
-    <div id="loginErr" style="color:#fca5a5;font-size:12px;text-align:center;margin-top:10px;display:none"></div>
+<!-- ============ MASUK ============ -->
+<div class="masuk" id="masuk">
+  <form class="masuk-kartu" id="form-masuk" autocomplete="on">
+    <div class="masuk-kepala">
+      <div><h1>Admin</h1><p>Mall 23Semarang</p></div>
+    </div>
+    <div class="pita" aria-hidden="true"></div>
+    <div class="masuk-isi">
+      <div class="medan"><label for="u">Username</label><input id="u" class="input" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" required></div>
+      <div class="medan"><label for="p">Password</label><input id="p" class="input" type="password" autocomplete="current-password" required></div>
+      <p id="g-masuk" class="galat" role="alert" hidden></p>
+      <button type="submit" id="btn-masuk" class="btn btn-utama btn-lebar">Masuk</button>
+      <p class="catatan">Halaman ini khusus admin, supervisor, dan manager. Petugas patroli tidak perlu masuk.</p>
+    </div>
+  </form>
+</div>
+
+<!-- ============ APLIKASI ============ -->
+<div class="rangka" id="app" hidden>
+  <aside class="sisi" id="sisi">
+    <div class="sisi-merek">
+      <div><b>Admin</b><span>Mall 23Semarang</span></div>
+    </div>
+    <nav class="menu" id="menu" aria-label="Menu utama"></nav>
+    <div class="sisi-bawah">
+      <div class="pengguna" id="pengguna"></div>
+      <div class="sisi-aksi">
+        <button type="button" class="btn btn-kecil btn-garis-terang" id="btn-sandi">Ganti password</button>
+        <button type="button" class="btn btn-kecil btn-garis-terang" id="btn-keluar">Keluar</button>
+      </div>
+      <a class="tautan-petugas" href="index.html" target="_blank" rel="noopener">Buka form petugas</a>
+    </div>
+  </aside>
+
+  <div class="utama">
+    <header class="atas">
+      <button type="button" class="btn-menu" id="btn-menu" aria-label="Sembunyikan menu" aria-expanded="true" aria-controls="sisi"><i></i><i></i><i></i></button>
+      <h1 id="judul-halaman">Laporan</h1>
+      <span class="atas-info" id="atas-info"></span>
+    </header>
+    <div class="tirai-menu" id="tirai-menu"></div>
+    <main class="isi" id="isi"></main>
   </div>
 </div>
 
-<div id="app" style="display:none">
-  <div class="nav">
-    <div style="max-width:1200px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
-      <div>
-        <h4>DASHBOARD PATROLI</h4>
-        <p>Mall 23Semarang • <span id="whoami"></span></p>
-      </div>
-      <button class="btn-p" style="width:auto;padding:8px 16px;font-size:13px" onclick="logoutAdmin()">
-        <i class="fa-solid fa-right-from-bracket"></i> Keluar
-      </button>
+<div id="lapisan"></div>
+
+<!-- ============ DIALOG ============ -->
+<dialog class="dialog" id="dlg-sandi">
+  <form id="form-sandi">
+    <h3>Ganti password</h3>
+    <div class="medan"><label for="s-lama">Password saat ini</label><input id="s-lama" class="input" type="password" autocomplete="current-password" required></div>
+    <div class="medan"><label for="s-baru">Password baru (minimal 8 karakter)</label><input id="s-baru" class="input" type="password" autocomplete="new-password" minlength="8" required></div>
+    <div class="medan"><label for="s-konf">Ulangi password baru</label><input id="s-konf" class="input" type="password" autocomplete="new-password" minlength="8" required></div>
+    <p id="g-sandi" class="galat" role="alert" hidden></p>
+    <div class="dialog-aksi">
+      <button type="button" class="btn btn-garis" id="s-batal">Batal</button>
+      <button type="submit" class="btn btn-utama" id="s-simpan">Simpan</button>
     </div>
-  </div>
+  </form>
+</dialog>
 
-  <div class="container">
-    <div class="tabs-w">
-      <button id="tabMon" class="active" onclick="switchTab('mon')"><i class="fa-solid fa-chart-line"></i> Monitoring</button>
-      <button id="tabMaster" onclick="switchTab('master')"><i class="fa-solid fa-database"></i> Kelola Master</button>
+<dialog class="dialog" id="dlg-status">
+  <form id="form-status">
+    <h3 id="st-judul">Ubah status</h3>
+    <p class="info" id="st-info"></p>
+    <div class="medan"><label for="st-catatan" id="st-label">Catatan</label><textarea id="st-catatan" class="input" maxlength="300" rows="3"></textarea></div>
+    <p id="g-status" class="galat" role="alert" hidden></p>
+    <div class="dialog-aksi">
+      <button type="button" class="btn btn-garis" id="st-batal">Batal</button>
+      <button type="submit" class="btn btn-utama" id="st-simpan">Simpan</button>
     </div>
+  </form>
+</dialog>
 
-    <div id="viewMon">
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:20px">
-        <div class="card-w" style="margin:0"><div class="stat"><div class="ic" style="background:#dbeafe;color:#1e40af"><i class="fa-solid fa-clipboard-list"></i></div><div><h3 id="sPatroli">0</h3><p>Laporan Patroli</p></div></div></div>
-        <div class="card-w" style="margin:0"><div class="stat"><div class="ic" style="background:#d1fae5;color:#065f46"><i class="fa-solid fa-store"></i></div><div><h3 id="sTenant">0</h3><p>Checklist Tenant</p></div></div></div>
-        <div class="card-w" style="margin:0"><div class="stat"><div class="ic" style="background:#fef3c7;color:#92400e"><i class="fa-solid fa-triangle-exclamation"></i></div><div><h3 id="sTemuan">0</h3><p>Temuan Terbuka</p></div></div></div>
-      </div>
-
-      <div class="card-w">
-        <div class="form-row">
-          <input type="date" id="fDari">
-          <input type="date" id="fSampai">
-          <button onclick="muatDashboard()"><i class="fa-solid fa-filter"></i> Terapkan</button>
-          <button onclick="window.location.reload()" style="background:#64748b">Reset</button>
-        </div>
-      </div>
-
-      <div class="card-w">
-        <h5 style="font-weight:700;margin-bottom:14px"><i class="fa-solid fa-list"></i> Riwayat Laporan</h5>
-        <div style="overflow-x:auto">
-          <table>
-            <thead><tr><th>Waktu</th><th>Jenis</th><th>Petugas</th><th>Lokasi</th><th>Kondisi</th><th>Foto</th><th>Peta</th><th>Tindak Lanjut</th></tr></thead>
-            <tbody id="tbodyLog"><tr><td colspan="8" style="text-align:center;color:#94a3b8;padding:30px">Memuat...</td></tr></tbody>
-          </table>
-        </div>
-      </div>
+<!-- Dialog serbaguna untuk form kelola (diisi oleh kelola.js) -->
+<dialog class="dialog dialog-lebar" id="dlg-form">
+  <form id="form-umum" novalidate>
+    <h3 id="fm-judul"></h3>
+    <p class="info" id="fm-info" hidden></p>
+    <div id="fm-isi"></div>
+    <p id="g-form" class="galat" role="alert" hidden></p>
+    <div class="dialog-aksi">
+      <button type="button" class="btn btn-garis" id="fm-batal">Batal</button>
+      <button type="submit" class="btn btn-utama" id="fm-simpan">Simpan</button>
     </div>
-
-    <div id="viewMaster" style="display:none">
-      <div class="card-w">
-        <h5 style="font-weight:700;margin-bottom:6px"><i class="fa-solid fa-store"></i> Master Tenant</h5>
-        <p class="mini" style="margin-bottom:14px">Tenant yang muncul di form petugas.</p>
-        <div class="form-row">
-          <input type="text" id="mtNama" placeholder="Nama tenant" maxlength="80">
-          <input type="text" id="mtLokasi" placeholder="Lantai / Unit (mis. L1 05)" maxlength="60">
-          <button onclick="simpanTenant()"><i class="fa-solid fa-plus"></i> Simpan</button>
-        </div>
-        <div class="form-row">
-          <textarea id="mtBulk" placeholder="Import massal — paste dari Excel, satu baris satu tenant. Format: Nama TAB Lokasi" style="min-height:100px;font-family:monospace;font-size:12px"></textarea>
-        </div>
-        <div class="form-row">
-          <button onclick="importBulkTenant()" style="background:#10b981"><i class="fa-solid fa-file-import"></i> Import Massal</button>
-        </div>
-        <div style="max-height:400px;overflow:auto;margin-top:14px">
-          <table>
-            <thead><tr><th>Nama</th><th>Lokasi</th><th>Aksi</th></tr></thead>
-            <tbody id="tbodyTenant"></tbody>
-          </table>
-        </div>
-      </div>
-
-      <div class="card-w">
-        <h5 style="font-weight:700;margin-bottom:6px"><i class="fa-solid fa-user-shield"></i> Master Petugas</h5>
-        <p class="mini" style="margin-bottom:14px">Nama yang muncul di dropdown form petugas.</p>
-        <div class="form-row">
-          <input type="text" id="mpNama" placeholder="Nama petugas" maxlength="80">
-          <input type="text" id="mpZona" placeholder="Zona (mis. Lobby Utama)" maxlength="80">
-          <button onclick="simpanPetugas()"><i class="fa-solid fa-plus"></i> Simpan</button>
-        </div>
-        <div style="max-height:400px;overflow:auto;margin-top:14px">
-          <table>
-            <thead><tr><th>Nama</th><th>Zona</th><th>Aksi</th></tr></thead>
-            <tbody id="tbodyPetugas"></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+  </form>
+</dialog>
 
 <script src="config.js"></script>
 <script src="core.js"></script>
-<script>
-var TOKEN = sessionStorage.getItem('dp_token') || '';
-var USER = null;
-
-function el(id){return document.getElementById(id)}
-
-el('loginPass').addEventListener('keypress', function(e){ if(e.key==='Enter') loginAdmin(); });
-el('loginUser').addEventListener('keypress', function(e){ if(e.key==='Enter') loginAdmin(); });
-
-function loginAdmin() {
-  var u = el('loginUser').value.trim();
-  var p = el('loginPass').value;
-  if (!u || !p) { el('loginErr').textContent = 'Isi username & password.'; el('loginErr').style.display='block'; return; }
-  el('loginErr').style.display = 'none';
-  DP.api({ aksi: 'login', username: u, password: p })
-    .then(function (res) {
-      if (res.status === 'SUCCESS' && res.token) {
-        TOKEN = res.token; USER = res.user;
-        sessionStorage.setItem('dp_token', TOKEN);
-        el('lockScreen').style.display = 'none';
-        el('app').style.display = 'block';
-        el('whoami').textContent = USER.nama + ' (' + USER.role + ')';
-        muatDashboard();
-        muatMasterAdmin();
-      } else {
-        el('loginErr').textContent = res.message || 'Login gagal.';
-        el('loginErr').style.display = 'block';
-      }
-    })
-    .catch(function () { el('loginErr').textContent = 'Gangguan jaringan.'; el('loginErr').style.display='block'; });
-}
-
-function logoutAdmin() {
-  DP.api({ aksi: 'logout', token: TOKEN }).catch(function(){});
-  sessionStorage.removeItem('dp_token');
-  window.location.reload();
-}
-
-if (TOKEN) {
-  DP.api({ aksi: 'ambilData', token: TOKEN })
-    .then(function (res) {
-      if (res.status === 'SUCCESS') {
-        USER = res.user;
-        el('lockScreen').style.display = 'none';
-        el('app').style.display = 'block';
-        el('whoami').textContent = USER.nama + ' (' + USER.role + ')';
-        muatDashboard(true);
-        muatMasterAdmin();
-      }
-    }).catch(function(){});
-}
-
-function switchTab(t) {
-  el('tabMon').classList.toggle('active', t === 'mon');
-  el('tabMaster').classList.toggle('active', t === 'master');
-  el('viewMon').style.display = t === 'mon' ? 'block' : 'none';
-  el('viewMaster').style.display = t === 'master' ? 'block' : 'none';
-}
-
-function muatDashboard(silent) {
-  var dari = el('fDari').value;
-  var sampai = el('fSampai').value;
-  if (!silent) el('tbodyLog').innerHTML = '<tr><td colspan="8" style="text-align:center;padding:30px;color:#94a3b8">Memuat...</td></tr>';
-  DP.api({ aksi: 'ambilData', token: TOKEN, dari: dari, sampai: sampai })
-    .then(function (res) {
-      if (res.status !== 'SUCCESS') { alert('Sesi berakhir: ' + res.message); logoutAdmin(); return; }
-      renderDashboard(res);
-    })
-    .catch(function () { el('tbodyLog').innerHTML = '<tr><td colspan="8" style="text-align:center;color:#ef4444;padding:30px">Gagal memuat.</td></tr>'; });
-}
-
-function renderDashboard(res) {
-  var patroli = res.patroli || [];
-  var tenant = res.tenant || [];
-  var tindak = res.tindak || {};
-  var terbuka = (res.terbuka && (res.terbuka.patroli || []).concat(res.terbuka.tenant || [])) || [];
-
-  el('sPatroli').textContent = patroli.length;
-  el('sTenant').textContent = tenant.length;
-  el('sTemuan').textContent = terbuka.length;
-
-  var rows = [];
-  patroli.forEach(function (p) { rows.push(Object.assign({}, p, { jenis: 'PATROLI' })); });
-  tenant.forEach(function (t) { rows.push(Object.assign({}, t, { jenis: 'TENANT' })); });
-  rows.sort(function (a, b) { return (b.tgl + b.ts).localeCompare(a.tgl + a.ts); });
-
-  var tb = el('tbodyLog');
-  if (!rows.length) {
-    tb.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#94a3b8;padding:30px">Tidak ada data.</td></tr>';
-    return;
-  }
-  tb.innerHTML = '';
-  rows.slice(0, 500).forEach(function (r) {
-    var id = r.id || '';
-    var st = tindak[id] || { status: 'BARU' };
-    var lokasi = r.jenis === 'PATROLI' ? (r.zona || '-') : (r.tenant || '-');
-    var kondisi = r.jenis === 'PATROLI' ? (r.kondisi || '-') : (r.hasil || '-');
-    var foto = r.foto && r.foto !== '-' ? '<a href="' + DP.esc(r.foto.split(' | ')[0]) + '" target="_blank" class="badge-s" style="background:#dbeafe;color:#1e40af;text-decoration:none"><i class="fa-solid fa-image"></i> Lihat</a>' : '-';
-    var peta = (r.lat && r.lat !== '-') ? '<a href="https://maps.google.com/?q=' + r.lat + ',' + r.lng + '" target="_blank" class="badge-s" style="background:#e0e7ff;color:#3730a3;text-decoration:none"><i class="fa-solid fa-location-dot"></i> Peta</a>' : '-';
-    var bisaUbah = USER && ['admin','supervisor','manager'].indexOf((USER.role||'').toLowerCase()) >= 0;
-    var tindakHtml = '<span class="badge-s b-' + st.status + '">' + st.status + '</span>' +
-      (bisaUbah ? ' <button class="btn-x" onclick="ubahStatus(\'' + id + '\',\'' + r.jenis + '\')">Ubah</button>' : '');
-    var tr = document.createElement('tr');
-    tr.innerHTML = '<td>' + DP.esc(r.ts || '-') + '</td>' +
-      '<td><span class="badge-s" style="background:#f1f5f9;color:#334155">' + r.jenis + '</span></td>' +
-      '<td>' + DP.esc(r.nama || r.petugas || '-') + '</td>' +
-      '<td>' + DP.esc(lokasi) + '</td>' +
-      '<td>' + DP.esc(kondisi) + '</td>' +
-      '<td>' + foto + '</td>' +
-      '<td>' + peta + '</td>' +
-      '<td>' + tindakHtml + '</td>';
-    tb.appendChild(tr);
-  });
-}
-
-function ubahStatus(id, jenis) {
-  var st = prompt('Status baru (BARU / DITANGANI / SELESAI):', 'DITANGANI');
-  if (!st) return;
-  var cat = prompt('Catatan tindakan (wajib diisi jika SELESAI):', '');
-  if (cat === null) return;
-  DP.api({ aksi: 'ubahStatus', token: TOKEN, id: id, jenis: jenis, status: st.toUpperCase(), catatan: cat })
-    .then(function (res) {
-      if (res.status === 'SUCCESS') muatDashboard(); else alert('Gagal: ' + res.message);
-    });
-}
-
-function muatMasterAdmin() {
-  DP.api({ aksi: 'ambilDropdown' })
-    .then(function (d) {
-      renderTenantList(d.daftarTenant || []);
-      renderPetugasList(d.daftarNama || [], d.daftarZona || []);
-    });
-}
-
-function renderTenantList(arr) {
-  var tb = el('tbodyTenant');
-  if (!arr.length) { tb.innerHTML = '<tr><td colspan="3" style="text-align:center;color:#94a3b8;padding:20px">Belum ada tenant.</td></tr>'; return; }
-  tb.innerHTML = '';
-  arr.forEach(function (t) {
-    var tr = document.createElement('tr');
-    var namaEsc = t.n.replace(/'/g, "\\'");
-    tr.innerHTML = '<td style="text-align:left">' + DP.esc(t.n) + '</td>' +
-      '<td style="text-align:left">' + DP.esc(t.l || '-') + '</td>' +
-      '<td><button class="btn-x" onclick="hapusTenant(\'' + namaEsc + '\')">Hapus</button></td>';
-    tb.appendChild(tr);
-  });
-}
-
-function renderPetugasList(nama, zona) {
-  var tb = el('tbodyPetugas');
-  tb.innerHTML = '';
-  nama.forEach(function (n, i) {
-    var tr = document.createElement('tr');
-    var namaEsc = n.replace(/'/g, "\\'");
-    tr.innerHTML = '<td style="text-align:left">' + DP.esc(n) + '</td>' +
-      '<td style="text-align:left">' + DP.esc(zona[i] || '-') + '</td>' +
-      '<td><button class="btn-x" onclick="hapusPetugas(\'' + namaEsc + '\')">Hapus</button></td>';
-    tb.appendChild(tr);
-  });
-}
-
-function simpanTenant() {
-  var nama = el('mtNama').value.trim(), lokasi = el('mtLokasi').value.trim();
-  if (!nama) { alert('Nama tenant wajib.'); return; }
-  api({ aksi: 'tambahTenant', nama: nama, lokasi: lokasi }, function () {
-    el('mtNama').value = ''; el('mtLokasi').value = '';
-    muatMasterAdmin();
-  });
-}
-
-function hapusTenant(nama) {
-  if (!confirm('Nonaktifkan tenant "' + nama + '"?')) return;
-  api({ aksi: 'hapusTenant', nama: nama }, function () { muatMasterAdmin(); });
-}
-
-function simpanPetugas() {
-  var nama = el('mpNama').value.trim(), zona = el('mpZona').value.trim();
-  if (!nama || !zona) { alert('Nama & zona wajib.'); return; }
-  api({ aksi: 'tambahPetugas', nama: nama, zona: zona }, function () {
-    el('mpNama').value = ''; el('mpZona').value = '';
-    muatMasterAdmin();
-  });
-}
-
-function hapusPetugas(nama) {
-  if (!confirm('Hapus petugas "' + nama + '"?')) return;
-  api({ aksi: 'hapusPetugas', nama: nama }, function () { muatMasterAdmin(); });
-}
-
-function importBulkTenant() {
-  var raw = el('mtBulk').value.trim();
-  if (!raw) { alert('Paste data dulu.'); return; }
-  var list = [];
-  raw.split('\n').forEach(function (line) {
-    line = line.trim();
-    if (!line) return;
-    var p = line.split(/\t|,/);
-    if (p[0]) list.push({ n: p[0].trim(), l: (p[1] || '').trim() });
-  });
-  if (!list.length) { alert('Tidak ada data valid.'); return; }
-  api({ aksi: 'importTenant', list: list }, function (res) {
-    alert(res.message);
-    el('mtBulk').value = '';
-    muatMasterAdmin();
-  });
-}
-
-function api(payload, cb) {
-  payload.token = payload.token || TOKEN;
-  DP.api(payload)
-    .then(function (res) {
-      if (res.status === 'SUCCESS') { if (cb) cb(res); }
-      else if (res.kode === 'SESI') { alert('Sesi berakhir.'); logoutAdmin(); }
-      else alert('Gagal: ' + res.message);
-    })
-    .catch(function () { alert('Gangguan jaringan.'); });
-}
-</script>
+<script src="dashboard.js"></script>
+<script src="laporan.js"></script>
+<script src="tenant-awal.js"></script>
+<script src="kelola.js"></script>
+<script src="dashboard-mulai.js"></script>
 </body>
 </html>

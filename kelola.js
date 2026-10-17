@@ -1,0 +1,664 @@
+/* kelola.js - menu Data master di dashboard: tenant, petugas, zona, item checklist, akun admin, area patroli, riwayat.
+   Semua perubahan lewat API kelolaSimpan / akunSimpan / pengaturanSimpan, jadi tidak ada lagi input manual ke sheet.
+   Izin dicek ulang di server; tombol yang tidak boleh dipakai hanya disembunyikan di sini. */
+(function () {
+  "use strict";
+  var DB = window.DB, PC = window.PC, h = PC.h, $ = DB.$;
+  var PER_HALAMAN = 50;
+  var K = { data: null, waktu: 0, memuat: null };
+  var KUNCI = { TENANT: "tenant", PETUGAS: "petugas", ZONA: "zona", ITEM: "item" };
+  var NAMA_KATEGORI = { PATROLI: "Patroli", BUKA: "Buka toko", TUTUP: "Tutup toko" };
+  var URUT_KATEGORI = ["PATROLI", "BUKA", "TUTUP"];
+
+  /* ---------------------------------------------------------- data bersama */
+  function muatKelola(paksa) {
+    if (K.memuat) return K.memuat;
+    if (K.data && !paksa && Date.now() - K.waktu < 60000) return Promise.resolve({ status: "SUCCESS" });
+    K.memuat = DB.panggil("kelolaAmbil", {}, 60000).then(function (r) {
+      if (r.status === "SUCCESS") { K.data = r; K.waktu = Date.now(); lencanaMenu(); }
+      return r;
+    }).then(function (r) { K.memuat = null; return r; });
+    return K.memuat;
+  }
+
+  function aktifSaja(daftar) { return (daftar || []).filter(function (o) { return o.aktif; }); }
+  function lencanaMenu() {
+    if (!K.data) return;
+    DB.badge("tenant", aktifSaja(K.data.tenant).length);
+    DB.badge("petugas", aktifSaja(K.data.petugas).length);
+    DB.badge("zona", aktifSaja(K.data.zona).length);
+  }
+  var sebelum = DB.setelahKeluar;
+  DB.setelahKeluar = function () { if (sebelum) sebelum(); K.data = null; K.waktu = 0; };
+
+  function lamaDari(jenis, o) { return jenis === "ITEM" ? { k: o.k, i: o.i } : { n: o.n }; }
+
+  // Mengirim satu operasi ke kelolaSimpan lalu menyimpan daftar terbaru dari server.
+  function kirimMaster(jenis, badan) {
+    return DB.panggil("kelolaSimpan", Object.assign({ jenis: jenis }, badan), 60000).then(function (r) {
+      if (r.status === "SUCCESS") {
+        K.data[KUNCI[jenis]] = r.daftar;
+        if (r.riwayat) K.data.riwayat = r.riwayat;
+        lencanaMenu();
+      }
+      return r;
+    });
+  }
+
+  function ringkasImpor(r) {
+    var bagian = [];
+    if (r.ditambah) bagian.push(r.ditambah + " baru");
+    if (r.diperbarui) bagian.push(r.diperbarui + " diperbarui");
+    if (r.sama) bagian.push(r.sama + " sudah ada");
+    if (r.jumlahGalat) bagian.push(r.jumlahGalat + " ditolak");
+    return bagian.length ? bagian.join(", ") : "tidak ada perubahan";
+  }
+
+  function tampilGalatImpor(galat, jumlah) {
+    DB.form({
+      judul: "Baris yang ditolak", tanpaSimpan: true,
+      info: jumlah + " baris tidak bisa diimpor. Perbaiki lalu impor ulang, baris yang sudah masuk tidak akan dobel.",
+      bidang: [{ kustom: h("ul", { class: "hasil-impor" }, galat.slice(0, 30).map(function (g) {
+        return h("li", { text: "Baris " + g.baris + ": " + g.pesan });
+      })) }]
+    });
+  }
+
+  function kotakMuat(wadah, pesan) {
+    PC.kosongkan(wadah);
+    wadah.appendChild(h("div", { class: "panel" }, h("div", { class: "kosong-info", text: pesan || "Memuat data..." })));
+  }
+  function kotakGalat(wadah, r, ulang) {
+    PC.kosongkan(wadah);
+    wadah.appendChild(h("div", { class: "panel" }, h("div", { class: "kosong-info" },
+      h("p", { text: r.message || "Gagal memuat data." }),
+      r.kode === "SESI" ? null : h("button", { type: "button", class: "btn btn-utama", text: "Coba lagi", onclick: ulang }))));
+  }
+
+  // Membungkus halaman: tampilkan "memuat" bila belum ada data, lalu panggil render(wadah).
+  function denganData(wadah, render) {
+    if (K.data) { render(wadah); return; }
+    kotakMuat(wadah);
+    muatKelola(true).then(function (r) {
+      if (r.status !== "SUCCESS") { kotakGalat(wadah, r, function () { denganData(wadah, render); }); return; }
+      if (wadah.isConnected) render(wadah);
+    });
+  }
+
+  function lencana(teks, kls) { return h("span", { class: "lencana " + kls, text: teks }); }
+  function lencanaAktif(a) { return a ? lencana("Aktif", "l-ok") : lencana("Nonaktif", "l-nonaktif"); }
+
+  /* ---------------------------------------------------------- penguraian tempelan Excel */
+  function pisahBaris(teks) {
+    return String(teks || "").split(/\r?\n/).map(function (l) { return l.replace(/ /g, " "); })
+      .filter(function (l) { return l.trim(); });
+  }
+  function pemisah(baris) {
+    var s = baris.join("\n");
+    if (s.indexOf("\t") >= 0) return "\t";
+    if (s.indexOf(";") >= 0) return ";";
+    if (s.indexOf("|") >= 0) return "|";
+    return null;
+  }
+  // Nama, Unit, Lantai. Baris judul (Nama Tenant / Unit / Lantai) dilewati otomatis.
+  function uraiTenant(teks) {
+    var baris = pisahBaris(teks), sep = pemisah(baris), hasil = [], abaikan = 0;
+    baris.forEach(function (l, i) {
+      var c = sep ? l.split(sep) : [l];
+      c = c.map(function (x) { return x.replace(/\s+/g, " ").trim(); });
+      if (i === 0 && /^(nama|tenant)/i.test(c[0]) && (c.length === 1 || /unit|lantai/i.test(c.slice(1).join(" ")))) { abaikan++; return; }
+      if (!c[0]) { abaikan++; return; }
+      hasil.push({ n: c[0], l: c[1] || "", f: (c[2] || "").toUpperCase() });
+    });
+    return { baris: hasil, abaikan: abaikan };
+  }
+  function uraiNama(teks) {
+    var lihat = {}, hasil = [];
+    pisahBaris(teks).forEach(function (l) {
+      var n = l.replace(/\s+/g, " ").trim();
+      if (n && !lihat[n.toLowerCase()]) { lihat[n.toLowerCase()] = 1; hasil.push(n); }
+    });
+    return hasil;
+  }
+
+  /* ---------------------------------------------------------- pembangun daftar (tenant, petugas, zona) */
+  function bangunDaftar(cfg) {
+    var st = { q: "", lantai: "", hanyaAktif: false, hal: 1 };
+
+    return function tampil(wadah) {
+      denganData(wadah, function () {
+        PC.kosongkan(wadah);
+        var chipWadah = h("div", { class: "chip-baris", hidden: !cfg.chip });
+        var tabelWadah = h("div");
+        var hitung = h("span");
+        var cari = h("input", { type: "search", class: "input", placeholder: cfg.cariHint, "aria-label": "Cari" });
+        cari.value = st.q;
+        cari.addEventListener("input", function () { st.q = cari.value; st.hal = 1; isi(); });
+
+        var btnAktif = h("button", { type: "button", class: "btn btn-pilih", text: "Hanya yang aktif", "aria-pressed": st.hanyaAktif ? "true" : "false",
+          onclick: function () { st.hanyaAktif = !st.hanyaAktif; btnAktif.setAttribute("aria-pressed", st.hanyaAktif ? "true" : "false"); st.hal = 1; isi(); } });
+
+        var rapat = h("div", { class: "rapat" }, btnAktif,
+          h("button", { type: "button", class: "btn btn-kecil btn-garis", text: "Muat ulang", onclick: function () {
+            muatKelola(true).then(function (r) { if (r.status === "SUCCESS") { isi(); PC.toast("Data dimuat ulang.", "ok"); } else PC.toast(r.message, "bad"); });
+          } }));
+        if (cfg.impor) rapat.appendChild(h("button", { type: "button", class: "btn btn-kecil btn-garis", text: "Impor dari Excel", onclick: cfg.impor }));
+        rapat.appendChild(h("button", { type: "button", class: "btn btn-kecil btn-utama", text: cfg.tambahLabel, onclick: function () { cfg.formTambah(isi); } }));
+
+        var panel = h("div", { class: "panel" },
+          h("div", { class: "panel-kepala" }, h("h2", { text: cfg.judulPanel }), h("span", { class: "oleh" }, hitung)),
+          h("div", { class: "tools" }, cari, rapat), chipWadah, tabelWadah);
+        if (cfg.pengantar) wadah.appendChild(h("div", { class: "pengantar" }, cfg.pengantar));
+        wadah.appendChild(panel);
+
+        function semua() { return K.data[cfg.kunci] || []; }
+        function terfilter() {
+          var q = st.q.toLowerCase().trim();
+          return semua().filter(function (o) {
+            if (st.hanyaAktif && !o.aktif) return false;
+            if (cfg.chip && st.lantai && o.f !== st.lantai) return false;
+            return !q || cfg.teksCari(o).toLowerCase().indexOf(q) >= 0;
+          });
+        }
+
+        function isiChip() {
+          if (!cfg.chip) return;
+          PC.kosongkan(chipWadah);
+          var cnt = {}, urut = [];
+          semua().forEach(function (o) { var f = o.f || "?"; if (!cnt[f]) { cnt[f] = 0; urut.push(f); } cnt[f]++; });
+          function chip(nilai, label, n) {
+            return h("button", { type: "button", class: "chip", "aria-pressed": st.lantai === nilai ? "true" : "false",
+              onclick: function () { st.lantai = nilai; st.hal = 1; isi(); } }, label, h("small", { text: String(n) }));
+          }
+          chipWadah.appendChild(chip("", "Semua", semua().length));
+          urut.forEach(function (f) { chipWadah.appendChild(chip(f === "?" ? "" : f, f === "?" ? "Tanpa lantai" : f, cnt[f])); });
+          chipWadah.hidden = urut.length < 2;
+        }
+
+        function isi() {
+          isiChip();
+          PC.kosongkan(tabelWadah);
+          var daftar = terfilter(), total = daftar.length, nAktif = aktifSaja(semua()).length;
+          hitung.textContent = nAktif + " aktif dari " + semua().length + (total !== semua().length ? " · " + total + " cocok" : "");
+          if (!semua().length) {
+            tabelWadah.appendChild(h("div", { class: "kosong-tabel" },
+              h("p", { text: cfg.kosong }),
+              cfg.impor ? h("button", { type: "button", class: "btn btn-utama", text: "Impor dari Excel", onclick: cfg.impor }) : null));
+            return;
+          }
+          if (!total) { tabelWadah.appendChild(h("div", { class: "kosong-tabel", text: "Tidak ada yang cocok dengan pencarian." })); return; }
+          var halaman = Math.max(1, Math.ceil(total / PER_HALAMAN));
+          if (st.hal > halaman) st.hal = halaman;
+          var mulai = (st.hal - 1) * PER_HALAMAN, potong = daftar.slice(mulai, mulai + PER_HALAMAN);
+          var tbody = h("tbody");
+          potong.forEach(function (o) {
+            tbody.appendChild(h("tr", { class: o.aktif ? "" : "nonaktif" },
+              cfg.sel(o).concat([
+                h("td", null, lencanaAktif(o.aktif)),
+                h("td", { class: "aksi" },
+                  h("button", { type: "button", class: "btn btn-kecil btn-garis", text: "Ubah", onclick: function () { cfg.formUbah(o, isi); } }),
+                  h("button", { type: "button", class: "btn btn-kecil btn-garis", text: o.aktif ? "Nonaktifkan" : "Aktifkan", onclick: function () { alihAktif(cfg.jenis, o, isi); } }),
+                  h("button", { type: "button", class: "btn btn-kecil btn-bahaya", text: "Hapus", onclick: function () { hapus(cfg, o, isi); } }))
+              ])));
+          });
+          tabelWadah.appendChild(h("div", { class: "tabel-wrap penuh", style: { border: "0", borderRadius: "0", marginBottom: "0" } },
+            h("table", null, h("thead", null, h("tr", null, cfg.kolom.concat(["Status", ""]).map(function (k) { return h("th", { text: k }); }))), tbody)));
+          tabelWadah.appendChild(h("div", { class: "halaman" },
+            h("span", { text: "Menampilkan " + (mulai + 1) + "-" + (mulai + potong.length) + " dari " + total }),
+            h("div", { class: "grup", style: { alignItems: "center" } },
+              h("button", { type: "button", class: "btn btn-kecil btn-garis", text: "Sebelumnya", disabled: st.hal <= 1, onclick: function () { st.hal--; isi(); } }),
+              h("span", { text: st.hal + " / " + halaman }),
+              h("button", { type: "button", class: "btn btn-kecil btn-garis", text: "Berikutnya", disabled: st.hal >= halaman, onclick: function () { st.hal++; isi(); } }))));
+        }
+        isi();
+      });
+    };
+  }
+
+  function alihAktif(jenis, o, segar) {
+    kirimMaster(jenis, { op: "aktif", lama: lamaDari(jenis, o), aktif: !o.aktif }).then(function (r) {
+      if (r.status === "SUCCESS") { PC.toast((o.aktif ? "Dinonaktifkan: " : "Diaktifkan: ") + (o.n || o.i), "ok"); segar(); }
+      else if (r.kode !== "SESI") PC.toast(r.message, "bad");
+    });
+  }
+
+  function hapus(cfg, o, segar) {
+    var nama = o.n || o.i;
+    PC.tanya("Hapus " + cfg.satu + "?", "\"" + nama + "\" dihapus permanen dari daftar. Laporan yang sudah masuk tidak berubah. " +
+      "Kalau hanya tidak dipakai sementara, pilih Nonaktifkan.", "Hapus", "Batal").then(function (ya) {
+      if (!ya) return;
+      kirimMaster(cfg.jenis, { op: "hapus", lama: lamaDari(cfg.jenis, o) }).then(function (r) {
+        if (r.status === "SUCCESS") { PC.toast("Dihapus: " + nama, "ok"); segar(); }
+        else if (r.kode !== "SESI") PC.toast(r.message, "bad");
+      });
+    });
+  }
+
+  /* ---------------------------------------------------------- TENANT */
+  function opsiLantai(saatIni) {
+    var set = {}, urut = [];
+    ["LG", "L1", "L2", "L3"].concat((K.data.tenant || []).map(function (o) { return o.f; })).concat([saatIni || ""]).forEach(function (f) {
+      if (f && !set[f]) { set[f] = 1; urut.push(f); }
+    });
+    var pilihan = [["", "Otomatis dari nomor unit"]];
+    urut.forEach(function (f) { pilihan.push([f, f]); });
+    return pilihan;
+  }
+
+  function formTenant(o, segar) {
+    var ubah = !!o;
+    DB.form({
+      judul: ubah ? "Ubah tenant" : "Tambah tenant",
+      info: ubah ? "Mengubah nama tenant tidak mengubah laporan lama." : "Tenant baru langsung muncul di form petugas.",
+      simpan: ubah ? "Simpan perubahan" : "Tambah tenant",
+      bidang: [
+        { id: "n", label: "Nama tenant", nilai: ubah ? o.n : "", maks: 80, placeholder: "Contoh: Kopi Kenangan" },
+        { id: "l", label: "Nomor unit", nilai: ubah ? o.l : "", maks: 60, separuh: true, placeholder: "Contoh: L1 12-13", bantuan: "Boleh kosong." },
+        { id: "f", label: "Lantai", tipe: "select", nilai: ubah ? o.f : "", pilihan: opsiLantai(ubah ? o.f : ""), separuh: true, bantuan: "Kode lantai dibaca dari nomor unit bila dikosongkan." }
+      ],
+      periksa: function (v) { return v.n.trim() ? "" : "Nama tenant wajib diisi."; },
+      kirim: function (v) {
+        return kirimMaster("TENANT", ubah
+          ? { op: "ubah", lama: { n: o.n }, data: { n: v.n, l: v.l, f: v.f } }
+          : { op: "tambah", data: { n: v.n, l: v.l, f: v.f } });
+      },
+      selesai: function () { PC.toast(ubah ? "Tenant diperbarui." : "Tenant ditambahkan.", "ok"); segar(); }
+    });
+  }
+
+  function teksBawaan() {
+    var baris = ["Nama Tenant\tUnit\tLantai"];
+    (window.TENANT_AWAL || []).forEach(function (r) { baris.push(r.join("\t")); });
+    return baris.join("\n");
+  }
+
+  function imporTenant(segar) {
+    var area = h("textarea", { id: "fm-impor", class: "input mono", rows: 8, spellcheck: "false",
+      placeholder: "Nama Tenant\tUnit\tLantai\nKopi Kenangan\tL1 12-13\tL1" });
+    var pratinjau = h("div");
+    var ada = !!(window.TENANT_AWAL && window.TENANT_AWAL.length);
+    var jumlahSaatIni = (K.data.tenant || []).length;
+    function perbarui() {
+      PC.kosongkan(pratinjau);
+      var u = uraiTenant(area.value);
+      if (!u.baris.length) {
+        pratinjau.appendChild(h("p", { class: "oleh", text: "Belum ada baris terbaca." }));
+        return u;
+      }
+      var tbody = h("tbody", null, u.baris.slice(0, 6).map(function (r) {
+        return h("tr", null, h("td", { text: r.n }), h("td", { text: r.l || "-" }), h("td", { text: r.f || "otomatis" }));
+      }));
+      pratinjau.appendChild(h("p", { class: "oleh", style: { margin: "0 0 6px" }, text: u.baris.length + " tenant terbaca" +
+        (u.baris.length > 6 ? ", 6 pertama ditampilkan" : "") + ". Nama yang sudah ada tidak dobel; unit dan lantainya diperbarui." }));
+      pratinjau.appendChild(h("div", { class: "pratinjau" }, h("table", null,
+        h("thead", null, h("tr", null, ["Nama", "Unit", "Lantai"].map(function (k) { return h("th", { text: k }); }))), tbody)));
+      return u;
+    }
+    area.addEventListener("input", perbarui);
+    var kustom = h("div", { class: "medan" },
+      h("label", { for: "fm-impor", text: "Tempel dari Excel" }),
+      area,
+      h("p", { class: "bantuan", text: "Blok kolom Nama, Unit, Lantai di Excel, salin, lalu tempel di sini. Lantai boleh kosong. Maksimal 600 baris sekali impor, lebih dari itu dikirim bertahap otomatis." }),
+      ada ? h("div", { style: { margin: "10px 0" } }, h("button", { type: "button", class: "btn btn-kecil btn-kuning",
+        text: "Isi dengan daftar tenant dari Excel 13 Okt 2026 (" + window.TENANT_AWAL.length + " tenant)",
+        onclick: function () { area.value = teksBawaan(); perbarui(); } })) : null,
+      pratinjau);
+    DB.form({
+      judul: "Impor tenant", simpan: "Impor", bidang: [{ kustom: kustom }],
+      info: jumlahSaatIni ? "Sudah ada " + jumlahSaatIni + " tenant. Impor hanya menambah yang baru dan memperbarui unit/lantai." : "Daftar tenant masih kosong.",
+      periksa: function () { return uraiTenant(area.value).baris.length ? "" : "Tidak ada baris yang bisa diimpor."; },
+      kirim: function () {
+        var baris = uraiTenant(area.value).baris, total = { ditambah: 0, diperbarui: 0, sama: 0, jumlahGalat: 0 }, galat = [], terkirim = 0;
+        var potong = [];
+        for (var i = 0; i < baris.length; i += 600) potong.push(baris.slice(i, i + 600));
+        var p = Promise.resolve({ status: "SUCCESS" });
+        potong.forEach(function (bagian, idx) {
+          p = p.then(function (prev) {
+            if (prev.status !== "SUCCESS") return prev;
+            return kirimMaster("TENANT", { op: "impor", baris: bagian }).then(function (r) {
+              if (r.status !== "SUCCESS") {
+                if (terkirim) r.message = "Berhenti di tengah jalan. " + terkirim + " baris sudah tersimpan. " + r.message;
+                return r;
+              }
+              terkirim += bagian.length;
+              ["ditambah", "diperbarui", "sama", "jumlahGalat"].forEach(function (k) { total[k] += r[k] || 0; });
+              (r.galat || []).forEach(function (g) { galat.push({ baris: g.baris + idx * 600, pesan: g.pesan }); });
+              return r;
+            });
+          });
+        });
+        return p.then(function (r) { if (r.status === "SUCCESS") r.ringkas = total; r.galatAll = galat; return r; });
+      },
+      selesai: function (r) {
+        PC.toast("Impor tenant selesai: " + ringkasImpor(r.ringkas), "ok");
+        segar();
+        if (r.galatAll && r.galatAll.length) tampilGalatImpor(r.galatAll, r.ringkas.jumlahGalat);
+      }
+    });
+    perbarui();
+  }
+
+  var tampilTenant = bangunDaftar({
+    jenis: "TENANT", kunci: "tenant", satu: "tenant", judulPanel: "Daftar tenant", cariHint: "Cari nama tenant atau unit",
+    teksCari: function (o) { return o.n + " " + o.l + " " + o.f; },
+    chip: true, tambahLabel: "Tambah tenant",
+    kolom: ["Tenant", "Unit", "Lantai"],
+    sel: function (o) { return [h("td", { class: "nama", text: o.n }), h("td", { class: "unit", text: o.l || "-" }), h("td", null, h("span", { class: "lencana l-abu", text: o.f || "-" }))]; },
+    pengantar: [h("b", { text: "Daftar ini yang muncul di form petugas. " }), "Tenant yang dinonaktifkan tidak muncul di form, tetapi laporan lamanya tetap tersimpan. Perubahan berlaku di HP petugas begitu mereka membuka ulang form."],
+    kosong: "Daftar tenant masih kosong. Impor dari Excel atau tambah satu per satu.",
+    formTambah: function (segar) { formTenant(null, segar); },
+    formUbah: function (o, segar) { formTenant(o, segar); },
+    impor: function () { imporTenant(function () { DB.buka("tenant"); }); }
+  });
+
+  /* ---------------------------------------------------------- PETUGAS dan ZONA */
+  function formNama(cfg, o, segar) {
+    var ubah = !!o;
+    DB.form({
+      judul: ubah ? "Ubah " + cfg.satu : "Tambah " + cfg.satu,
+      info: ubah ? cfg.infoUbah : cfg.infoTambah,
+      simpan: ubah ? "Simpan perubahan" : "Tambah",
+      bidang: [ubah
+        ? { id: "n", label: cfg.labelNama, nilai: o.n, maks: 80 }
+        : { id: "n", label: cfg.labelNama + " (satu per baris)", tipe: "textarea", rows: 5, nilai: "", placeholder: cfg.contoh, bantuan: "Boleh tempel banyak nama sekaligus." }],
+      periksa: function (v) { return (ubah ? v.n.trim() : uraiNama(v.n).length) ? "" : "Isi " + cfg.labelNama.toLowerCase() + " dulu."; },
+      kirim: function (v) {
+        if (ubah) return kirimMaster(cfg.jenis, { op: "ubah", lama: { n: o.n }, data: { n: v.n } });
+        var nama = uraiNama(v.n);
+        if (nama.length === 1) return kirimMaster(cfg.jenis, { op: "tambah", data: { n: nama[0] } });
+        return kirimMaster(cfg.jenis, { op: "impor", baris: nama.map(function (n) { return { n: n }; }) });
+      },
+      selesai: function (r) {
+        if (r.op === "impor") {
+          PC.toast(cfg.judulPanel + ": " + ringkasImpor(r), "ok");
+          if (r.galat && r.galat.length) tampilGalatImpor(r.galat, r.jumlahGalat);
+        } else PC.toast(ubah ? "Diperbarui." : "Ditambahkan.", "ok");
+        segar();
+      }
+    });
+  }
+
+  var CFG_PETUGAS = {
+    jenis: "PETUGAS", kunci: "petugas", satu: "petugas", judulPanel: "Daftar petugas", labelNama: "Nama petugas", cariHint: "Cari nama petugas",
+    contoh: "Budi Santoso\nSiti Aminah", tambahLabel: "Tambah petugas",
+    infoTambah: "Petugas memilih namanya dari daftar ini saat mengisi form. Tanpa PIN, jadi pastikan nama ditulis jelas dan tidak kembar.",
+    infoUbah: "Nama di laporan lama tidak ikut berubah.",
+    teksCari: function (o) { return o.n; }, kolom: ["Nama petugas"],
+    sel: function (o) { return [h("td", { class: "nama", text: o.n })]; },
+    pengantar: [h("b", { text: "Tanpa PIN. " }), "Petugas cukup memilih namanya dari daftar aktif. Saat ada petugas berhenti, nonaktifkan namanya agar tidak bisa dipakai lagi. Satu nama dibatasi jumlah laporan per jam sebagai pengaman."],
+    kosong: "Belum ada petugas. Tambahkan nama-nama petugas, boleh banyak sekaligus."
+  };
+  CFG_PETUGAS.formTambah = function (segar) { formNama(CFG_PETUGAS, null, segar); };
+  CFG_PETUGAS.formUbah = function (o, segar) { formNama(CFG_PETUGAS, o, segar); };
+  var tampilPetugas = bangunDaftar(CFG_PETUGAS);
+
+  var CFG_ZONA = {
+    jenis: "ZONA", kunci: "zona", satu: "zona", judulPanel: "Daftar zona patroli", labelNama: "Nama zona", cariHint: "Cari zona",
+    contoh: "Basement LG\nLobby Utama", tambahLabel: "Tambah zona",
+    infoTambah: "Zona tampil sebagai tombol besar di form patroli.", infoUbah: "Nama zona di laporan lama tidak ikut berubah.",
+    teksCari: function (o) { return o.n; }, kolom: ["Zona"],
+    sel: function (o) { return [h("td", { class: "nama", text: o.n }) ]; },
+    pengantar: [h("b", { text: "Zona = area yang dipatroli. " }), "Minimal satu zona harus tetap aktif. Beri nama yang singkat karena tampil sebagai tombol di HP petugas."],
+    kosong: "Belum ada zona patroli. Tambahkan minimal satu."
+  };
+  CFG_ZONA.formTambah = function (segar) { formNama(CFG_ZONA, null, segar); };
+  CFG_ZONA.formUbah = function (o, segar) { formNama(CFG_ZONA, o, segar); };
+  var tampilZona = bangunDaftar(CFG_ZONA);
+
+  /* ---------------------------------------------------------- ITEM CHECKLIST */
+  function formItem(o, kategori, segar) {
+    var ubah = !!o;
+    DB.form({
+      judul: ubah ? "Ubah item checklist" : "Tambah item checklist",
+      info: "Perubahan berlaku untuk laporan berikutnya. Laporan lama menyimpan teks item saat itu.",
+      simpan: ubah ? "Simpan perubahan" : "Tambah item",
+      bidang: [
+        { id: "k", label: "Dipakai di", tipe: "select", nilai: ubah ? o.k : kategori,
+          pilihan: URUT_KATEGORI.map(function (k) { return [k, NAMA_KATEGORI[k]]; }) },
+        { id: "i", label: "Teks item", tipe: "textarea", rows: 2, nilai: ubah ? o.i : "", maks: 120, placeholder: "Contoh: Pintu darurat tidak terhalang" }
+      ],
+      periksa: function (v) { return v.i.trim() ? "" : "Teks item wajib diisi."; },
+      kirim: function (v) {
+        return kirimMaster("ITEM", ubah
+          ? { op: "ubah", lama: lamaDari("ITEM", o), data: { k: v.k, i: v.i } }
+          : { op: "tambah", data: { k: v.k, i: v.i } });
+      },
+      selesai: function () { PC.toast(ubah ? "Item diperbarui." : "Item ditambahkan.", "ok"); segar(); }
+    });
+  }
+
+  function tampilItem(wadah) {
+    denganData(wadah, function () {
+      PC.kosongkan(wadah);
+      wadah.appendChild(h("div", { class: "pengantar" }, h("b", { text: "Item yang dijawab petugas di setiap form. " }),
+        "Patroli dipakai di form patroli. Buka dan Tutup dipakai di form tenant. Setiap kategori harus punya minimal satu item aktif."));
+      var grid = h("div", { class: "kartu-item" });
+      wadah.appendChild(grid);
+
+      function isi() {
+        PC.kosongkan(grid);
+        URUT_KATEGORI.forEach(function (kat) {
+          var daftar = (K.data.item || []).filter(function (o) { return o.k === kat; });
+          var panel = h("div", { class: "panel" },
+            h("div", { class: "panel-kepala" }, h("h2", { text: NAMA_KATEGORI[kat] }),
+              h("span", { class: "oleh", text: aktifSaja(daftar).length + " aktif" })));
+          if (!daftar.length) panel.appendChild(h("div", { class: "kosong-info", text: "Belum ada item." }));
+          daftar.forEach(function (o) {
+            panel.appendChild(h("div", { class: "item-baris" + (o.aktif ? "" : " nonaktif") },
+              h("div", { class: "teks", text: o.i }),
+              h("div", { class: "item-aksi" },
+                h("button", { type: "button", class: "btn btn-kecil btn-garis", text: "Ubah", onclick: function () { formItem(o, kat, isi); } }),
+                h("button", { type: "button", class: "btn btn-kecil btn-garis", text: o.aktif ? "Matikan" : "Aktifkan", onclick: function () { alihAktif("ITEM", o, isi); } }),
+                h("button", { type: "button", class: "btn btn-kecil btn-bahaya", text: "Hapus",
+                  onclick: function () { hapus({ jenis: "ITEM", satu: "item checklist" }, o, isi); } }))));
+          });
+          panel.appendChild(h("div", { class: "panel-isi" },
+            h("button", { type: "button", class: "btn btn-kecil btn-utama", text: "Tambah item", onclick: function () { formItem(null, kat, isi); } })));
+          grid.appendChild(panel);
+        });
+      }
+      isi();
+    });
+  }
+
+  /* ---------------------------------------------------------- AKUN ADMIN */
+  function sandiAcak() {
+    var abjad = "abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789", a = new Uint8Array(12), s = "";
+    window.crypto.getRandomValues(a);
+    for (var i = 0; i < a.length; i++) s += abjad[a[i] % abjad.length];
+    return s;
+  }
+
+  function formAkun(o, segar) {
+    var ubah = !!o, role = (K.data.roleTersedia || ["Admin", "Supervisor", "Manager", "Viewer"]);
+    var bidang = [];
+    if (!ubah) bidang.push({ id: "username", label: "Username", maks: 40, placeholder: "huruf kecil, angka, titik, strip", mode: "text", bantuan: "Dipakai untuk masuk. 3 sampai 40 karakter." });
+    bidang.push({ id: "nama", label: "Nama lengkap", nilai: ubah ? o.nama : "", maks: 60, separuh: true });
+    bidang.push({ id: "role", label: "Role", tipe: "select", nilai: ubah ? o.role : "Supervisor", separuh: true, pilihan: role.map(function (r) { return [r, r]; }) });
+    if (!ubah) bidang.push({ id: "password", label: "Password awal", maks: 100, tombol: { teks: "Buat acak", klik: function (el) { el.value = sandiAcak(); } },
+      bantuan: "Minimal 8 karakter. Catat dan berikan langsung ke orangnya, setelah disimpan tidak bisa dilihat lagi." });
+    DB.form({
+      judul: ubah ? "Ubah akun " + o.username : "Tambah akun admin",
+      info: ubah ? "Mengubah role akan mengeluarkan akun itu dari sesi yang sedang aktif." : null,
+      simpan: ubah ? "Simpan perubahan" : "Buat akun", bidang: bidang,
+      periksa: function (v) {
+        if (!ubah && !v.username.trim()) return "Username wajib diisi.";
+        if (!v.nama.trim()) return "Nama wajib diisi.";
+        if (!ubah && v.password.length < 8) return "Password minimal 8 karakter.";
+        return "";
+      },
+      kirim: function (v) {
+        return DB.panggil("akunSimpan", ubah
+          ? { op: "ubah", username: o.username, nama: v.nama, role: v.role }
+          : { op: "tambah", username: v.username, nama: v.nama, role: v.role, password: v.password }, 40000).then(function (r) {
+          if (r.status === "SUCCESS") { K.data.akun = r.akun; if (r.riwayat) K.data.riwayat = r.riwayat; }
+          return r;
+        });
+      },
+      selesai: function () { PC.toast(ubah ? "Akun diperbarui." : "Akun dibuat.", "ok"); segar(); }
+    });
+  }
+
+  function formResetSandi(o, segar) {
+    DB.form({
+      judul: "Reset password " + o.username, info: "Akun ini akan dikeluarkan dari semua sesi dan harus masuk dengan password baru.",
+      simpan: "Reset password",
+      bidang: [{ id: "password", label: "Password baru", maks: 100, tombol: { teks: "Buat acak", klik: function (el) { el.value = sandiAcak(); } }, bantuan: "Minimal 8 karakter. Catat sebelum menyimpan." }],
+      periksa: function (v) { return v.password.length >= 8 ? "" : "Password minimal 8 karakter."; },
+      kirim: function (v) { return DB.panggil("akunSimpan", { op: "reset", username: o.username, password: v.password }, 40000); },
+      selesai: function () { PC.toast("Password direset.", "ok"); segar(); }
+    });
+  }
+
+  function tampilAkun(wadah) {
+    denganData(wadah, function () {
+      PC.kosongkan(wadah);
+      wadah.appendChild(h("div", { class: "pengantar" }, h("b", { text: "Akun ini hanya untuk dashboard, bukan untuk petugas. " }),
+        "Admin: semua fitur termasuk akun dan area. Supervisor dan Manager: kelola data tenant, petugas, zona, checklist serta tindak lanjut temuan. Viewer: hanya melihat laporan."));
+      var tbodyWadah = h("div", { class: "tabel-wrap penuh", style: { border: "0", borderRadius: "0", marginBottom: "0" } });
+      var panel = h("div", { class: "panel" },
+        h("div", { class: "panel-kepala" }, h("h2", { text: "Akun dashboard" })),
+        h("div", { class: "tools" }, h("div", { class: "rapat", style: { marginLeft: "0" } },
+          h("button", { type: "button", class: "btn btn-kecil btn-utama", text: "Tambah akun", onclick: function () { formAkun(null, isi); } }))),
+        tbodyWadah);
+      wadah.appendChild(panel);
+      var diri = String(DB.S.user.username).toLowerCase();
+
+      function isi() {
+        PC.kosongkan(tbodyWadah);
+        var tbody = h("tbody");
+        (K.data.akun || []).forEach(function (o) {
+          var saya = o.username.toLowerCase() === diri;
+          tbody.appendChild(h("tr", null,
+            h("td", { class: "nama" }, o.username, saya ? h("span", { class: "lencana l-rendah", style: { marginLeft: "8px" }, text: "Anda" }) : null),
+            h("td", { text: o.nama }), h("td", null, lencana(o.role, /^admin$/i.test(o.role) ? "l-proses" : "l-abu")),
+            h("td", { class: "aksi" },
+              h("button", { type: "button", class: "btn btn-kecil btn-garis", text: "Ubah", onclick: function () { formAkun(o, isi); } }),
+              saya ? null : h("button", { type: "button", class: "btn btn-kecil btn-garis", text: "Reset password", onclick: function () { formResetSandi(o, isi); } }),
+              saya ? null : h("button", { type: "button", class: "btn btn-kecil btn-bahaya", text: "Hapus", onclick: function () {
+                PC.tanya("Hapus akun?", "Akun \"" + o.username + "\" dihapus dan langsung dikeluarkan dari dashboard.", "Hapus", "Batal").then(function (ya) {
+                  if (!ya) return;
+                  DB.panggil("akunSimpan", { op: "hapus", username: o.username }, 40000).then(function (r) {
+                    if (r.status === "SUCCESS") { K.data.akun = r.akun; if (r.riwayat) K.data.riwayat = r.riwayat; PC.toast("Akun dihapus.", "ok"); isi(); }
+                    else if (r.kode !== "SESI") PC.toast(r.message, "bad");
+                  });
+                });
+              } }))));
+        });
+        tbodyWadah.appendChild(h("table", null, h("thead", null, h("tr", null, ["Username", "Nama", "Role", ""].map(function (k) { return h("th", { text: k }); }))), tbody));
+      }
+      isi();
+    });
+  }
+
+  /* ---------------------------------------------------------- AREA PATROLI (geofence) */
+  function tampilArea(wadah) {
+    denganData(wadah, function () {
+      PC.kosongkan(wadah);
+      var g = K.data.geo || {};
+      wadah.appendChild(h("div", { class: "pengantar" }, h("b", { text: "Batas area mall. " }),
+        "Laporan yang dikirim dari luar lingkaran ini tetap tersimpan tetapi diberi catatan \"Di luar area mall\" di dashboard. Kosongkan semua isian untuk mematikan pemeriksaan."));
+      var lat = h("input", { id: "g-lat", class: "input", inputmode: "decimal", autocomplete: "off", placeholder: "-6.9932" });
+      var lng = h("input", { id: "g-lng", class: "input", inputmode: "decimal", autocomplete: "off", placeholder: "110.4203" });
+      var rad = h("input", { id: "g-rad", class: "input", inputmode: "numeric", autocomplete: "off", placeholder: "300" });
+      lat.value = g.lat || ""; lng.value = g.lng || ""; rad.value = g.radius || "";
+      var galat = h("p", { class: "galat", role: "alert", hidden: true });
+      var status = h("p", { class: "oleh" });
+      function segarStatus() {
+        var gg = K.data.geo || {};
+        PC.kosongkan(status);
+        if (gg.lat && gg.lng && gg.radius) {
+          status.appendChild(document.createTextNode("Aktif: " + gg.lat + ", " + gg.lng + " radius " + gg.radius + " meter. "));
+          status.appendChild(h("a", { href: "https://www.google.com/maps?q=" + encodeURIComponent(gg.lat + "," + gg.lng), target: "_blank", rel: "noopener noreferrer", text: "Lihat di peta" }));
+        } else status.appendChild(document.createTextNode("Belum diatur. Semua laporan dianggap berada di dalam area."));
+      }
+      segarStatus();
+
+      function simpan(kosong) {
+        galat.hidden = true;
+        var geo = kosong ? { lat: "", lng: "", radius: "" } : { lat: lat.value.trim().replace(",", "."), lng: lng.value.trim().replace(",", "."), radius: rad.value.trim() };
+        DB.panggil("pengaturanSimpan", { geo: geo }, 40000).then(function (r) {
+          if (r.status === "SUCCESS") {
+            K.data.geo = r.geo; if (r.riwayat) K.data.riwayat = r.riwayat;
+            lat.value = r.geo.lat || ""; lng.value = r.geo.lng || ""; rad.value = r.geo.radius || "";
+            segarStatus(); PC.toast(kosong ? "Batas area dimatikan." : "Batas area disimpan.", "ok");
+          } else if (r.kode !== "SESI") { galat.textContent = r.message || "Gagal menyimpan."; galat.hidden = false; }
+        });
+      }
+      var btnLokasi = h("button", { type: "button", class: "btn btn-kuning", text: "Pakai lokasi saya sekarang", onclick: function () {
+        if (!navigator.geolocation) { galat.textContent = "Perangkat ini tidak mendukung lokasi."; galat.hidden = false; return; }
+        btnLokasi.disabled = true; btnLokasi.textContent = "Mencari lokasi...";
+        navigator.geolocation.getCurrentPosition(function (p) {
+          lat.value = p.coords.latitude.toFixed(6); lng.value = p.coords.longitude.toFixed(6);
+          if (!rad.value) rad.value = "300";
+          btnLokasi.disabled = false; btnLokasi.textContent = "Pakai lokasi saya sekarang";
+          galat.hidden = true;
+        }, function () {
+          btnLokasi.disabled = false; btnLokasi.textContent = "Pakai lokasi saya sekarang";
+          galat.textContent = "Lokasi tidak bisa dibaca. Izinkan akses lokasi di browser, atau isi koordinat manual."; galat.hidden = false;
+        }, { enableHighAccuracy: true, timeout: 20000 });
+      } });
+
+      wadah.appendChild(h("div", { class: "panel" },
+        h("div", { class: "panel-kepala" }, h("h2", { text: "Titik pusat dan radius" })),
+        h("div", { class: "panel-isi" },
+          status,
+          h("div", { style: { margin: "12px 0" } }, btnLokasi,
+            h("p", { class: "bantuan oleh", style: { marginTop: "6px" }, text: "Berdiri di tengah mall lalu tekan tombol ini, atau salin koordinat dari Google Maps." })),
+          h("div", { class: "peta-isian" },
+            h("div", { class: "medan" }, h("label", { for: "g-lat", text: "Lintang (latitude)" }), lat),
+            h("div", { class: "medan" }, h("label", { for: "g-lng", text: "Bujur (longitude)" }), lng),
+            h("div", { class: "medan" }, h("label", { for: "g-rad", text: "Radius (meter)" }), rad, h("p", { class: "bantuan", text: "20 sampai 5000." }))),
+          galat,
+          h("div", { class: "grup" },
+            h("button", { type: "button", class: "btn btn-utama", text: "Simpan batas area", onclick: function () { simpan(false); } }),
+            h("button", { type: "button", class: "btn btn-bahaya", text: "Matikan pemeriksaan", onclick: function () { simpan(true); } })))));
+    });
+  }
+
+  /* ---------------------------------------------------------- RIWAYAT */
+  function tampilRiwayat(wadah) {
+    denganData(wadah, function () {
+      PC.kosongkan(wadah);
+      wadah.appendChild(h("div", { class: "pengantar" }, h("b", { text: "Catatan audit. " }), "Setiap perubahan data master, akun, dan batas area tercatat di sini beserta pelakunya. Password tidak pernah dicatat. Menampilkan 100 perubahan terakhir."));
+      var tabel = h("div", { class: "tabel-wrap penuh", style: { border: "0", borderRadius: "0", marginBottom: "0" } });
+      var hitung = h("span");
+      var cari = h("input", { type: "search", class: "input", placeholder: "Cari pelaku, jenis, atau isi", "aria-label": "Cari riwayat" });
+      var panel = h("div", { class: "panel" }, h("div", { class: "panel-kepala" }, h("h2", { text: "Riwayat perubahan" }), h("span", { class: "oleh" }, hitung)),
+        h("div", { class: "tools" }, cari, h("div", { class: "rapat" }, h("button", { type: "button", class: "btn btn-kecil btn-garis", text: "Muat ulang", onclick: function () {
+          muatKelola(true).then(function (r) { if (r.status === "SUCCESS") isi(); else PC.toast(r.message, "bad"); });
+        } }))), tabel);
+      wadah.appendChild(panel);
+      function isi() {
+        PC.kosongkan(tabel);
+        var q = cari.value.toLowerCase().trim();
+        var daftar = (K.data.riwayat || []).filter(function (o) { return !q || [o.ts, o.oleh, o.jenis, o.aksi, o.rincian].join(" ").toLowerCase().indexOf(q) >= 0; });
+        hitung.textContent = daftar.length + " catatan";
+        if (!daftar.length) { tabel.appendChild(h("div", { class: "kosong-tabel", text: "Belum ada perubahan tercatat." })); return; }
+        tabel.appendChild(h("table", null, h("thead", null, h("tr", null, ["Waktu", "Oleh", "Data", "Aksi", "Rincian"].map(function (k) { return h("th", { text: k }); }))),
+          h("tbody", null, daftar.map(function (o) {
+            return h("tr", null, h("td", { class: "waktu", text: o.ts }), h("td", { text: o.oleh }), h("td", { text: o.jenis }),
+              h("td", null, lencana(o.aksi, /hapus/.test(o.aksi) ? "l-bad" : "l-abu")), h("td", { text: o.rincian }));
+          }))));
+      }
+      cari.addEventListener("input", isi);
+      isi();
+    });
+  }
+
+  /* ---------------------------------------------------------- daftar halaman */
+  DB.daftar({ id: "tenant", judul: "Tenant", grup: "data", izin: "editor", tampil: tampilTenant });
+  DB.daftar({ id: "petugas", judul: "Petugas", grup: "data", izin: "editor", tampil: tampilPetugas });
+  DB.daftar({ id: "zona", judul: "Zona patroli", grup: "data", izin: "editor", tampil: tampilZona });
+  DB.daftar({ id: "item", judul: "Item checklist", grup: "data", izin: "editor", tampil: tampilItem });
+  DB.daftar({ id: "akun", judul: "Akun admin", grup: "sistem", izin: "penuh", tampil: tampilAkun });
+  DB.daftar({ id: "area", judul: "Area patroli", grup: "sistem", izin: "penuh", tampil: tampilArea });
+  DB.daftar({ id: "riwayat", judul: "Riwayat perubahan", grup: "sistem", izin: "editor", tampil: tampilRiwayat });
+
+  // Setelah masuk, muat jumlah data master di latar agar angka di menu langsung terisi.
+  var mulaiApp = DB.mulaiApp;
+  DB.mulaiApp = function () {
+    mulaiApp();
+    if (DB.S.user && DB.S.user.bisaUbah) muatKelola(true);
+  };
+})();
