@@ -1,4 +1,4 @@
-/* petugas.css v19 - Simple & bersih (font sistem, 1 warna aksen) */
+/* petugas.css v20 - Simple & bersih (font sistem, 1 warna aksen) */
 
 :root {
   --bg: #f5f6f8;
@@ -58,7 +58,7 @@ input:focus-visible + .seg, input:focus-visible + .ubin { outline: 2px solid var
 .kepala .merek-grup img, .kepala .merek-grup svg { width: 28px; height: 28px; flex: none; }
 .judul { font-size: 17px; font-weight: 700; white-space: nowrap; }
 .sub { display: none; }
-.kepala button { color: var(--teks); background: transparent; border: 1px solid var(--garis); border-radius: 8px; min-width: 34px; min-height: 34px; padding: 0; display: inline-grid; place-items: center; cursor: pointer; flex: none; }
+.kepala button { display: none !important; }
 .nav-app { flex: none; display: flex; gap: 2px; }
 .nav-app a { padding: 7px 12px; font-size: 13px; font-weight: 600; color: var(--teks-2); text-decoration: none; border-radius: 8px; }
 .nav-app a[aria-current="page"] { color: #fff; background: var(--aksen); }
@@ -102,7 +102,7 @@ input:focus-visible + .seg, input:focus-visible + .ubin { outline: 2px solid var
 /* Input */
 .medan { margin-bottom: 12px; }
 .medan:last-child { margin-bottom: 0; }
-.medan > label, .label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 6px; color: var(--teks-2); }
+.label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 6px; color: var(--teks-2); }
 .input { width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid var(--input-garis); border-radius: 10px; background: var(--input); color: var(--teks); font: inherit; font-size: 16px; }
 .input:focus { border-color: var(--aksen); outline: none; box-shadow: 0 0 0 3px rgba(37,99,235,.18); }
 .input.invalid { border-color: var(--merah); }
@@ -132,11 +132,10 @@ input:checked + .t-tinggi { background: #dc2626; border-color: #dc2626; color: #
 
 /* Tenant (halaman lain) */
 .ubin-grup { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
-.ubin { display: flex; align-items: center; gap: 8px; padding: 12px; border: 1px solid var(--input-garis); border-radius: 10px; background: var(--input); cursor: pointer; font-size: 14px; font-weight: 600; }
+.ubin { display: flex; align-items: center; justify-content: center; text-align: center; min-height: 56px; gap: 8px; padding: 12px; border: 1px solid var(--input-garis); border-radius: 10px; background: var(--input); cursor: pointer; font-size: 17px; font-weight: 700; }
 .ubin svg, .ubin .ikon, .ubin img { display: none !important; }
-.ubin small { display: block; font-size: 11px; font-weight: 400; color: var(--teks-2); }
+.ubin small { display: none !important; }
 input:checked + .ubin { background: var(--aksen); border-color: var(--aksen); color: #fff; }
-input:checked + .ubin small { color: rgba(255,255,255,.85); }
 
 /* Foto */
 .foto-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
@@ -168,7 +167,19 @@ input:checked + .ubin small { color: rgba(255,255,255,.85); }
 #btn-kirim:disabled { background: var(--garis); color: var(--teks-2); }
 
 /* Teks bantuan dihilangkan */
-#b-cl .petunjuk, #b-foto .petunjuk, #hint-foto { display: none !important; }
+.petunjuk { display: none !important; }
+/* Label field disembunyikan secara visual (tetap terbaca screen reader) */
+.medan > label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+/* Tanpa ikon di tombol foto */
+.btn-foto svg, .btn-foto .ikon { display: none !important; }
+.lokasi-nama:not([hidden]) + .btn { margin-top: 10px; }
+
+/* Pilihan lantai / tenant: tombol besar, mudah diketuk */
+.bagian button:not(.btn):not(.foto-hapus) { min-height: 46px; margin: 0 8px 8px 0; padding: 0 16px; border: 1px solid var(--input-garis); border-radius: 10px; background: var(--input); color: var(--teks); font: inherit; font-size: 15px; font-weight: 600; cursor: pointer; }
+.bagian button:not(.btn):not(.foto-hapus) small, .bagian button:not(.btn):not(.foto-hapus) span { font-size: 12px; font-weight: 500; color: var(--teks-2); }
+.bagian button[aria-pressed="true"]:not(.btn):not(.foto-hapus), .bagian button[aria-selected="true"]:not(.btn):not(.foto-hapus), .bagian button.aktif:not(.btn):not(.foto-hapus), .bagian button.active:not(.btn):not(.foto-hapus), .bagian button.on:not(.btn):not(.foto-hapus), .bagian button.terpilih:not(.btn):not(.foto-hapus) { background: var(--aksen); border-color: var(--aksen); color: #fff; }
+.bagian button[aria-pressed="true"]:not(.btn):not(.foto-hapus) small, .bagian button[aria-pressed="true"]:not(.btn):not(.foto-hapus) span, .bagian button.aktif:not(.btn):not(.foto-hapus) small, .bagian button.aktif:not(.btn):not(.foto-hapus) span, .bagian button.active:not(.btn):not(.foto-hapus) small, .bagian button.active:not(.btn):not(.foto-hapus) span { color: rgba(255,255,255,.85); }
+.daftar li { min-height: 48px; display: flex; align-items: center; padding: 8px 12px; }
 
 /* Scan QR */
 .scan { position: fixed; inset: 0; z-index: 100; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; }

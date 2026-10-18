@@ -1,4 +1,4 @@
-/* index.js v18 - Form Patroli Petugas (QR zona + Hard Geofence) */
+/* index.js v20 - Form Patroli Petugas (QR zona + Hard Geofence) */
 (function () {
   "use strict";
   var PC = window.PC, h = PC.h;
@@ -17,7 +17,6 @@
   PC.pasangPWA($("antrean-wadah"));
   setInterval(PC.sinkronJam, 300000);
   document.addEventListener("visibilitychange", function () { if (!document.hidden) PC.sinkronJam(); });
-  if ($("ikon-foto")) $("ikon-foto").appendChild(PC.ikon("KAMERA"));
 
   /* ---------- Geofence ---------- */
   function hitungJarakM(lat1, lng1, lat2, lng2) {
@@ -62,8 +61,8 @@
   /* ---------- Lokasi (QR) ---------- */
   function tampilLokasi() {
     var ada = !!zona;
-    $("lokasi-nama").textContent = ada ? zona : "Belum scan QR";
-    $("lokasi-petunjuk").hidden = true;
+    $("lokasi-nama").textContent = zona;
+    $("lokasi-nama").hidden = !ada;
     $("btn-scan").textContent = ada ? "Scan Ulang" : "Scan QR";
     $("b-lokasi").classList.toggle("selesai", ada);
 
@@ -287,8 +286,6 @@
     $("jml-foto").textContent = nFoto + "/3";
     $("btn-foto").disabled = !siapFoto || foto.penuh();
     $("btn-foto-teks").textContent = foto.penuh() ? "Maks 3" : (nFoto ? "Tambah Foto" : "Ambil Foto");
-    $("hint-foto").textContent = siapFoto ? "" :
-      (!zona || !cbNama.nilai() ? "Scan QR dan pilih nama dulu." : "Masuk area dulu.");
 
     $("kurang").textContent = k.length ? "Kurang: " + k.join(", ") : "Siap dikirim";
     $("kurang").className = "kurang" + (k.length ? "" : " siap");

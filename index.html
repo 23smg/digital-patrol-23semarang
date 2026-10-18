@@ -15,14 +15,14 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" type="image/png" href="icons/icon-192.png">
 <title>Patroli - Mall 23Semarang</title>
-<link rel="stylesheet" href="petugas.css?v=19">
+<link rel="stylesheet" href="petugas.css?v=20">
 </head>
 <body>
 
 <header class="kepala">
   <div class="kepala-isi">
     <div class="merek-grup">
-      <div class="judul">Patroli 23</div>
+      <div class="judul">Digital Patrol</div>
     </div>
     <nav class="nav-app" aria-label="Halaman">
       <a href="index.html" aria-current="page">Patroli</a>
@@ -41,9 +41,8 @@
   <form id="form" hidden novalidate>
     <section class="bagian" id="b-lokasi">
       <h2>Lokasi</h2>
-      <div class="lokasi-nama" id="lokasi-nama">Belum scan QR</div>
+      <div class="lokasi-nama" id="lokasi-nama" hidden></div>
       <button type="button" id="btn-scan" class="btn btn-foto">Scan QR</button>
-      <p class="petunjuk" id="lokasi-petunjuk" hidden></p>
       <div class="geo" id="geo-status" data-state="cari" role="status" aria-live="polite" hidden>
         <span class="dot" aria-hidden="true"></span><span id="geo-teks"></span>
       </div>
@@ -82,8 +81,7 @@
     <section class="bagian" id="b-foto">
       <h2>Foto <small id="jml-foto">0/3</small></h2>
       <div id="foto-grid" class="foto-grid"></div>
-      <button type="button" id="btn-foto" class="btn btn-foto"><span id="ikon-foto"></span><span id="btn-foto-teks">Ambil Foto</span></button>
-      <p id="hint-foto" class="petunjuk"></p>
+      <button type="button" id="btn-foto" class="btn btn-foto"><span id="btn-foto-teks">Ambil Foto</span></button>
     </section>
   </form>
 </main>
@@ -103,8 +101,8 @@
   </div>
 </div>
 
-<script src="config.js?v=19"></script>
-<script src="core.js?v=19"></script>
-<script src="index.js?v=19"></script>
+<script src="config.js?v=20"></script>
+<script src="core.js?v=20"></script>
+<script src="index.js?v=20"></script>
 </body>
 </html>
