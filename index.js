@@ -1,7 +1,8 @@
-/* index.js - form patroli petugas. Tanpa PIN: petugas memilih namanya dari daftar aktif.
-   Diperbarui dengan:
-   1. Auto-select dan penguncian zona via QR Code (?zona=NamaZona)
-   2. Hard Geofencing (Pencegahan submit & blokir tombol jika di luar area mall)
+/* index.js - Form Patroli Petugas (Mode Khusus QR Code & Hard Geofence)
+   Perubahan:
+   1. Pilihan zona manual (tombol lantai/angka/pencarian) disembunyikan.
+   2. Petugas WAJIB memindai QR Code di lokasi untuk memilih zona.
+   3. Tombol 'Kirim' dikunci jika di luar area Mall atau GPS tidak aktif.
 */
 (function () {
   "use strict";
@@ -39,7 +40,6 @@
     var geo = master && master.geo ? master.geo : null;
     var pesanEl = $("pesan-geofence");
 
-    // Jika batas area dikonfigurasi di server
     if (geo && geo.lat && geo.lng && geo.radius) {
       var latMall = parseFloat(geo.lat);
       var lngMall = parseFloat(geo.lng);
@@ -70,7 +70,7 @@
     if (pesanEl) pesanEl.hidden = true;
   }
 
-  /* ------------------------------------------------ memuat master */
+  /* ------------------------------------------------ Memuat Master */
   function muat() {
     var muatEl = $("muat");
     muatEl.hidden = false;
@@ -109,13 +109,17 @@
       } });
     foto = PC.FotoGrid($("foto-grid"), { maks: 3, onUbah: ubah });
     cl = PC.Checklist($("checklist"), { onUbah: ubah });
-    bangunZona();
-    $("zona-cari").addEventListener("input", cariZona);
+
+    // Sembunyikan elemen pencarian dan tombol pilihan zona manual
+    if ($("zona-cari-wadah")) $("zona-cari-wadah").hidden = true;
+    if ($("zona-lantai")) $("zona-lantai").hidden = true;
+    if ($("zona-petunjuk")) $("zona-petunjuk").hidden = true;
+    if ($("zona-grup")) $("zona-grup").hidden = true;
 
     var draft = bacaDraft();
     cl.set(master.checklist.PATROLI, draft && draft.cl);
     if (draft) {
-      if (draft.zona) pilihZona(draft.zona);
+      if (draft.zona) zona = draft.zona;
       $("catatan").value = draft.catatan || "";
       if (draft.tingkat) {
         tingkat = draft.tingkat;
@@ -124,22 +128,22 @@
       }
     }
 
-    // Tautan dari QR di lokasi: ?zona=Nama.
+    // Tangkap Lokasi dari QR Code (?zona=NamaZona)
     try {
       var zq = new URLSearchParams(location.search).get("zona");
       if (zq && master.daftarZona.indexOf(zq) >= 0) {
-        pilihZona(zq); zonaQR = zq;
+        zona = zq;
+        zonaQR = zq;
         if ($("zona-qr")) {
           $("zona-qr").hidden = false;
-          $("zona-qr").textContent = "Zona terpilih dari QR di lokasi: " + zq + ". Ketuk zona lain bila salah.";
+          $("zona-qr").textContent = "✓ Lokasi Terverifikasi via QR Code: " + zq;
         }
-        
-        // Kunci bidang pilihan zona agar tidak bisa diedit manual bila diakses via QR
-        Array.prototype.forEach.call(document.querySelectorAll('input[name="zona"]'), function (radio) {
-          if (radio.value !== zq) {
-            radio.disabled = true;
-          }
-        });
+      } else {
+        if ($("zona-qr")) {
+          $("zona-qr").hidden = false;
+          $("zona-qr").style.color = "#ef4444";
+          $("zona-qr").textContent = "⚠️ Peringatan: Pindai QR Code lokasi patroli terlebih dahulu!";
+        }
       }
     } catch (e) { /* abaikan */ }
 
@@ -158,7 +162,7 @@
     $("btn-foto").addEventListener("click", ambilFoto);
     $("btn-kirim").addEventListener("click", kirim);
 
-    // Jalankan pemeriksaan posisi/geofence berkala
+    // Pantau geofence secara berkala
     setInterval(function () {
       periksaGeofence();
       ubah();
@@ -167,101 +171,7 @@
     ubah();
   }
 
-  /* ------------------------------------------------ zona: pilih lantai dulu, lalu titiknya */
-  var grupZona = [], grupAktif = "";
-  function pecahZona(n) {
-    var m = /^(.+?)\s+[-\u2013]\s+(.+)$/.exec(n);
-    return m ? { g: m[1].trim(), s: m[2].trim() } : { g: "Lainnya", s: n };
-  }
-
-  function bangunZona() {
-    var wadah = $("zona-grup");
-    PC.kosongkan(wadah);
-    grupZona = []; grupAktif = "";
-    if (!master.daftarZona.length) {
-      wadah.appendChild(h("div", { class: "kosong-zona", text: "Belum ada zona. Minta admin menambahkannya di dashboard." }));
-      return;
-    }
-    var peta = {};
-    master.daftarZona.forEach(function (nama) {
-      var p = pecahZona(nama);
-      if (!peta[p.g]) { peta[p.g] = { nama: p.g, jml: 0 }; grupZona.push(peta[p.g]); }
-      peta[p.g].jml++;
-    });
-    grupZona.sort(function (a, b) { return (a.nama === "Lainnya") - (b.nama === "Lainnya"); });
-    var bertingkat = grupZona.length > 1 && master.daftarZona.length > 8;
-    master.daftarZona.forEach(function (nama, i) {
-      var id = "zona" + i, p = pecahZona(nama);
-      var pecah = bertingkat && p.g !== "Lainnya";
-      wadah.appendChild(h("div", { "data-grup": p.g, "data-kunci": kunciCari(nama) },
-        h("input", { type: "radio", name: "zona", id: id, value: nama, onchange: function () {
-          zona = nama; 
-          if (zonaQR && nama !== zonaQR) { 
-            zonaQR = ""; 
-            if ($("zona-qr")) $("zona-qr").hidden = true; 
-          } 
-          if ($("zona-cari").value) { 
-            $("zona-cari").value = ""; 
-            cariZona(); 
-            if (pecah) tampilGrup(p.g); 
-          } 
-          ubah(); 
-        } }),
-        pecah ? h("label", { class: "ubin-z", for: id }, h("span", null, h("span", { class: "pfx", text: p.g + " - " }), h("span", { class: "sfx", text: p.s })))
-              : h("label", { class: "ubin-z", for: id, text: nama })));
-    });
-    var lantai = $("zona-lantai");
-    PC.kosongkan(lantai);
-    wadah.classList.toggle("rapat", bertingkat);
-    lantai.hidden = !bertingkat;
-    $("zona-petunjuk").hidden = !bertingkat;
-    $("zona-cari-wadah").hidden = !(bertingkat || master.daftarZona.length > 8);
-    $("zona-cari").value = ""; $("zona-kosong").hidden = true;
-    if (bertingkat) {
-      grupZona.forEach(function (g) {
-        lantai.appendChild(h("button", { type: "button", class: "lantai-btn", "data-grup": g.nama, "aria-pressed": "false",
-          onclick: function () { tampilGrup(g.nama); } },
-          h("b", { text: g.nama }), h("small", { text: g.jml + " titik" })));
-      });
-      tampilGrup("");
-    }
-  }
-
-  function kunciCari(t) { return String(t).toLowerCase().replace(/[^a-z0-9]+/g, ""); }
-
-  function cariZona() {
-    var q = kunciCari($("zona-cari").value), bertingkat = !$("zona-lantai").hidden, wadah = $("zona-grup"), ada = 0;
-    wadah.classList.toggle("cari", !!q);
-    if (!q) { $("zona-kosong").hidden = true; if (bertingkat) tampilGrup(grupAktif); else Array.prototype.forEach.call(wadah.children, function (d) { d.hidden = false; }); return; }
-    Array.prototype.forEach.call(wadah.children, function (d) {
-      var cocok = (d.getAttribute("data-kunci") || "").indexOf(q) >= 0;
-      d.hidden = !cocok; if (cocok) ada++;
-    });
-    Array.prototype.forEach.call($("zona-lantai").children, function (b) { b.setAttribute("aria-pressed", "false"); });
-    $("zona-petunjuk").hidden = true;
-    $("zona-kosong").hidden = ada > 0;
-  }
-
-  function tampilGrup(nama) {
-    grupAktif = nama;
-    Array.prototype.forEach.call($("zona-lantai").children, function (b) {
-      b.setAttribute("aria-pressed", b.getAttribute("data-grup") === nama ? "true" : "false");
-    });
-    Array.prototype.forEach.call($("zona-grup").children, function (d) {
-      var tampil = !$("zona-lantai").hidden ? d.getAttribute("data-grup") === nama : true;
-      d.hidden = !tampil;
-    });
-    $("zona-petunjuk").hidden = $("zona-lantai").hidden || !!nama;
-  }
-
-  function pilihZona(nama) {
-    var el = Array.prototype.filter.call(document.querySelectorAll('input[name="zona"]'), function (r) { return r.value === nama; })[0];
-    if (!el) return;
-    el.checked = true; zona = nama;
-    if (!$("zona-lantai").hidden) tampilGrup(pecahZona(nama).g);
-  }
-
-  /* ------------------------------------------------ draft lokal */
+  /* ------------------------------------------------ Draft Lokal */
   function bacaDraft() {
     try {
       var d = JSON.parse(localStorage.getItem(KUNCI_DRAFT));
@@ -277,18 +187,18 @@
     } catch (e) { /* abaikan */ }
   }
 
-  /* ------------------------------------------------ status form */
+  /* ------------------------------------------------ Status Form */
   function kekurangan() {
     var k = [], c = cl.nilai();
     if (!cbNama.nilai()) k.push("nama petugas");
-    if (!zona) k.push("zona");
+    if (!zona) k.push("pindai QR lokasi");
     if (!c.lengkap) k.push("checklist (" + c.terisi + "/" + c.total + ")");
     if (c.adaTemuan) {
       if (c.catatanKurang) k.push("penjelasan temuan");
       if (!tingkat) k.push("tingkat temuan");
     }
     if (!foto.daftar().length) k.push("foto");
-    if (diluarArea) k.push("posisi berada di luar area mall (tombol dikunci)");
+    if (diluarArea) k.push("posisi berada di luar area mall");
     return k;
   }
 
@@ -306,16 +216,16 @@
     var siapFoto = !!cbNama.nilai() && !!zona;
     $("btn-foto").disabled = !siapFoto || foto.penuh();
     $("btn-foto-teks").textContent = foto.penuh() ? "Foto sudah 3 (maksimal)" : (foto.daftar().length ? "Tambah foto" : "Ambil foto");
-    $("hint-foto").textContent = siapFoto ? "" : "Pilih nama petugas dan zona dulu. Keduanya dicetak pada foto.";
+    $("hint-foto").textContent = siapFoto ? "" : "Pilih nama petugas dan scan QR lokasi dulu.";
     $("kurang").textContent = k.length ? "Lengkapi: " + k.join(", ") : "Semua isian lengkap. Siap dikirim.";
     $("kurang").className = "kurang" + (k.length ? "" : " siap");
     
-    // Kunci tombol kirim jika sedang mengirim, ada isian kurang, ATAU lokasi di luar area
+    // Kunci tombol kirim
     $("btn-kirim").disabled = mengirim || k.length > 0 || diluarArea;
 
     $("b-nama").classList.toggle("selesai", !!cbNama.nilai());
     $("b-zona").classList.toggle("selesai", !!zona);
-    if ($("zona-plakat")) $("zona-plakat").hidden = !zona || $("zona-lantai").hidden;
+    if ($("zona-plakat")) $("zona-plakat").hidden = !zona;
     if ($("zona-plakat-nama")) $("zona-plakat-nama").textContent = zona;
     $("b-cl").classList.toggle("selesai", c.lengkap && (!c.adaTemuan || (!c.catatanKurang && !!tingkat)));
     $("b-foto").classList.toggle("selesai", foto.daftar().length > 0);
@@ -323,7 +233,7 @@
     timerDraft = setTimeout(simpanDraft, 500);
   }
 
-  /* ------------------------------------------------ foto */
+  /* ------------------------------------------------ Foto */
   function ambilFoto() {
     PC.Kamera.buka({
       baris: function (now) {
@@ -335,7 +245,7 @@
     });
   }
 
-  /* ------------------------------------------------ kirim */
+  /* ------------------------------------------------ Kirim */
   function setMengirim(v) {
     mengirim = v;
     $("btn-kirim").textContent = v ? "Mengirim..." : "Kirim laporan patroli";
@@ -344,14 +254,13 @@
 
   function reset() {
     cl.set(master.checklist.PATROLI);
-    Array.prototype.forEach.call(document.querySelectorAll('input[name="zona"]'), function (r) { 
-      r.checked = false; 
-      r.disabled = false; // Buka kembali kunci zona setelah reset
-    });
     zona = "";
     zonaQR = "";
-    if ($("zona-qr")) $("zona-qr").hidden = true;
-    if (!$("zona-lantai").hidden) tampilGrup("");
+    if ($("zona-qr")) {
+      $("zona-qr").hidden = false;
+      $("zona-qr").style.color = "#ef4444";
+      $("zona-qr").textContent = "⚠️ Peringatan: Pindai QR Code lokasi patroli untuk titik berikutnya!";
+    }
     $("catatan").value = "";
     tingkat = "";
     foto.kosongkan();
@@ -374,7 +283,7 @@
       checklist: c.daftar, tingkat: c.adaTemuan ? tingkat : "", catatan: $("catatan").value.trim(),
       lat: gps ? gps.lat : null, lng: gps ? gps.lng : null, akurasi: gps ? gps.akurasi : null,
       fotos: foto.daftar().map(function (f) { return { b64: f.b64, t: f.t, sumber: f.sumber }; }),
-      jamPerangkat: !PC.Jam.terpercaya(), durasiDetik: cl.durasiDetik(), qr: !!zonaQR && zonaQR === zona
+      jamPerangkat: !PC.Jam.terpercaya(), durasiDetik: cl.durasiDetik(), qr: true
     };
     var zonaTeks = payload.zona;
     setMengirim(true);
