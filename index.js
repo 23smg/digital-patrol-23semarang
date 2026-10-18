@@ -27,6 +27,36 @@
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   }
 
+  /* ---------- Catatan: satu baris, tumbuh otomatis (maks 3 baris) ---------- */
+  function rapatkanCatatan() {
+    var t = $("catatan");
+    t.style.height = "auto";
+    t.style.height = Math.min(t.scrollHeight + 2, 96) + "px";
+  }
+
+  /* ---------- Tombol izin lokasi + kamera ---------- */
+  function mintaAkses() {
+    var btn = $("btn-izin"), hasil = { lokasi: "", kamera: "" };
+    btn.disabled = true; btn.textContent = "Meminta izin...";
+    PC.Lokasi.minta().then(function (st) {
+      hasil.lokasi = st === "ditolak" ? "ditolak" : (st === "tidakada" ? "tidakada" : "ok");
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { hasil.kamera = "tidakada"; return; }
+      return navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } }, audio: false })
+        .then(function (s) { s.getTracks().forEach(function (t) { t.stop(); }); hasil.kamera = "ok"; })
+        .catch(function (e) { hasil.kamera = e && e.name === "NotAllowedError" ? "ditolak" : "tidakada"; });
+    }).then(function () {
+      btn.disabled = false; btn.textContent = "Izinkan akses lokasi & kamera";
+      var masalah = [];
+      if (hasil.lokasi !== "ok") masalah.push("lokasi");
+      if (hasil.kamera !== "ok") masalah.push("kamera");
+      if (!masalah.length) { PC.toast("Akses lokasi dan kamera sudah aktif.", "ok"); return; }
+      PC.tanya("Izin " + masalah.join(" dan ") + " belum aktif",
+        "Browser memblokir izin ini. Ketuk ikon gembok (atau ikon pengaturan) di sebelah alamat situs, pilih Izin, aktifkan " +
+        masalah.join(" dan ") + ", lalu muat ulang halaman. Di iPhone: Pengaturan > Safari > Lokasi / Kamera > Izinkan.",
+        "Muat ulang", "Tutup").then(function (ya) { if (ya) location.reload(); });
+    });
+  }
+
   function tampilGeo(state, teks) {
     var el = $("geo-status");
     if (!el) return;
@@ -268,11 +298,11 @@
     cbNama = buatKombo({ input: $("nama"), list: $("daftar-nama"), kosong: "Nama tidak terdaftar.",
       items: function () { return master.daftarNama; },
       onPick: function (v) {
-        if (v) { try { localStorage.setItem(KUNCI_NAMA, v); } catch (e) {} }
         $("g-nama").hidden = true; $("nama").classList.remove("invalid");
         ubah();
       } });
     foto = PC.FotoGrid($("foto-grid"), { maks: 3, onUbah: ubah });
+    try { localStorage.setItem("dp_cl_mode", "daftar"); } catch (e) {}   // tampilan daftar: tanpa tombol Sebelumnya/Selesai
     cl = PC.Checklist($("checklist"), { onUbah: ubah });
     rapikanChecklist();
 
@@ -294,18 +324,14 @@
     } catch (e) {}
     tampilLokasi();
 
-    var tersimpan = null;
-    try { tersimpan = localStorage.getItem(KUNCI_NAMA); } catch (e) {}
-    if (tersimpan && master.daftarNama.indexOf(tersimpan) >= 0) $("nama").value = tersimpan;
+    try { localStorage.removeItem(KUNCI_NAMA); } catch (e) {}   // nama tidak lagi terisi otomatis
 
     Array.prototype.forEach.call(document.querySelectorAll('input[name="tingkat"]'), function (r) {
       r.addEventListener("change", function () { tingkat = r.value; ubah(); });
     });
     $("catatan").addEventListener("input", ubah);
-    $("btn-semua").addEventListener("click", function () {
-      var n = cl.isiSemuaSesuai();
-      PC.toast(n ? n + " item sesuai." : "Sudah lengkap.", n ? "ok" : "");
-    });
+    $("catatan").addEventListener("input", rapatkanCatatan);
+    $("btn-izin").addEventListener("click", mintaAkses);
     $("btn-scan").addEventListener("click", bukaScan);
     $("scan-batal").addEventListener("click", tutupScan);
     window.addEventListener("pagehide", tutupScan);

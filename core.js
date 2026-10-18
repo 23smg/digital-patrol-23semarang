@@ -180,6 +180,21 @@
           else if (state !== "ditolak") pantau();
         });
       },
+      // Minta izin lokasi lewat tombol (memunculkan dialog izin bila belum pernah ditanya). Mengembalikan status akhir.
+      minta: function () {
+        return new Promise(function (res) {
+          if (!navigator.geolocation) { state = "tidakada"; emit(); res(state); return; }
+          navigator.geolocation.getCurrentPosition(function (p) {
+            cur = { lat: p.coords.latitude, lng: p.coords.longitude, akurasi: Math.round(p.coords.accuracy) };
+            state = cur.akurasi <= 50 ? "baik" : (cur.akurasi <= 150 ? "lemah" : "buruk");
+            henti(); pantau();   // pemantauan lama berhenti setelah ditolak, mulai ulang
+            emit(); res(state);
+          }, function (err) {
+            if (err.code === 1) state = "ditolak"; else if (!cur) state = "tidakada";
+            emit(); res(state);
+          }, { enableHighAccuracy: true, maximumAge: 0, timeout: 20000 });
+        });
+      },
       on: function (f) { subs.push(f); f(state, cur); },
       saatIni: function () { return cur; },
       status: function () { return state; }
