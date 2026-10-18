@@ -129,13 +129,15 @@
 
   function muatData(latar) {
     if (S.memuat || !DB.S.token) return;
+    if (latar && DB.sibuk > 0) return;     // jangan bersaing dengan klik pengguna
     S.memuat = true;
+    S.terakhir = Date.now();
     var st = $("status-muat");
     if (!latar && st) st.textContent = "Memuat...";
     var hari = tglWIB();
     var dari = S.dari < hari ? S.dari : hari;
     var sampai = S.sampai > hari ? S.sampai : hari;
-    DB.panggil("ambilData", { dari: dari, sampai: sampai }, 60000).then(function (r) {
+    DB.panggil("ambilData", { dari: dari, sampai: sampai, latar: !!latar }, 60000).then(function (r) {
       var st2 = $("status-muat");
       if (r.status !== "SUCCESS") { if (st2 && r.kode !== "SESI") st2.textContent = r.message || "Gagal memuat."; return; }
       S.hariIni = r.hariIni; S.patroli = r.patroli; S.tenant = r.tenant; S.master = r.master;
@@ -153,9 +155,19 @@
     }).then(function () { S.memuat = false; if (S.tampil && $("status-muat")) $("status-muat").textContent = ""; });
   }
 
+  // Satu detak tiap 15 detik yang memutuskan perlu memuat atau tidak: tab tersembunyi tidak memuat; di halaman
+  // Laporan/Cakupan mengikuti pilihan "Muat ulang"; di halaman lain cukup tiap 2 menit (untuk lonceng).
+  function detak() {
+    if (document.hidden || !DB.S.token) return;
+    var pantau = DB.aktif === "laporan" || DB.aktif === "cakupan";
+    var jeda = pantau ? S.otoDetik : 120;
+    if (jeda <= 0) return;
+    if (Date.now() - (S.terakhir || 0) < jeda * 1000 - 1000) return;
+    muatData(true);
+  }
   function atur() {
     clearInterval(S.timer);
-    if (S.otoDetik > 0) S.timer = setInterval(function () { muatData(true); }, S.otoDetik * 1000);
+    S.timer = setInterval(detak, 15000);
     muatData(false);
   }
 
