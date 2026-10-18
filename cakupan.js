@@ -9,7 +9,7 @@
   var URUT = { belum: 0, terlambat: 1, ok: 2, "luar-jam": 3 };
 
   function teksMenit(m) {
-    if (m === null || m === undefined) return "Belum ada patroli hari ini";
+    if (m === null || m === undefined) return "Belum ada patroli";
     if (m < 1) return "Baru saja";
     if (m < 60) return m + " menit lalu";
     return Math.floor(m / 60) + " jam " + (m % 60) + " menit lalu";

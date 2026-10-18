@@ -15,34 +15,10 @@
     if (K.memuat) return K.memuat;
     if (K.data && !paksa && Date.now() - K.waktu < 60000) return Promise.resolve({ status: "SUCCESS" });
     K.memuat = DB.panggil("kelolaAmbil", {}, 60000).then(function (r) {
-      if (r.status === "SUCCESS") {
-        var lama = K.data || {};
-        ["akun", "geo", "roleTersedia", "pengaturan", "sistem"].forEach(function (x) { if (lama[x] !== undefined) r[x] = lama[x]; });
-        K.data = r; K.waktu = Date.now(); lencanaMenu();
-      }
+      if (r.status === "SUCCESS") { K.data = r; K.waktu = Date.now(); lencanaMenu(); }
       return r;
     }).then(function (r) { K.memuat = null; return r; });
     return K.memuat;
-  }
-
-  // Data khusus admin (akun, area, pengaturan, status sistem) dimuat hanya saat halamannya dibuka.
-  function muatAdmin(sistem) {
-    return DB.panggil("adminAmbil", { sistem: !!sistem }, 60000).then(function (r) {
-      if (r.status === "SUCCESS") {
-        ["akun", "geo", "roleTersedia", "pengaturan", "sistem"].forEach(function (x) { if (r[x] !== undefined) K.data[x] = r[x]; });
-      }
-      return r;
-    });
-  }
-  function denganAdmin(wadah, sistem, render) {
-    denganData(wadah, function () {
-      if (K.data.akun && K.data.pengaturan && (!sistem || K.data.sistem)) { render(); return; }
-      kotakMuat(wadah);
-      muatAdmin(sistem).then(function (r) {
-        if (r.status !== "SUCCESS") { kotakGalat(wadah, r, function () { denganAdmin(wadah, sistem, render); }); return; }
-        if (wadah.isConnected) render();
-      });
-    });
   }
 
   function aktifSaja(daftar) { return (daftar || []).filter(function (o) { return o.aktif; }); }
@@ -244,15 +220,10 @@
     };
   }
 
-  // Perubahan terlihat seketika (optimistis); permintaan ke server jalan di latar. Bila gagal, tampilan dikembalikan.
   function alihAktif(jenis, o, segar) {
-    if (o._sibuk) return;
-    var awal = o.aktif;
-    o._sibuk = true; o.aktif = !awal; lencanaMenu(); segar();
-    kirimMaster(jenis, { op: "aktif", lama: lamaDari(jenis, o), aktif: !awal }).then(function (r) {
-      if (r.status === "SUCCESS") { PC.toast((awal ? "Dinonaktifkan: " : "Diaktifkan: ") + (o.n || o.i), "ok"); segar(); return; }
-      o.aktif = awal; delete o._sibuk; lencanaMenu(); segar();
-      if (r.kode !== "SESI") PC.toast(r.message || "Gagal menyimpan. Tampilan dikembalikan.", "bad");
+    kirimMaster(jenis, { op: "aktif", lama: lamaDari(jenis, o), aktif: !o.aktif }).then(function (r) {
+      if (r.status === "SUCCESS") { PC.toast((o.aktif ? "Dinonaktifkan: " : "Diaktifkan: ") + (o.n || o.i), "ok"); segar(); }
+      else if (r.kode !== "SESI") PC.toast(r.message, "bad");
     });
   }
 
@@ -261,14 +232,9 @@
     PC.tanya("Hapus " + cfg.satu + "?", "\"" + nama + "\" dihapus permanen dari daftar. Laporan yang sudah masuk tidak berubah. " +
       "Kalau hanya tidak dipakai sementara, pilih Nonaktifkan.", "Hapus", "Batal").then(function (ya) {
       if (!ya) return;
-      var daftar = K.data[KUNCI[cfg.jenis]] || [], pos = daftar.indexOf(o);
-      if (pos >= 0) { daftar.splice(pos, 1); lencanaMenu(); segar(); }
       kirimMaster(cfg.jenis, { op: "hapus", lama: lamaDari(cfg.jenis, o) }).then(function (r) {
-        if (r.status === "SUCCESS") { PC.toast("Dihapus: " + nama, "ok"); segar(); return; }
-        var d2 = K.data[KUNCI[cfg.jenis]] || [];
-        if (pos >= 0 && d2.indexOf(o) < 0) d2.splice(Math.min(pos, d2.length), 0, o);
-        lencanaMenu(); segar();
-        if (r.kode !== "SESI") PC.toast(r.message || "Gagal menghapus. Tampilan dikembalikan.", "bad");
+        if (r.status === "SUCCESS") { PC.toast("Dihapus: " + nama, "ok"); segar(); }
+        else if (r.kode !== "SESI") PC.toast(r.message, "bad");
       });
     });
   }
@@ -549,7 +515,7 @@
   }
 
   function tampilAkun(wadah) {
-    denganAdmin(wadah, false, function () {
+    denganData(wadah, function () {
       PC.kosongkan(wadah);
       wadah.appendChild(h("div", { class: "pengantar" }, h("b", { text: "Akun ini hanya untuk dashboard, bukan untuk petugas. " }),
         "Admin: semua fitur termasuk akun dan area. Supervisor dan Manager: kelola data tenant, petugas, zona, checklist serta tindak lanjut temuan. Viewer: hanya melihat laporan."));
@@ -737,7 +703,7 @@
   }
 
   function tampilPengaturan(wadah) {
-    denganAdmin(wadah, true, function () {
+    denganData(wadah, function () {
       PC.kosongkan(wadah);
       wadah.appendChild(panelPatroli());
       var area = h("div");

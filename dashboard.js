@@ -33,27 +33,11 @@
 
   // Semua panggilan admin lewat sini: token ditambahkan, sesi habis ditangani sekali di satu tempat,
   // galat jaringan dikembalikan sebagai objek biasa supaya halaman cukup memeriksa r.status.
-  // DB.sibuk = jumlah panggilan aksi pengguna yang sedang berjalan. Pemuatan latar (ambilData) menunggu bila > 0
-  // supaya tidak bersaing dengan klik pengguna. DB.kecepatan menyimpan waktu tiap aksi untuk panel Kecepatan.
-  DB.sibuk = 0;
-  DB.kecepatan = {};
-  function catatKecepatan(aksi, total, server) {
-    var k = DB.kecepatan[aksi] || (DB.kecepatan[aksi] = { n: 0, jumlah: 0, total: 0, server: null });
-    k.n++; k.jumlah += total; k.total = total; k.server = typeof server === "number" ? server : null;
-  }
   DB.panggil = function (aksi, data, ms) {
-    var latar = aksi === "ambilData" && data && data.latar === true;
-    if (data && data.latar) { data = Object.assign({}, data); delete data.latar; }
-    if (!latar) DB.sibuk++;
-    var t0 = performance.now();
-    function selesai() { if (!latar) DB.sibuk = Math.max(0, DB.sibuk - 1); }
     return PC.api(aksi, Object.assign({ token: DB.S.token }, data || {}), ms || 40000).then(function (r) {
-      selesai();
-      catatKecepatan(aksi, Math.round(performance.now() - t0), r && r.ms);
       if (r && r.status !== "SUCCESS" && r.kode === "SESI") { DB.keluar(r.message); }
       return r;
     }, function () {
-      selesai();
       return { status: "ERROR", message: "Tidak dapat terhubung ke server. Periksa sinyal lalu coba lagi.", jaringan: true };
     });
   };
@@ -287,12 +271,11 @@
     e.preventDefault();
     var o = formAktif;
     if (!o || !o.kirim) return;
-    var btn = $("fm-simpan"), teksAsli = btn.textContent;
+    var btn = $("fm-simpan");
     btn.disabled = true;
     DB.galatForm("");
     var pesanLokal = o.periksa ? o.periksa(DB.nilaiForm()) : "";
     if (pesanLokal) { DB.galatForm(pesanLokal); btn.disabled = false; return; }
-    btn.textContent = "Menyimpan...";
     Promise.resolve(o.kirim(DB.nilaiForm())).then(function (r) {
       if (r && r.status === "SUCCESS") {
         if (!o.tetapBuka) DB.tutupForm();
@@ -300,7 +283,7 @@
       } else if (r && r.kode !== "SESI") {
         DB.galatForm((r && r.message) || "Gagal menyimpan.");
       }
-    }).then(function () { btn.disabled = false; btn.textContent = teksAsli; });
+    }).then(function () { btn.disabled = false; });
   });
 
   /* ------------------------------------------------------------ ganti password */
