@@ -1,4 +1,4 @@
-/* petugas.css v20 - Simple & bersih (font sistem, 1 warna aksen) */
+/* petugas.css v22 - Simple & bersih (font sistem, 1 warna aksen) */
 
 :root {
   --bg: #f5f6f8;
@@ -15,6 +15,8 @@
   --merah-bg: #fef2f2;
   --ambar: #b45309;
   --ambar-bg: #fffbeb;
+  --on-hijau: #ffffff;
+  --on-merah: #ffffff;
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
@@ -24,10 +26,14 @@
     --hijau: #34d399; --hijau-bg: rgba(52,211,153,.12);
     --merah: #f87171; --merah-bg: rgba(248,113,113,.12);
     --ambar: #fbbf24; --ambar-bg: rgba(251,191,36,.12);
+    --on-hijau: #052e22;
+    --on-merah: #3b0a0a;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
+  --on-hijau: #052e22;
+  --on-merah: #3b0a0a;
   --bg: #0d1117; --kartu: #161b22; --garis: #2a313c; --teks: #f0f3f6; --teks-2: #9aa4b2;
   --input: #0d1117; --input-garis: #3a4452; --aksen: #3b82f6;
   --hijau: #34d399; --hijau-bg: rgba(52,211,153,.12);
@@ -108,7 +114,9 @@ input:focus-visible + .seg, input:focus-visible + .ubin { outline: 2px solid var
 .input.invalid { border-color: var(--merah); }
 textarea.input { min-height: 64px; resize: vertical; }
 .kombo { position: relative; }
-.daftar { position: absolute; left: 0; right: 0; top: calc(100% + 4px); z-index: 30; margin: 0; padding: 4px; list-style: none; max-height: 220px; overflow-y: auto; background: var(--kartu); border: 1px solid var(--input-garis); border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,.15); }
+.daftar { position: absolute; left: 0; right: 0; top: calc(100% + 4px); z-index: 50; margin: 0; padding: 4px; list-style: none; max-height: min(240px, 40vh); overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; touch-action: pan-y; background: var(--kartu); border: 1px solid var(--input-garis); border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,.15); }
+.daftar.atas { top: auto; bottom: calc(100% + 4px); }
+.daftar .kosong { color: var(--teks-2); cursor: default; }
 .daftar li { padding: 10px 12px; border-radius: 8px; font-size: 15px; cursor: pointer; }
 .daftar li:hover, .daftar li[aria-selected="true"] { background: var(--bg); }
 
@@ -122,8 +130,8 @@ textarea.input { min-height: 64px; resize: vertical; }
 .seg-na, input[value="NA"], input[value="N/A"], input[value="na"], input[value="n/a"] { display: none !important; }
 .seg-grup input, .tingkat input, .ubin-grup input { position: absolute; opacity: 0; pointer-events: none; }
 .seg { min-height: 44px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--input-garis); border-radius: 10px; background: var(--input); font-size: 13.5px; font-weight: 600; color: var(--teks-2); cursor: pointer; user-select: none; }
-input:checked + .seg-ok { background: var(--hijau); border-color: var(--hijau); color: #fff; }
-input:checked + .seg-bad { background: var(--merah); border-color: var(--merah); color: #fff; }
+input:checked + .seg-ok { background: var(--hijau); border-color: var(--hijau); color: var(--on-hijau); }
+input:checked + .seg-bad { background: var(--merah); border-color: var(--merah); color: var(--on-merah); }
 input:checked + .seg-na { background: var(--teks-2); border-color: var(--teks-2); color: #fff; }
 input:checked + .t-rendah { background: #0e7490; border-color: #0e7490; color: #fff; }
 input:checked + .t-sedang { background: #d97706; border-color: #d97706; color: #fff; }
@@ -142,7 +150,7 @@ input:checked + .ubin { background: var(--aksen); border-color: var(--aksen); co
 .foto-grid:empty { display: none; }
 .foto-item { position: relative; width: 80px; height: 80px; }
 .foto-item img { width: 100%; height: 100%; object-fit: cover; border-radius: 10px; border: 1px solid var(--garis); }
-.foto-hapus { position: absolute; top: -7px; right: -7px; width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--kartu); background: var(--merah); color: #fff; font-size: 11px; font-weight: 700; cursor: pointer; }
+.foto-hapus { position: absolute; top: -7px; right: -7px; width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--kartu); background: var(--merah); color: var(--on-merah); font-size: 11px; font-weight: 700; cursor: pointer; }
 
 /* Tombol */
 .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 46px; padding: 0 16px; font: inherit; font-size: 14.5px; font-weight: 600; border-radius: 10px; border: none; cursor: pointer; }
@@ -187,3 +195,6 @@ input:checked + .ubin { background: var(--aksen); border-color: var(--aksen); co
 .scan-bingkai { position: relative; width: min(70vw, 280px); aspect-ratio: 1; border: 3px solid #fff; border-radius: 20px; box-shadow: 0 0 0 100vmax rgba(0,0,0,.55); }
 .scan-teks { position: relative; margin: 18px 0 0; color: #fff; font-size: 14px; font-weight: 600; text-align: center; }
 .scan-batal { position: absolute; left: 16px; right: 16px; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); background: #fff; color: #111; }
+
+/* Checklist: tanpa ikon */
+#checklist svg, #checklist .ikon, #checklist img { display: none !important; }

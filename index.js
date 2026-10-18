@@ -1,4 +1,4 @@
-/* index.js v20 - Form Patroli Petugas (QR zona + Hard Geofence) */
+/* index.js v21 - Form Patroli Petugas (QR zona + Hard Geofence) */
 (function () {
   "use strict";
   var PC = window.PC, h = PC.h;
@@ -148,6 +148,68 @@
     });
   }
 
+  /* ---------- Kolom nama (dropdown bisa di-scroll) ---------- */
+  function buatKombo(o) {
+    var inp = o.input, ul = o.list, aktif = -1;
+    function daftar() { return o.items() || []; }
+    function kanon() {
+      var v = inp.value.trim().toLowerCase(), a = daftar();
+      for (var i = 0; i < a.length; i++) if (a[i].toLowerCase() === v) return a[i];
+      return "";
+    }
+    function tutup() { ul.hidden = true; aktif = -1; inp.setAttribute("aria-expanded", "false"); }
+    function pilih(n) { inp.value = n; tutup(); inp.blur(); o.onPick(n); }
+    function sorot(i) {
+      var li = ul.querySelectorAll("li[role=option]");
+      if (!li.length) return;
+      aktif = (i + li.length) % li.length;
+      Array.prototype.forEach.call(li, function (x, j) { x.setAttribute("aria-selected", j === aktif ? "true" : "false"); });
+      li[aktif].scrollIntoView({ block: "nearest" });
+    }
+    function gambar() {
+      var q = inp.value.trim().toLowerCase();
+      ul.textContent = ""; aktif = -1;
+      var hasil = daftar().filter(function (n) { return !q || n.toLowerCase().indexOf(q) >= 0; });
+      if (!hasil.length) ul.appendChild(h("li", { class: "kosong", text: o.kosong || "Tidak ada." }));
+      hasil.forEach(function (n) {
+        var li = h("li", { role: "option", text: n });
+        li.addEventListener("click", function () { pilih(n); });
+        ul.appendChild(li);
+      });
+      ul.hidden = false; inp.setAttribute("aria-expanded", "true");
+      var r = inp.getBoundingClientRect(), bawah = window.innerHeight - r.bottom - 150;
+      ul.classList.toggle("atas", bawah < 200 && r.top > bawah);
+    }
+    inp.addEventListener("focus", gambar);
+    inp.addEventListener("input", function () { gambar(); o.onPick(kanon()); });
+    inp.addEventListener("keydown", function (e) {
+      if (e.key === "ArrowDown") { e.preventDefault(); if (ul.hidden) gambar(); sorot(aktif + 1); }
+      else if (e.key === "ArrowUp") { e.preventDefault(); sorot(aktif - 1); }
+      else if (e.key === "Enter") {
+        var li = ul.querySelectorAll("li[role=option]");
+        if (!ul.hidden && li.length) { e.preventDefault(); pilih(li[aktif >= 0 ? aktif : 0].textContent); }
+      } else if (e.key === "Escape") tutup();
+    });
+    // Tutup hanya saat menyentuh di luar (bukan saat scroll di dalam daftar)
+    document.addEventListener("pointerdown", function (e) {
+      if (!ul.hidden && e.target !== inp && !ul.contains(e.target)) tutup();
+    });
+    return { nilai: kanon };
+  }
+
+  /* Sembunyikan teks "Item X dari Y ..." di checklist */
+  function rapikanChecklist() {
+    var w = $("checklist");
+    if (!w) return;
+    var rapi = function () {
+      Array.prototype.forEach.call(w.querySelectorAll("*"), function (el) {
+        if (!el.children.length && /^Item\s+\d+\s+dari\s+\d+/i.test(el.textContent.trim())) el.hidden = true;
+      });
+    };
+    rapi();
+    new MutationObserver(rapi).observe(w, { childList: true, subtree: true, characterData: true });
+  }
+
   /* ---------- Muat data ---------- */
   function muat() {
     var muatEl = $("muat");
@@ -178,7 +240,7 @@
     $("form").hidden = false;
     $("bar-kirim").hidden = false;
 
-    cbNama = PC.Combobox({ input: $("nama"), list: $("daftar-nama"), kosong: "Nama tidak terdaftar.",
+    cbNama = buatKombo({ input: $("nama"), list: $("daftar-nama"), kosong: "Nama tidak terdaftar.",
       items: function () { return master.daftarNama; },
       onPick: function (v) {
         if (v) { try { localStorage.setItem(KUNCI_NAMA, v); } catch (e) {} }
@@ -187,6 +249,7 @@
       } });
     foto = PC.FotoGrid($("foto-grid"), { maks: 3, onUbah: ubah });
     cl = PC.Checklist($("checklist"), { onUbah: ubah });
+    rapikanChecklist();
 
     // Draft: checklist, tingkat, catatan. Lokasi TIDAK dipulihkan dari draft: hanya sah dari pindai QR.
     var draft = bacaDraft();
