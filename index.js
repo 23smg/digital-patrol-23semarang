@@ -1,4 +1,4 @@
-/* index.js v16 - Form Patroli Petugas (QR zona + Hard Geofence) */
+/* index.js v18 - Form Patroli Petugas (QR zona + Hard Geofence) */
 (function () {
   "use strict";
   var PC = window.PC, h = PC.h;
@@ -45,25 +45,24 @@
     var gps = PC.Lokasi.saatIni();
     if (!gps || gps.lat === null || gps.lng === null) {
       geoState = "cari";
-      tampilGeo("cari", "Mencari sinyal GPS... pastikan izin lokasi aktif.");
+      tampilGeo("cari", "Mencari GPS...");
       return;
     }
     var jarak = hitungJarakM(gps.lat, gps.lng, lat0, lng0);
     var toleransi = Math.min(Math.max(parseFloat(gps.akurasi) || 0, 0), TOLERANSI_GPS_MAKS);
     if (jarak - toleransi > radius) {
       geoState = "luar";
-      tampilGeo("luar", "Di luar area mall (" + Math.round(jarak) + " m dari titik pusat, maks " + Math.round(radius) + " m). Pengiriman dikunci.");
+      tampilGeo("luar", "Di luar area (" + Math.round(jarak) + " m)");
     } else {
       geoState = "ok";
-      tampilGeo("ok", "Posisi di dalam area mall.");
+      tampilGeo("ok", "Dalam area");
     }
   }
 
   /* ---------- Lokasi (QR) ---------- */
   function tampilLokasi() {
     var ada = !!zona;
-    $("lokasi-nama").textContent = ada ? zona : "Belum ada lokasi";
-    $("lokasi-tag").textContent = ada ? "Terverifikasi QR" : "Belum dipindai";
+    $("lokasi-nama").textContent = ada ? zona : "Scan QR lokasi";
     $("lokasi-petunjuk").hidden = ada;
     $("b-lokasi").classList.toggle("selesai", ada);
 
@@ -85,7 +84,7 @@
     var muatEl = $("muat");
     muatEl.hidden = false;
     PC.kosongkan(muatEl);
-    muatEl.textContent = "Memuat data...";
+    muatEl.textContent = "Memuat...";
     var t0 = Date.now();
     PC.api("ambilDropdown", {}, 25000).then(function (r) {
       if (r.status !== "SUCCESS") throw new Error(r.message);
@@ -95,12 +94,12 @@
     }).catch(function () {
       try {
         var c = JSON.parse(localStorage.getItem(KUNCI_MASTER));
-        if (c && c.checklist) { master = c; PC.toast("Memakai data tersimpan.", "bad"); }
+        if (c && c.checklist) { master = c; PC.toast("Data offline.", "bad"); }
       } catch (e) {}
     }).then(function () {
       if (master) { mulai(); return; }
       PC.kosongkan(muatEl);
-      muatEl.appendChild(h("p", { text: "Gagal memuat data." }));
+      muatEl.appendChild(h("p", { text: "Gagal memuat." }));
       muatEl.appendChild(h("button", { type: "button", class: "btn btn-utama", text: "Coba Lagi", onclick: muat }));
     });
   }
@@ -148,7 +147,7 @@
     $("catatan").addEventListener("input", ubah);
     $("btn-semua").addEventListener("click", function () {
       var n = cl.isiSemuaSesuai();
-      PC.toast(n ? n + " item ditandai Sesuai." : "Semua item sudah dijawab.", n ? "ok" : "");
+      PC.toast(n ? n + " item sesuai." : "Sudah lengkap.", n ? "ok" : "");
     });
     $("btn-foto").addEventListener("click", ambilFoto);
     $("btn-kirim").addEventListener("click", kirim);
@@ -177,16 +176,16 @@
   /* ---------- Syarat kirim ---------- */
   function syarat() {
     var c = cl.nilai(), s = [];
-    s.push({ ok: !!zona, label: "pindai QR lokasi" });
-    s.push({ ok: !!cbNama.nilai(), label: "nama petugas" });
+    s.push({ ok: !!zona, label: "scan QR" });
+    s.push({ ok: !!cbNama.nilai(), label: "nama" });
     s.push({ ok: !!c.lengkap, label: "checklist (" + c.terisi + "/" + c.total + ")" });
     if (c.adaTemuan) {
-      s.push({ ok: !c.catatanKurang, label: "penjelasan temuan" });
+      s.push({ ok: !c.catatanKurang, label: "keterangan temuan" });
       s.push({ ok: !!tingkat, label: "tingkat temuan" });
     }
     s.push({ ok: foto.daftar().length > 0, label: "foto" });
     if (geoState !== "none") {
-      s.push({ ok: geoState === "ok", label: geoState === "cari" ? "sinyal GPS" : "posisi di dalam area mall" });
+      s.push({ ok: geoState === "ok", label: geoState === "cari" ? "GPS" : "posisi di area" });
     }
     return s;
   }
@@ -202,7 +201,7 @@
     var k = s.filter(function (x) { return !x.ok; }).map(function (x) { return x.label; });
     var selesaiN = s.length - k.length;
 
-    $("progres").textContent = c.terisi + " dari " + c.total;
+    $("progres").textContent = c.terisi + "/" + c.total;
     $("blok-temuan").hidden = !c.adaTemuan;
     if (!c.adaTemuan && tingkat) {
       tingkat = "";
@@ -212,13 +211,13 @@
     var nFoto = foto.daftar().length;
     var lokasiOk = geoState === "none" || geoState === "ok";
     var siapFoto = !!cbNama.nilai() && !!zona && lokasiOk;
-    $("jml-foto").textContent = nFoto + " dari 3";
+    $("jml-foto").textContent = nFoto + "/3";
     $("btn-foto").disabled = !siapFoto || foto.penuh();
-    $("btn-foto-teks").textContent = foto.penuh() ? "Foto maks 3" : (nFoto ? "Tambah Foto" : "Ambil Foto");
+    $("btn-foto-teks").textContent = foto.penuh() ? "Maks 3" : (nFoto ? "Tambah Foto" : "Ambil Foto");
     $("hint-foto").textContent = siapFoto ? "" :
-      (!zona || !cbNama.nilai() ? "Pindai QR lokasi dan pilih nama dulu." : "Foto aktif setelah posisi Anda di dalam area mall.");
+      (!zona || !cbNama.nilai() ? "Scan QR dan pilih nama dulu." : "Masuk area dulu.");
 
-    $("kurang").textContent = k.length ? "Lengkapi: " + k.join(", ") : "Semua isian lengkap. Siap dikirim.";
+    $("kurang").textContent = k.length ? "Kurang: " + k.join(", ") : "Siap dikirim";
     $("kurang").className = "kurang" + (k.length ? "" : " siap");
     var bar = $("bar-progres");
     bar.max = s.length; bar.value = selesaiN;
@@ -253,7 +252,7 @@
   /* ---------- Kirim ---------- */
   function setMengirim(v) {
     mengirim = v;
-    $("btn-kirim").textContent = v ? "Mengirim..." : "Kirim Laporan Patroli";
+    $("btn-kirim").textContent = v ? "Mengirim..." : "Kirim";
     ubah();
   }
 
@@ -274,7 +273,7 @@
     periksaGeofence();
     var k = kekurangan();
     if (mengirim || k.length) {
-      if (k.length) PC.toast("Lengkapi: " + k.join(", "), "bad");
+      if (k.length) PC.toast("Kurang: " + k.join(", "), "bad");
       render();
       return;
     }
@@ -291,28 +290,28 @@
     PC.api("simpanPatroli", { payload: payload }).then(function (r) {
       if (r.status === "SUCCESS") {
         var hasil = $("hasil");
-        hasil.textContent = "Laporan patroli tercatat" + (r.waktu ? " pukul " + r.waktu + " WIB" : "") + ". Lokasi: " + zonaTeks + ".";
+        hasil.textContent = "Tercatat" + (r.waktu ? " " + r.waktu + " WIB" : "") + " · " + zonaTeks;
         hasil.hidden = false;
-        PC.toast("Laporan tersimpan.", "ok");
+        PC.toast("Terkirim.", "ok");
         reset();
         return;
       }
-      PC.toast(r.message || "Laporan ditolak.", "bad");
+      PC.toast(r.message || "Ditolak.", "bad");
       if (r.kode === "NAMA") {
         var g = $("g-nama");
         g.textContent = r.message; g.hidden = false;
         $("nama").classList.add("invalid"); $("nama").focus();
       }
     }).catch(function (e) {
-      if (!e.jaringan) { PC.toast("Gagal mengirim. Coba lagi.", "bad"); return; }
+      if (!e.jaringan) { PC.toast("Gagal mengirim.", "bad"); return; }
       PC.Antrean.simpan({ id: payload.id, aksi: "simpanPatroli", payload: payload, dibuat: Date.now(),
         status: "menunggu", label: "Patroli " + zonaTeks }).then(function () {
-        PC.toast("Tidak ada sinyal. Laporan disimpan di perangkat.", "ok");
+        PC.toast("Offline. Tersimpan di HP.", "ok");
         $("hasil").hidden = true;
         reset();
         antrean.segarkan();
       }).catch(function () {
-        PC.toast("Penyimpanan gagal. Coba kirim kembali.", "bad");
+        PC.toast("Gagal menyimpan.", "bad");
       });
     }).then(function () { setMengirim(false); });
   }

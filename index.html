@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0f172a">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src https://script.google.com https://script.googleusercontent.com; media-src blob:; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'">
+<meta name="theme-color" content="#2563eb">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src https://script.google.com https://script.googleusercontent.com; media-src blob:; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -15,20 +15,14 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" type="image/png" href="icons/icon-192.png">
 <title>Patroli - Mall 23Semarang</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&family=Playfair+Display:wght@600;700&display=swap">
-<link rel="stylesheet" href="petugas.css?v=17">
+<link rel="stylesheet" href="petugas.css?v=18">
 </head>
 <body>
 
 <header class="kepala">
   <div class="kepala-isi">
     <div class="merek-grup">
-      <div>
-        <div class="judul">Patroli Digital</div>
-        <div class="sub">Mall 23Semarang</div>
-      </div>
+      <div class="judul">Patroli 23</div>
     </div>
     <nav class="nav-app" aria-label="Halaman">
       <a href="index.html" aria-current="page">Patroli</a>
@@ -37,43 +31,37 @@
   </div>
 </header>
 
-<!-- Jam & badge lokasi -->
-<div class="stempel" id="stempel" aria-label="Waktu dan lokasi"></div>
+<div class="stempel" id="stempel" aria-label="Waktu"></div>
 
 <main class="app">
   <div id="antrean-wadah"></div>
   <div id="hasil" class="hasil" role="status" hidden></div>
-  <div id="muat" class="muat" role="status">Memuat konfigurasi sistem...</div>
+  <div id="muat" class="muat" role="status">Memuat...</div>
 
   <form id="form" hidden novalidate>
-    <!-- LANGKAH 1: LOKASI (QR) + STATUS AREA -->
     <section class="bagian" id="b-lokasi">
-      <h2><span class="langkah"><span>1</span></span>Lokasi Patroli <small id="lokasi-tag">Belum dipindai</small></h2>
-      <div class="lokasi-nama" id="lokasi-nama">Belum ada lokasi</div>
-      <p class="petunjuk" id="lokasi-petunjuk">Pindai QR di titik patroli menggunakan kamera HP.</p>
+      <h2>Lokasi</h2>
+      <div class="lokasi-nama" id="lokasi-nama">Scan QR lokasi</div>
+      <p class="petunjuk" id="lokasi-petunjuk" hidden></p>
       <div class="geo" id="geo-status" data-state="cari" role="status" aria-live="polite" hidden>
-        <span class="dot" aria-hidden="true"></span><span id="geo-teks">Memeriksa posisi...</span>
+        <span class="dot" aria-hidden="true"></span><span id="geo-teks"></span>
       </div>
     </section>
 
-    <!-- LANGKAH 2: NAMA PETUGAS -->
     <section class="bagian" id="b-nama">
-      <h2><span class="langkah"><span>2</span></span>Nama Petugas</h2>
+      <h2>Nama</h2>
       <div class="medan">
-        <label for="nama">Pilih Nama Anda</label>
         <div class="kombo">
-          <input id="nama" class="input" type="text" autocomplete="off" placeholder="Ketik nama Anda..." aria-controls="daftar-nama">
+          <input id="nama" class="input" type="text" autocomplete="off" placeholder="Pilih nama" aria-label="Nama petugas" aria-controls="daftar-nama">
           <ul id="daftar-nama" class="daftar" role="listbox" hidden></ul>
         </div>
         <p id="g-nama" class="galat" role="alert" hidden></p>
       </div>
     </section>
 
-    <!-- LANGKAH 3: CHECKLIST -->
     <section class="bagian" id="b-cl">
-      <h2><span class="langkah"><span>3</span></span>Kondisi Area <small id="progres">0 dari 0</small></h2>
-      <p class="petunjuk">Periksa area lalu jawab checklist di bawah ini.</p>
-      <button type="button" id="btn-semua" class="btn btn-semua">Tandai Semua Sesuai</button>
+      <h2>Checklist <small id="progres">0/0</small></h2>
+      <button type="button" id="btn-semua" class="btn btn-semua">Semua Sesuai</button>
       <div id="checklist"></div>
       <div id="blok-temuan" hidden>
         <div class="medan">
@@ -86,15 +74,12 @@
         </div>
       </div>
       <div class="medan">
-        <label for="catatan">Catatan Tambahan (Opsional)</label>
-        <textarea id="catatan" class="input" rows="2" maxlength="500" placeholder="Tambahkan rincian jika ada..."></textarea>
+        <textarea id="catatan" class="input" rows="2" maxlength="500" placeholder="Catatan (opsional)" aria-label="Catatan"></textarea>
       </div>
     </section>
 
-    <!-- LANGKAH 4: FOTO -->
     <section class="bagian" id="b-foto">
-      <h2><span class="langkah"><span>4</span></span>Foto Bukti <small id="jml-foto">0 dari 3</small></h2>
-      <p class="petunjuk">Ambil foto kondisi area langsung lewat kamera HP.</p>
+      <h2>Foto <small id="jml-foto">0/3</small></h2>
       <div id="foto-grid" class="foto-grid"></div>
       <button type="button" id="btn-foto" class="btn btn-foto"><span id="ikon-foto"></span><span id="btn-foto-teks">Ambil Foto</span></button>
       <p id="hint-foto" class="petunjuk"></p>
@@ -104,14 +89,14 @@
 
 <div class="bar-kirim" id="bar-kirim" hidden>
   <div class="bar-isi">
-    <progress id="bar-progres" max="1" value="0" aria-label="Kelengkapan laporan"></progress>
+    <progress id="bar-progres" max="1" value="0" aria-label="Kelengkapan"></progress>
     <p id="kurang" class="kurang" role="status" aria-live="polite"></p>
-    <button type="button" id="btn-kirim" class="btn btn-utama" disabled>Kirim Laporan Patroli</button>
+    <button type="button" id="btn-kirim" class="btn btn-utama" disabled>Kirim</button>
   </div>
 </div>
 
-<script src="config.js?v=16"></script>
-<script src="core.js?v=16"></script>
-<script src="index.js?v=16"></script>
+<script src="config.js?v=18"></script>
+<script src="core.js?v=18"></script>
+<script src="index.js?v=18"></script>
 </body>
 </html>
