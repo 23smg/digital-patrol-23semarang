@@ -1,4 +1,8 @@
-/* index.js - form patroli petugas. Tanpa PIN: petugas memilih namanya dari daftar aktif. */
+/* index.js - form patroli petugas. Tanpa PIN: petugas memilih namanya dari daftar aktif.
+   Diperbarui dengan:
+   1. Auto-select dan penguncian zona via QR Code (?zona=NamaZona)
+   2. Hard Geofencing (Pencegahan submit & blokir tombol jika di luar area mall)
+*/
 (function () {
   "use strict";
   var PC = window.PC, h = PC.h;
@@ -6,6 +10,7 @@
   var KUNCI_DRAFT = "dp_draft_patroli_v2", KUNCI_MASTER = "dp_master_v2", KUNCI_NAMA = "dp_nama";
   var master = null, idLaporan = PC.buatId(), tingkat = "", zona = "", mengirim = false, timerDraft = null;
   var cbNama, cl, foto, zonaQR = "";
+  var diluarArea = false; // Status Geofence
 
   PC.pasangLogo(document.querySelector(".merek-grup"));
   PC.pasangTema(document.querySelector(".kepala-isi"));
@@ -15,7 +20,55 @@
   PC.pasangPWA($("antrean-wadah"));
   setInterval(PC.sinkronJam, 300000);
   document.addEventListener("visibilitychange", function () { if (!document.hidden) PC.sinkronJam(); });
-  $("ikon-foto").appendChild(PC.ikon("KAMERA"));
+  if ($("ikon-foto")) $("ikon-foto").appendChild(PC.ikon("KAMERA"));
+
+  /* ------------------------------------------------ Utilitas Geofence (Haversine) */
+  function hitungJarakM(lat1, lng1, lat2, lng2) {
+    var R = 6371000; // Radius bumi dalam meter
+    var rad = Math.PI / 180;
+    var dLat = (lat2 - lat1) * rad;
+    var dLng = (lng2 - lng1) * rad;
+    var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * rad) * Math.cos(lat2 * rad) *
+      Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  }
+
+  function periksaGeofence() {
+    var gps = PC.Lokasi.saatIni();
+    var geo = master && master.geo ? master.geo : null;
+    var pesanEl = $("pesan-geofence");
+
+    // Jika batas area dikonfigurasi di server
+    if (geo && geo.lat && geo.lng && geo.radius) {
+      var latMall = parseFloat(geo.lat);
+      var lngMall = parseFloat(geo.lng);
+      var radiusMaks = parseFloat(geo.radius);
+
+      if (!gps || gps.lat === null || gps.lng === null) {
+        diluarArea = true;
+        if (pesanEl) {
+          pesanEl.textContent = "Mencari lokasi GPS... Pastikan izin GPS aktif.";
+          pesanEl.hidden = false;
+        }
+        return;
+      }
+
+      var jarak = hitungJarakM(gps.lat, gps.lng, latMall, lngMall);
+
+      if (jarak > radiusMaks) {
+        diluarArea = true;
+        if (pesanEl) {
+          pesanEl.textContent = "Anda terdeteksi di luar area mall (Jarak: " + Math.round(jarak) + "m, Maks: " + radiusMaks + "m). Laporan tidak dapat dikirim.";
+          pesanEl.hidden = false;
+        }
+        return;
+      }
+    }
+
+    diluarArea = false;
+    if (pesanEl) pesanEl.hidden = true;
+  }
 
   /* ------------------------------------------------ memuat master */
   function muat() {
@@ -70,15 +123,26 @@
         if (r) r.checked = true;
       }
     }
-    // Tautan dari QR di lokasi: ?zona=Nama. Zona langsung terpilih bila namanya ada di daftar aktif.
+
+    // Tautan dari QR di lokasi: ?zona=Nama.
     try {
       var zq = new URLSearchParams(location.search).get("zona");
       if (zq && master.daftarZona.indexOf(zq) >= 0) {
         pilihZona(zq); zonaQR = zq;
-        $("zona-qr").hidden = false;
-        $("zona-qr").textContent = "Zona terpilih dari QR di lokasi: " + zq + ". Ketuk zona lain bila salah.";
+        if ($("zona-qr")) {
+          $("zona-qr").hidden = false;
+          $("zona-qr").textContent = "Zona terpilih dari QR di lokasi: " + zq + ". Ketuk zona lain bila salah.";
+        }
+        
+        // Kunci bidang pilihan zona agar tidak bisa diedit manual bila diakses via QR
+        Array.prototype.forEach.call(document.querySelectorAll('input[name="zona"]'), function (radio) {
+          if (radio.value !== zq) {
+            radio.disabled = true;
+          }
+        });
       }
     } catch (e) { /* abaikan */ }
+
     var tersimpan = null;
     try { tersimpan = localStorage.getItem(KUNCI_NAMA); } catch (e) { /* abaikan */ }
     if (tersimpan && master.daftarNama.indexOf(tersimpan) >= 0) $("nama").value = tersimpan;
@@ -93,11 +157,17 @@
     });
     $("btn-foto").addEventListener("click", ambilFoto);
     $("btn-kirim").addEventListener("click", kirim);
+
+    // Jalankan pemeriksaan posisi/geofence berkala
+    setInterval(function () {
+      periksaGeofence();
+      ubah();
+    }, 3000);
+
     ubah();
   }
 
-  /* ------------------------------------------------ zona: pilih lantai dulu, lalu titiknya
-     Nama seperti "L4 - 12" dipecah menjadi lantai "L4" dan titik "12". Daftar pendek tetap ditampilkan datar. */
+  /* ------------------------------------------------ zona: pilih lantai dulu, lalu titiknya */
   var grupZona = [], grupAktif = "";
   function pecahZona(n) {
     var m = /^(.+?)\s+[-\u2013]\s+(.+)$/.exec(n);
@@ -118,13 +188,25 @@
       if (!peta[p.g]) { peta[p.g] = { nama: p.g, jml: 0 }; grupZona.push(peta[p.g]); }
       peta[p.g].jml++;
     });
-    grupZona.sort(function (a, b) { return (a.nama === "Lainnya") - (b.nama === "Lainnya"); });   // "Lainnya" selalu terakhir
+    grupZona.sort(function (a, b) { return (a.nama === "Lainnya") - (b.nama === "Lainnya"); });
     var bertingkat = grupZona.length > 1 && master.daftarZona.length > 8;
     master.daftarZona.forEach(function (nama, i) {
       var id = "zona" + i, p = pecahZona(nama);
       var pecah = bertingkat && p.g !== "Lainnya";
       wadah.appendChild(h("div", { "data-grup": p.g, "data-kunci": kunciCari(nama) },
-        h("input", { type: "radio", name: "zona", id: id, value: nama, onchange: function () { zona = nama; if (zonaQR && nama !== zonaQR) { zonaQR = ""; $("zona-qr").hidden = true; } if ($("zona-cari").value) { $("zona-cari").value = ""; cariZona(); if (pecah) tampilGrup(p.g); } ubah(); } }),
+        h("input", { type: "radio", name: "zona", id: id, value: nama, onchange: function () {
+          zona = nama; 
+          if (zonaQR && nama !== zonaQR) { 
+            zonaQR = ""; 
+            if ($("zona-qr")) $("zona-qr").hidden = true; 
+          } 
+          if ($("zona-cari").value) { 
+            $("zona-cari").value = ""; 
+            cariZona(); 
+            if (pecah) tampilGrup(p.g); 
+          } 
+          ubah(); 
+        } }),
         pecah ? h("label", { class: "ubin-z", for: id }, h("span", null, h("span", { class: "pfx", text: p.g + " - " }), h("span", { class: "sfx", text: p.s })))
               : h("label", { class: "ubin-z", for: id, text: nama })));
     });
@@ -147,7 +229,6 @@
 
   function kunciCari(t) { return String(t).toLowerCase().replace(/[^a-z0-9]+/g, ""); }
 
-  // Pencarian: tampilkan semua zona yang cocok dari semua lantai, lengkap dengan nama lantainya.
   function cariZona() {
     var q = kunciCari($("zona-cari").value), bertingkat = !$("zona-lantai").hidden, wadah = $("zona-grup"), ada = 0;
     wadah.classList.toggle("cari", !!q);
@@ -207,11 +288,13 @@
       if (!tingkat) k.push("tingkat temuan");
     }
     if (!foto.daftar().length) k.push("foto");
+    if (diluarArea) k.push("posisi berada di luar area mall (tombol dikunci)");
     return k;
   }
 
   function ubah() {
     if (!cl) return;
+    periksaGeofence();
     var c = cl.nilai(), k = kekurangan();
     $("progres").textContent = c.terisi + " dari " + c.total;
     $("blok-temuan").hidden = !c.adaTemuan;
@@ -226,11 +309,14 @@
     $("hint-foto").textContent = siapFoto ? "" : "Pilih nama petugas dan zona dulu. Keduanya dicetak pada foto.";
     $("kurang").textContent = k.length ? "Lengkapi: " + k.join(", ") : "Semua isian lengkap. Siap dikirim.";
     $("kurang").className = "kurang" + (k.length ? "" : " siap");
-    $("btn-kirim").disabled = mengirim || k.length > 0;
+    
+    // Kunci tombol kirim jika sedang mengirim, ada isian kurang, ATAU lokasi di luar area
+    $("btn-kirim").disabled = mengirim || k.length > 0 || diluarArea;
+
     $("b-nama").classList.toggle("selesai", !!cbNama.nilai());
     $("b-zona").classList.toggle("selesai", !!zona);
-    $("zona-plakat").hidden = !zona || $("zona-lantai").hidden;
-    $("zona-plakat-nama").textContent = zona;
+    if ($("zona-plakat")) $("zona-plakat").hidden = !zona || $("zona-lantai").hidden;
+    if ($("zona-plakat-nama")) $("zona-plakat-nama").textContent = zona;
     $("b-cl").classList.toggle("selesai", c.lengkap && (!c.adaTemuan || (!c.catatanKurang && !!tingkat)));
     $("b-foto").classList.toggle("selesai", foto.daftar().length > 0);
     clearTimeout(timerDraft);
@@ -258,8 +344,13 @@
 
   function reset() {
     cl.set(master.checklist.PATROLI);
-    Array.prototype.forEach.call(document.querySelectorAll('input[name="zona"]'), function (r) { r.checked = false; });
+    Array.prototype.forEach.call(document.querySelectorAll('input[name="zona"]'), function (r) { 
+      r.checked = false; 
+      r.disabled = false; // Buka kembali kunci zona setelah reset
+    });
     zona = "";
+    zonaQR = "";
+    if ($("zona-qr")) $("zona-qr").hidden = true;
     if (!$("zona-lantai").hidden) tampilGrup("");
     $("catatan").value = "";
     tingkat = "";
@@ -271,8 +362,12 @@
   }
 
   function kirim() {
+    periksaGeofence();
     var k = kekurangan();
-    if (mengirim || k.length) { if (k.length) PC.toast("Lengkapi: " + k.join(", "), "bad"); return; }
+    if (mengirim || k.length) { 
+      if (k.length) PC.toast("Lengkapi: " + k.join(", "), "bad"); 
+      return; 
+    }
     var c = cl.nilai(), gps = PC.Lokasi.saatIni();
     var payload = {
       id: idLaporan, nama: cbNama.nilai(), zona: zona,
