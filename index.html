@@ -15,7 +15,7 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" type="image/png" href="icons/icon-192.png">
 <title>Patroli - Mall 23Semarang</title>
-<link rel="stylesheet" href="petugas.css?v=18">
+<link rel="stylesheet" href="petugas.css?v=19">
 </head>
 <body>
 
@@ -41,7 +41,8 @@
   <form id="form" hidden novalidate>
     <section class="bagian" id="b-lokasi">
       <h2>Lokasi</h2>
-      <div class="lokasi-nama" id="lokasi-nama">Scan QR lokasi</div>
+      <div class="lokasi-nama" id="lokasi-nama">Belum scan QR</div>
+      <button type="button" id="btn-scan" class="btn btn-foto">Scan QR</button>
       <p class="petunjuk" id="lokasi-petunjuk" hidden></p>
       <div class="geo" id="geo-status" data-state="cari" role="status" aria-live="polite" hidden>
         <span class="dot" aria-hidden="true"></span><span id="geo-teks"></span>
@@ -87,6 +88,13 @@
   </form>
 </main>
 
+<div class="scan" id="scan" role="dialog" aria-label="Scan QR lokasi" hidden>
+  <video id="scan-video" playsinline muted></video>
+  <div class="scan-bingkai" aria-hidden="true"></div>
+  <p class="scan-teks" id="scan-teks"></p>
+  <button type="button" id="scan-batal" class="btn scan-batal">Batal</button>
+</div>
+
 <div class="bar-kirim" id="bar-kirim" hidden>
   <div class="bar-isi">
     <progress id="bar-progres" max="1" value="0" aria-label="Kelengkapan"></progress>
@@ -95,8 +103,8 @@
   </div>
 </div>
 
-<script src="config.js?v=18"></script>
-<script src="core.js?v=18"></script>
-<script src="index.js?v=18"></script>
+<script src="config.js?v=19"></script>
+<script src="core.js?v=19"></script>
+<script src="index.js?v=19"></script>
 </body>
 </html>

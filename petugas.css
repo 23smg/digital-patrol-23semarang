@@ -1,4 +1,4 @@
-/* petugas.css v18 - Simple & bersih (font sistem, 1 warna aksen) */
+/* petugas.css v19 - Simple & bersih (font sistem, 1 warna aksen) */
 
 :root {
   --bg: #f5f6f8;
@@ -78,7 +78,10 @@ input:focus-visible + .seg, input:focus-visible + .ubin { outline: 2px solid var
 
 .bagian { background: var(--kartu); border: 1px solid var(--garis); border-radius: 12px; padding: 14px; margin-bottom: 12px; }
 .bagian.selesai { border-color: var(--hijau); }
-.bagian > h2 { margin: 0 0 10px; font-size: 14px; font-weight: 700; display: flex; align-items: center; justify-content: space-between; }
+.bagian > h2 { margin: 0 0 10px; font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+.bagian > h2 small { margin-left: auto; }
+.langkah { width: 22px; height: 22px; flex: none; display: inline-grid; place-items: center; border-radius: 50%; background: var(--bg); border: 1px solid var(--garis); color: var(--teks-2); font-size: 11px; font-weight: 700; }
+.bagian.selesai .langkah { background: var(--hijau); border-color: var(--hijau); color: #fff; }
 .bagian > h2 small { font-size: 12px; font-weight: 600; color: var(--teks-2); }
 .bagian.selesai > h2 small { color: var(--hijau); }
 .petunjuk { font-size: 12.5px; color: var(--teks-2); margin: 8px 0 0; }
@@ -99,7 +102,7 @@ input:focus-visible + .seg, input:focus-visible + .ubin { outline: 2px solid var
 /* Input */
 .medan { margin-bottom: 12px; }
 .medan:last-child { margin-bottom: 0; }
-.label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 6px; color: var(--teks-2); }
+.medan > label, .label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 6px; color: var(--teks-2); }
 .input { width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid var(--input-garis); border-radius: 10px; background: var(--input); color: var(--teks); font: inherit; font-size: 16px; }
 .input:focus { border-color: var(--aksen); outline: none; box-shadow: 0 0 0 3px rgba(37,99,235,.18); }
 .input.invalid { border-color: var(--merah); }
@@ -114,7 +117,9 @@ textarea.input { min-height: 64px; resize: vertical; }
 .cl-baris { padding: 12px 0; border-top: 1px solid var(--garis); }
 .cl-baris:first-child { border-top: 0; }
 .cl-nama { font-weight: 600; font-size: 14px; margin-bottom: 8px; }
-.seg-grup, .tingkat { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.seg-grup { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.tingkat { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.seg-na, input[value="NA"], input[value="N/A"], input[value="na"], input[value="n/a"] { display: none !important; }
 .seg-grup input, .tingkat input, .ubin-grup input { position: absolute; opacity: 0; pointer-events: none; }
 .seg { min-height: 44px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--input-garis); border-radius: 10px; background: var(--input); font-size: 13.5px; font-weight: 600; color: var(--teks-2); cursor: pointer; user-select: none; }
 input:checked + .seg-ok { background: var(--hijau); border-color: var(--hijau); color: #fff; }
@@ -128,6 +133,7 @@ input:checked + .t-tinggi { background: #dc2626; border-color: #dc2626; color: #
 /* Tenant (halaman lain) */
 .ubin-grup { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
 .ubin { display: flex; align-items: center; gap: 8px; padding: 12px; border: 1px solid var(--input-garis); border-radius: 10px; background: var(--input); cursor: pointer; font-size: 14px; font-weight: 600; }
+.ubin svg, .ubin .ikon, .ubin img { display: none !important; }
 .ubin small { display: block; font-size: 11px; font-weight: 400; color: var(--teks-2); }
 input:checked + .ubin { background: var(--aksen); border-color: var(--aksen); color: #fff; }
 input:checked + .ubin small { color: rgba(255,255,255,.85); }
@@ -160,3 +166,13 @@ input:checked + .ubin small { color: rgba(255,255,255,.85); }
 .kurang.siap { color: var(--hijau); font-weight: 600; }
 #btn-kirim { width: 100%; min-height: 48px; font-size: 15px; font-weight: 700; }
 #btn-kirim:disabled { background: var(--garis); color: var(--teks-2); }
+
+/* Teks bantuan dihilangkan */
+#b-cl .petunjuk, #b-foto .petunjuk, #hint-foto { display: none !important; }
+
+/* Scan QR */
+.scan { position: fixed; inset: 0; z-index: 100; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.scan video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.scan-bingkai { position: relative; width: min(70vw, 280px); aspect-ratio: 1; border: 3px solid #fff; border-radius: 20px; box-shadow: 0 0 0 100vmax rgba(0,0,0,.55); }
+.scan-teks { position: relative; margin: 18px 0 0; color: #fff; font-size: 14px; font-weight: 600; text-align: center; }
+.scan-batal { position: absolute; left: 16px; right: 16px; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); background: #fff; color: #111; }

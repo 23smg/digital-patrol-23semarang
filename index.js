@@ -62,8 +62,9 @@
   /* ---------- Lokasi (QR) ---------- */
   function tampilLokasi() {
     var ada = !!zona;
-    $("lokasi-nama").textContent = ada ? zona : "Scan QR lokasi";
-    $("lokasi-petunjuk").hidden = ada;
+    $("lokasi-nama").textContent = ada ? zona : "Belum scan QR";
+    $("lokasi-petunjuk").hidden = true;
+    $("btn-scan").textContent = ada ? "Scan Ulang" : "Scan QR";
     $("b-lokasi").classList.toggle("selesai", ada);
 
     var elBadge = $("st-lokasi-badge");
@@ -77,6 +78,75 @@
       stMeta.appendChild(elBadge);
     }
     elBadge.textContent = "📍 " + zona;
+  }
+
+  /* ---------- Scan QR lokasi (langsung dari form) ---------- */
+  var scanStream = null, scanTimer = null;
+
+  function zonaDariQR(teks) {
+    var v = String(teks || "").trim(), z = v;
+    try { z = new URL(v).searchParams.get("zona") || ""; } catch (e) {}
+    return master.daftarZona.indexOf(z) >= 0 ? z : "";
+  }
+
+  function tutupScan() {
+    clearInterval(scanTimer); scanTimer = null;
+    if (scanStream) { scanStream.getTracks().forEach(function (t) { t.stop(); }); scanStream = null; }
+    var v = $("scan-video"); if (v) v.srcObject = null;
+    var o = $("scan"); if (o) o.hidden = true;
+  }
+
+  function setZona(z) {
+    if (zona && zona !== z && foto.daftar().length) {
+      foto.kosongkan();
+      PC.toast("Lokasi berubah, foto direset.", "bad");
+    }
+    zona = z; zonaQR = z;
+    tampilLokasi();
+    ubah();
+  }
+
+  function mulaiDeteksi() {
+    var v = $("scan-video"), det = null, cv = null, sibuk = false;
+    if (window.BarcodeDetector) { try { det = new window.BarcodeDetector({ formats: ["qr_code"] }); } catch (e) {} }
+    scanTimer = setInterval(function () {
+      if (sibuk || v.readyState < 2) return;
+      sibuk = true;
+      var p;
+      if (det) {
+        p = det.detect(v).then(function (r) { return r.length ? r[0].rawValue : ""; });
+      } else {
+        p = new Promise(function (ok) {
+          if (!cv) cv = document.createElement("canvas");
+          cv.width = v.videoWidth; cv.height = v.videoHeight;
+          var ctx = cv.getContext("2d"); ctx.drawImage(v, 0, 0);
+          var d = ctx.getImageData(0, 0, cv.width, cv.height);
+          var q = window.jsQR(d.data, d.width, d.height);
+          ok(q ? q.data : "");
+        });
+      }
+      p.then(function (teks) {
+        if (!teks) return;
+        var z = zonaDariQR(teks);
+        if (z) { tutupScan(); setZona(z); PC.toast("Lokasi: " + z, "ok"); }
+        else $("scan-teks").textContent = "QR bukan lokasi patroli";
+      }).catch(function () {}).then(function () { sibuk = false; });
+    }, 250);
+  }
+
+  function bukaScan() {
+    if (!window.BarcodeDetector && !window.jsQR) { PC.toast("Scan tidak didukung. Pakai kamera HP.", "bad"); return; }
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { PC.toast("Kamera tidak tersedia.", "bad"); return; }
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } }, audio: false }).then(function (st) {
+      scanStream = st;
+      var v = $("scan-video"); v.srcObject = st;
+      $("scan-teks").textContent = "Arahkan ke QR lokasi";
+      $("scan").hidden = false;
+      return v.play();
+    }).then(mulaiDeteksi).catch(function () {
+      tutupScan();
+      PC.toast("Kamera tidak bisa dibuka.", "bad");
+    });
   }
 
   /* ---------- Muat data ---------- */
@@ -149,6 +219,9 @@
       var n = cl.isiSemuaSesuai();
       PC.toast(n ? n + " item sesuai." : "Sudah lengkap.", n ? "ok" : "");
     });
+    $("btn-scan").addEventListener("click", bukaScan);
+    $("scan-batal").addEventListener("click", tutupScan);
+    window.addEventListener("pagehide", tutupScan);
     $("btn-foto").addEventListener("click", ambilFoto);
     $("btn-kirim").addEventListener("click", kirim);
 
