@@ -1,4 +1,4 @@
-/* index.js v21 - Form Patroli Petugas (QR zona + Hard Geofence) */
+/* index.js v23 - Form Patroli Petugas (QR zona + Hard Geofence) */
 (function () {
   "use strict";
   var PC = window.PC, h = PC.h;
@@ -117,8 +117,10 @@
       } else {
         p = new Promise(function (ok) {
           if (!cv) cv = document.createElement("canvas");
-          cv.width = v.videoWidth; cv.height = v.videoHeight;
-          var ctx = cv.getContext("2d"); ctx.drawImage(v, 0, 0);
+          var sk = Math.min(1, 800 / (v.videoWidth || 800));
+          cv.width = Math.round(v.videoWidth * sk); cv.height = Math.round(v.videoHeight * sk);
+          var ctx = cv.getContext("2d", { willReadFrequently: true });
+          ctx.drawImage(v, 0, 0, cv.width, cv.height);
           var d = ctx.getImageData(0, 0, cv.width, cv.height);
           var q = window.jsQR(d.data, d.width, d.height);
           ok(q ? q.data : "");
