@@ -1,8 +1,5 @@
-/* index.js - Form Patroli Petugas (Mode Khusus QR Code & Hard Geofence)
-   Perubahan:
-   1. Pilihan zona manual (tombol lantai/angka/pencarian) disembunyikan.
-   2. Petugas WAJIB memindai QR Code di lokasi untuk memilih zona.
-   3. Tombol 'Kirim' dikunci jika di luar area Mall atau GPS tidak aktif.
+/* index.js - Form Patroli Petugas
+   Tampilan UI diperbarui: Elemen Status Lokasi / QR dipindahkan ke bagian atas.
 */
 (function () {
   "use strict";
@@ -25,7 +22,7 @@
 
   /* ------------------------------------------------ Utilitas Geofence (Haversine) */
   function hitungJarakM(lat1, lng1, lat2, lng2) {
-    var R = 6371000; // Radius bumi dalam meter
+    var R = 6371000;
     var rad = Math.PI / 180;
     var dLat = (lat2 - lat1) * rad;
     var dLng = (lng2 - lng1) * rad;
@@ -48,7 +45,7 @@
       if (!gps || gps.lat === null || gps.lng === null) {
         diluarArea = true;
         if (pesanEl) {
-          pesanEl.textContent = "Mencari lokasi GPS... Pastikan izin GPS aktif.";
+          pesanEl.textContent = "⚠️ Mencari lokasi GPS... Pastikan izin GPS aktif.";
           pesanEl.hidden = false;
         }
         return;
@@ -59,7 +56,7 @@
       if (jarak > radiusMaks) {
         diluarArea = true;
         if (pesanEl) {
-          pesanEl.textContent = "Anda terdeteksi di luar area mall (Jarak: " + Math.round(jarak) + "m, Maks: " + radiusMaks + "m). Laporan tidak dapat dikirim.";
+          pesanEl.textContent = "🚫 Posisi di luar area mall (Jarak: " + Math.round(jarak) + "m, Maks: " + radiusMaks + "m). Tombol kirim dikunci.";
           pesanEl.hidden = false;
         }
         return;
@@ -110,7 +107,7 @@
     foto = PC.FotoGrid($("foto-grid"), { maks: 3, onUbah: ubah });
     cl = PC.Checklist($("checklist"), { onUbah: ubah });
 
-    // Sembunyikan elemen pencarian dan tombol pilihan zona manual
+    // Sembunyikan elemen pilihan zona manual lama
     if ($("zona-cari-wadah")) $("zona-cari-wadah").hidden = true;
     if ($("zona-lantai")) $("zona-lantai").hidden = true;
     if ($("zona-petunjuk")) $("zona-petunjuk").hidden = true;
@@ -128,7 +125,7 @@
       }
     }
 
-    // Tangkap Lokasi dari QR Code (?zona=NamaZona)
+    // Pindahkan & Tampilkan Informasi QR Code di Atas
     try {
       var zq = new URLSearchParams(location.search).get("zona");
       if (zq && master.daftarZona.indexOf(zq) >= 0) {
@@ -136,13 +133,14 @@
         zonaQR = zq;
         if ($("zona-qr")) {
           $("zona-qr").hidden = false;
-          $("zona-qr").textContent = "✓ Lokasi Terverifikasi via QR Code: " + zq;
+          $("zona-qr").style.color = "#10b981";
+          $("zona-qr").textContent = "✓ Lokasi Terverifikasi via QR: " + zq;
         }
       } else {
         if ($("zona-qr")) {
           $("zona-qr").hidden = false;
           $("zona-qr").style.color = "#ef4444";
-          $("zona-qr").textContent = "⚠️ Peringatan: Pindai QR Code lokasi patroli terlebih dahulu!";
+          $("zona-qr").textContent = "⚠️ Peringatan: Silakan pindai QR Code di lokasi patroli terlebih dahulu!";
         }
       }
     } catch (e) { /* abaikan */ }
@@ -162,7 +160,6 @@
     $("btn-foto").addEventListener("click", ambilFoto);
     $("btn-kirim").addEventListener("click", kirim);
 
-    // Pantau geofence secara berkala
     setInterval(function () {
       periksaGeofence();
       ubah();
@@ -225,10 +222,8 @@
 
     $("b-nama").classList.toggle("selesai", !!cbNama.nilai());
     $("b-zona").classList.toggle("selesai", !!zona);
-    if ($("zona-plakat")) $("zona-plakat").hidden = !zona;
-    if ($("zona-plakat-nama")) $("zona-plakat-nama").textContent = zona;
-    $("b-cl").classList.toggle("selesai", c.lengkap && (!c.adaTemuan || (!c.catatanKurang && !!tingkat)));
-    $("b-foto").classList.toggle("selesai", foto.daftar().length > 0);
+    if ($("b-cl")) $("b-cl").classList.toggle("selesai", c.lengkap && (!c.adaTemuan || (!c.catatanKurang && !!tingkat)));
+    if ($("b-foto")) $("b-foto").classList.toggle("selesai", foto.daftar().length > 0);
     clearTimeout(timerDraft);
     timerDraft = setTimeout(simpanDraft, 500);
   }
