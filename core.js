@@ -570,16 +570,25 @@
     return { segarkan: segarkan };
   }
 
-  /* ------------------------------------------------------- Combobox */
+  /* ------------------------------------------------------- Combobox
+     Daftar pilihan yang bisa di-scroll (iPhone/Android). Penting untuk layar sentuh:
+     - pilihan diambil saat "click" (bukan pointerdown), jadi menggeser daftar tidak memilih item
+     - daftar tidak menutup selama jari menyentuhnya (blur input tidak lagi memutus scroll)
+     - buka() menampilkan seluruh isi daftar tanpa perlu mengetik / membuka keyboard */
   function Combobox(o) {
-    var inp = o.input, ul = o.list, aktif = -1, tampil = [];
+    var inp = o.input, ul = o.list, aktif = -1, tampil = [], sentuh = false, timerSentuh = null;
 
-    function item() { return o.items(); }
-    function render() {
-      var q = inp.value.trim().toLowerCase();
+    function item() { return o.items() || []; }
+    function pastikanTampak() {
+      var r = ul.getBoundingClientRect(), batas = (w.innerHeight || 600) - 120;   // sisakan ruang untuk bar kirim
+      if (r.bottom > batas) w.scrollBy({ top: Math.min(r.bottom - batas + 8, r.top - 90), behavior: "smooth" });
+    }
+    function render(semua) {
+      var q = semua ? "" : inp.value.trim().toLowerCase();
       tampil = item().filter(function (x) {
         return !q || x.toLowerCase().indexOf(q) >= 0 || (o.detail && String(o.detail(x)).toLowerCase().indexOf(q) >= 0);
-      }).slice(0, o.maks || 60);
+      });
+      if (o.maks) tampil = tampil.slice(0, o.maks);
       kosongkan(ul);
       if (!tampil.length) {
         ul.appendChild(h("li", { class: "kosong", text: o.kosong || "Tidak ditemukan" }));
@@ -587,7 +596,7 @@
         tampil.forEach(function (x, i) {
           var det = o.detail ? o.detail(x) : "";
           ul.appendChild(h("li", { role: "option", class: i === aktif ? "aktif" : "",
-            onpointerdown: function (e) { e.preventDefault(); pilih(x); } },
+            onclick: function (e) { e.preventDefault(); pilih(x); } },
             h("span", { class: "opsi-teks", text: x }), det ? h("span", { class: "opsi-detail", text: det }) : null));
         });
       }
@@ -596,12 +605,32 @@
     }
     function tutup() { ul.hidden = true; inp.setAttribute("aria-expanded", "false"); aktif = -1; }
     function pilih(v) { inp.value = v; tutup(); if (o.onPick) o.onPick(v); }
+    function buka() { aktif = -1; ul.scrollTop = 0; render(true); ul.scrollTop = 0; pastikanTampak(); }
+
+    // Jari di dalam daftar = sedang scroll: jangan tutup daftar.
+    function mulaiSentuh() { sentuh = true; clearTimeout(timerSentuh); }
+    function akhirSentuh() { clearTimeout(timerSentuh); timerSentuh = setTimeout(function () { sentuh = false; }, 400); }
+    ul.addEventListener("touchstart", mulaiSentuh, { passive: true });
+    ul.addEventListener("touchend", akhirSentuh, { passive: true });
+    ul.addEventListener("touchcancel", akhirSentuh, { passive: true });
+    ul.addEventListener("pointerdown", mulaiSentuh);
+    ul.addEventListener("pointerup", akhirSentuh);
+    ul.addEventListener("pointercancel", akhirSentuh);
+    ul.addEventListener("mousedown", function (e) { e.preventDefault(); });   // desktop: input tidak kehilangan fokus
+
+    // Sentuh di luar kolom dan daftar = tutup (daftar yang dibuka lewat buka() tidak punya fokus input).
+    document.addEventListener("pointerdown", function (e) {
+      if (ul.hidden || e.target === inp || ul.contains(e.target)) return;
+      if (o.abaikanLuar && o.abaikanLuar(e.target)) return;
+      tutup();
+    });
 
     inp.setAttribute("role", "combobox");
     inp.setAttribute("aria-expanded", "false");
+    ul.style.webkitOverflowScrolling = "touch";
     inp.addEventListener("input", function () { aktif = -1; if (o.onPick) o.onPick(null); render(); });
-    inp.addEventListener("focus", render);
-    inp.addEventListener("blur", function () { setTimeout(tutup, 150); });
+    inp.addEventListener("focus", function () { render(); pastikanTampak(); });
+    inp.addEventListener("blur", function () { setTimeout(function () { if (!sentuh) tutup(); }, 200); });
     inp.addEventListener("keydown", function (e) {
       if (e.key === "ArrowDown") { e.preventDefault(); if (ul.hidden) render(); aktif = Math.min(tampil.length - 1, aktif + 1); render(); }
       else if (e.key === "ArrowUp") { e.preventDefault(); aktif = Math.max(0, aktif - 1); render(); }
@@ -611,6 +640,7 @@
     return {
       nilai: function () { var v = inp.value.trim(); return item().indexOf(v) >= 0 ? v : ""; },
       set: function (v) { inp.value = v || ""; },
+      buka: buka,
       tutup: tutup
     };
   }

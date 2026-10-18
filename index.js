@@ -106,47 +106,70 @@
   }
 
   function mulaiDeteksi() {
-    var v = $("scan-video"), det = null, cv = null, sibuk = false;
-    if (window.BarcodeDetector) { try { det = new window.BarcodeDetector({ formats: ["qr_code"] }); } catch (e) {} }
+    var v = $("scan-video"), det = null, cv = null, ctx = null, sibuk = false;
+    if (window.BarcodeDetector) { try { det = new window.BarcodeDetector({ formats: ["qr_code"] }); } catch (e) { det = null; } }
+
+    // Baca satu frame lewat jsQR (dipakai di iPhone/Safari yang belum punya BarcodeDetector).
+    function bacaJsQR() {
+      if (!window.jsQR || !v.videoWidth || !v.videoHeight) return "";
+      if (!cv) { cv = document.createElement("canvas"); ctx = cv.getContext("2d", { willReadFrequently: true }); }
+      var sk = Math.min(1, 800 / Math.max(v.videoWidth, v.videoHeight));
+      var cw = Math.round(v.videoWidth * sk), ch = Math.round(v.videoHeight * sk);
+      if (cv.width !== cw || cv.height !== ch) { cv.width = cw; cv.height = ch; }
+      ctx.drawImage(v, 0, 0, cw, ch);
+      var d = ctx.getImageData(0, 0, cw, ch);
+      var q = window.jsQR(d.data, d.width, d.height);
+      return q ? q.data : "";
+    }
+
     scanTimer = setInterval(function () {
-      if (sibuk || v.readyState < 2) return;
+      if (sibuk || v.readyState < 2 || !v.videoWidth) return;
       sibuk = true;
       var p;
       if (det) {
-        p = det.detect(v).then(function (r) { return r.length ? r[0].rawValue : ""; });
+        p = det.detect(v).then(function (r) { return r.length ? r[0].rawValue : bacaJsQR(); })
+          .catch(function () { det = null; return bacaJsQR(); });
       } else {
-        p = new Promise(function (ok) {
-          if (!cv) cv = document.createElement("canvas");
-          var sk = Math.min(1, 800 / (v.videoWidth || 800));
-          cv.width = Math.round(v.videoWidth * sk); cv.height = Math.round(v.videoHeight * sk);
-          var ctx = cv.getContext("2d", { willReadFrequently: true });
-          ctx.drawImage(v, 0, 0, cv.width, cv.height);
-          var d = ctx.getImageData(0, 0, cv.width, cv.height);
-          var q = window.jsQR(d.data, d.width, d.height);
-          ok(q ? q.data : "");
-        });
+        p = new Promise(function (ok) { ok(bacaJsQR()); });
       }
       p.then(function (teks) {
         if (!teks) return;
         var z = zonaDariQR(teks);
         if (z) { tutupScan(); setZona(z); PC.toast("Lokasi: " + z, "ok"); }
-        else $("scan-teks").textContent = "QR bukan lokasi patroli";
+        else { $("scan-teks").textContent = "QR bukan lokasi patroli"; }
       }).catch(function () {}).then(function () { sibuk = false; });
-    }, 250);
+    }, 200);
   }
 
   function bukaScan() {
     if (!window.BarcodeDetector && !window.jsQR) { PC.toast("Scan tidak didukung. Pakai kamera HP.", "bad"); return; }
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { PC.toast("Kamera tidak tersedia.", "bad"); return; }
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } }, audio: false }).then(function (st) {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      PC.toast("Kamera tidak tersedia. Buka lewat HTTPS dan pakai Safari/Chrome terbaru.", "bad"); return;
+    }
+    var v = $("scan-video");
+    // iOS Safari: video harus muted + playsinline, kalau tidak kamera hitam / tidak mau diputar.
+    v.muted = true; v.setAttribute("muted", ""); v.setAttribute("playsinline", ""); v.setAttribute("webkit-playsinline", "");
+    $("scan-teks").textContent = "Membuka kamera...";
+    $("scan").hidden = false;
+    navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false
+    }).catch(function (e) {
+      if (e && (e.name === "OverconstrainedError" || e.name === "NotFoundError"))
+        return navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+      throw e;
+    }).then(function (st) {
+      if ($("scan").hidden) { st.getTracks().forEach(function (t) { t.stop(); }); throw new Error("batal"); }   // dibatalkan saat menunggu izin
       scanStream = st;
-      var v = $("scan-video"); v.srcObject = st;
+      v.srcObject = st;
       $("scan-teks").textContent = "Arahkan ke QR lokasi";
-      $("scan").hidden = false;
-      return v.play();
-    }).then(mulaiDeteksi).catch(function () {
+      var pl = v.play();
+      return pl && pl.catch ? pl.catch(function () {}) : pl;
+    }).then(mulaiDeteksi).catch(function (e) {
+      if (e && e.message === "batal") return;
       tutupScan();
-      PC.toast("Kamera tidak bisa dibuka.", "bad");
+      PC.toast(e && e.name === "NotAllowedError"
+        ? "Izin kamera ditolak. Izinkan kamera di Pengaturan > Safari, lalu coba lagi."
+        : "Kamera tidak bisa dibuka.", "bad");
     });
   }
 

@@ -51,7 +51,7 @@
       wadah.appendChild(h("button", { type: "button", class: "lantai-btn", "data-lantai": x.f,
         "aria-pressed": lantai === x.f ? "true" : "false",
         onclick: function () { pilihLantai(lantai === x.f ? "" : x.f); } },
-        h("b", { text: x.f }), h("small", { text: x.n + " tenant" })));
+        x.f));
     });
   }
 
@@ -62,6 +62,8 @@
     });
     if ($("tenant").value && !cbTenant.nilai()) { $("tenant").value = ""; tampilPlakat(""); }
     ubah();
+    // Setelah lantai diketuk, daftar tenant langsung terbuka (bisa di-scroll atau dicari dengan mengetik).
+    if (cbTenant) cbTenant.buka();
   }
 
   function tampilPlakat(nama) {
@@ -110,7 +112,7 @@
     }
 
     cbTenant = PC.Combobox({ input: $("tenant"), list: $("daftar-tenant"), kosong: "Tenant tidak ditemukan",
-      items: namaTenant, detail: unitTenant, maks: 80,
+      items: namaTenant, detail: unitTenant,
       onPick: function (v) { tampilPlakat(v); ubah(); } });
     cbNama = PC.Combobox({ input: $("nama"), list: $("daftar-nama"), kosong: "Nama tidak terdaftar. Hubungi admin.",
       items: function () { return master.daftarNama; },

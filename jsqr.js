@@ -490,6 +490,31 @@
         r = decodeMatrix(m, dim);
         if (r !== null && r !== undefined) return r;
       }
+      // Cadangan untuk foto kamera HP: perspektif membuat titik kanan-bawah meleset (terutama QR kecil versi 1-2
+      // yang tanpa pola alignment). Geser titik itu sedikit demi sedikit; hasil sah bila lolos Reed-Solomon.
+      r = searchCorner(bin, w, h, src, dst, dim, ap, brx, bry, ms);
+      if (r !== null) return r;
+    }
+    return null;
+  }
+
+  var T_AKHIR = 0;
+  function searchCorner(bin, w, h, src, dst, dim, ap, brx, by0, ms) {
+    var useAlign = !!ap, bx = useAlign ? ap.x : brx, by = useAlign ? ap.y : by0;
+    var target = useAlign ? [dim - 6.5, dim - 6.5] : [dim - 3.5, dim - 3.5];
+    var step = Math.max(0.5, ms * 0.45), rad = ms * (useAlign ? 1.4 : 3), list = [], a, b;
+    for (a = -rad; a <= rad + 1e-6; a += step) for (b = -rad; b <= rad + 1e-6; b += step) {
+      if (a === 0 && b === 0) continue;
+      list.push([a, b, a * a + b * b]);
+    }
+    list.sort(function (p, q) { return p[2] - q[2]; });
+    var t0 = Date.now(), i;
+    for (i = 0; i < list.length; i++) {
+      if (Date.now() - t0 > 90) break;   // batasi waktu per kandidat agar kamera tetap lancar
+      var H = homog(src.concat([target]), dst.concat([[bx + list[i][0], by + list[i][1]]]));
+      if (!H) continue;
+      var r = decodeMatrix(sampleGrid(bin, w, h, H, dim), dim);
+      if (r !== null && r !== undefined) return r;
     }
     return null;
   }
