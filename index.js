@@ -1,6 +1,4 @@
-/* index.js - Form Patroli Petugas
-   Tampilan UI diperbarui: Elemen Status Lokasi / QR dipindahkan ke bagian atas.
-*/
+/* index.js - Form Patroli Petugas (Tampilan Mewah & Hard Geofence) */
 (function () {
   "use strict";
   var PC = window.PC, h = PC.h;
@@ -8,7 +6,7 @@
   var KUNCI_DRAFT = "dp_draft_patroli_v2", KUNCI_MASTER = "dp_master_v2", KUNCI_NAMA = "dp_nama";
   var master = null, idLaporan = PC.buatId(), tingkat = "", zona = "", mengirim = false, timerDraft = null;
   var cbNama, cl, foto, zonaQR = "";
-  var diluarArea = false; // Status Geofence
+  var diluarArea = false;
 
   PC.pasangLogo(document.querySelector(".merek-grup"));
   PC.pasangTema(document.querySelector(".kepala-isi"));
@@ -20,15 +18,11 @@
   document.addEventListener("visibilitychange", function () { if (!document.hidden) PC.sinkronJam(); });
   if ($("ikon-foto")) $("ikon-foto").appendChild(PC.ikon("KAMERA"));
 
-  /* ------------------------------------------------ Utilitas Geofence (Haversine) */
   function hitungJarakM(lat1, lng1, lat2, lng2) {
-    var R = 6371000;
-    var rad = Math.PI / 180;
-    var dLat = (lat2 - lat1) * rad;
-    var dLng = (lng2 - lng1) * rad;
+    var R = 6371000, rad = Math.PI / 180;
+    var dLat = (lat2 - lat1) * rad, dLng = (lng2 - lng1) * rad;
     var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(lat1 * rad) * Math.cos(lat2 * rad) *
-      Math.sin(dLng / 2) * Math.sin(dLng / 2);
+      Math.cos(lat1 * rad) * Math.cos(lat2 * rad) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   }
 
@@ -38,14 +32,12 @@
     var pesanEl = $("pesan-geofence");
 
     if (geo && geo.lat && geo.lng && geo.radius) {
-      var latMall = parseFloat(geo.lat);
-      var lngMall = parseFloat(geo.lng);
-      var radiusMaks = parseFloat(geo.radius);
+      var latMall = parseFloat(geo.lat), lngMall = parseFloat(geo.lng), radiusMaks = parseFloat(geo.radius);
 
       if (!gps || gps.lat === null || gps.lng === null) {
         diluarArea = true;
         if (pesanEl) {
-          pesanEl.textContent = "⚠️ Mencari lokasi GPS... Pastikan izin GPS aktif.";
+          pesanEl.textContent = "⚠️ Mencari koordinat GPS... Mohon aktifkan GPS perangkat Anda.";
           pesanEl.hidden = false;
         }
         return;
@@ -56,7 +48,7 @@
       if (jarak > radiusMaks) {
         diluarArea = true;
         if (pesanEl) {
-          pesanEl.textContent = "🚫 Posisi di luar area mall (Jarak: " + Math.round(jarak) + "m, Maks: " + radiusMaks + "m). Tombol kirim dikunci.";
+          pesanEl.textContent = "🚫 Posisi di luar jangkauan area Mall (Jarak: " + Math.round(jarak) + "m, Maks: " + radiusMaks + "m). Tombol kirim dikunci.";
           pesanEl.hidden = false;
         }
         return;
@@ -67,28 +59,27 @@
     if (pesanEl) pesanEl.hidden = true;
   }
 
-  /* ------------------------------------------------ Memuat Master */
   function muat() {
     var muatEl = $("muat");
     muatEl.hidden = false;
     PC.kosongkan(muatEl);
-    muatEl.textContent = "Memuat daftar petugas dan zona...";
+    muatEl.textContent = "Memuat konfigurasi sistem...";
     var t0 = Date.now();
     PC.api("ambilDropdown", {}, 25000).then(function (r) {
       if (r.status !== "SUCCESS") throw new Error(r.message);
       PC.Jam.sinkron(r.waktuServer + (Date.now() - t0) / 2);
       master = r;
-      try { localStorage.setItem(KUNCI_MASTER, JSON.stringify(r)); } catch (e) { /* abaikan */ }
+      try { localStorage.setItem(KUNCI_MASTER, JSON.stringify(r)); } catch (e) {}
     }).catch(function () {
       try {
         var c = JSON.parse(localStorage.getItem(KUNCI_MASTER));
-        if (c && c.checklist) { master = c; PC.toast("Tanpa sinyal. Memakai daftar yang tersimpan.", "bad"); }
-      } catch (e) { /* abaikan */ }
+        if (c && c.checklist) { master = c; PC.toast("Mode offline: Memakai data tersimpan.", "bad"); }
+      } catch (e) {}
     }).then(function () {
       if (master) { mulai(); return; }
       PC.kosongkan(muatEl);
-      muatEl.appendChild(h("p", { text: "Daftar belum bisa dimuat. Periksa sinyal, lalu coba lagi." }));
-      muatEl.appendChild(h("button", { type: "button", class: "btn btn-utama", text: "Coba lagi", onclick: muat }));
+      muatEl.appendChild(h("p", { text: "Gagal memuat data. Periksa koneksi internet Anda." }));
+      muatEl.appendChild(h("button", { type: "button", class: "btn btn-utama", text: "Coba Lagi", onclick: muat }));
     });
   }
 
@@ -97,17 +88,17 @@
     $("form").hidden = false;
     $("bar-kirim").hidden = false;
 
-    cbNama = PC.Combobox({ input: $("nama"), list: $("daftar-nama"), kosong: "Nama tidak terdaftar. Hubungi admin.",
+    cbNama = PC.Combobox({ input: $("nama"), list: $("daftar-nama"), kosong: "Nama tidak terdaftar.",
       items: function () { return master.daftarNama; },
       onPick: function (v) {
-        if (v) { try { localStorage.setItem(KUNCI_NAMA, v); } catch (e) { /* abaikan */ } }
+        if (v) { try { localStorage.setItem(KUNCI_NAMA, v); } catch (e) {} }
         $("g-nama").hidden = true; $("nama").classList.remove("invalid");
         ubah();
       } });
     foto = PC.FotoGrid($("foto-grid"), { maks: 3, onUbah: ubah });
     cl = PC.Checklist($("checklist"), { onUbah: ubah });
 
-    // Sembunyikan elemen pilihan zona manual lama
+    // Sembunyikan selektor zona manual
     if ($("zona-cari-wadah")) $("zona-cari-wadah").hidden = true;
     if ($("zona-lantai")) $("zona-lantai").hidden = true;
     if ($("zona-petunjuk")) $("zona-petunjuk").hidden = true;
@@ -125,7 +116,7 @@
       }
     }
 
-    // Pindahkan & Tampilkan Informasi QR Code di Atas
+    // Deteksi QR Code lokasi
     try {
       var zq = new URLSearchParams(location.search).get("zona");
       if (zq && master.daftarZona.indexOf(zq) >= 0) {
@@ -133,20 +124,21 @@
         zonaQR = zq;
         if ($("zona-qr")) {
           $("zona-qr").hidden = false;
-          $("zona-qr").style.color = "#10b981";
-          $("zona-qr").textContent = "✓ Lokasi Terverifikasi via QR: " + zq;
+          $("zona-qr").innerHTML = "<span>📍</span> <span>Lokasi Terverifikasi: <strong>" + zq + "</strong></span>";
         }
       } else {
         if ($("zona-qr")) {
           $("zona-qr").hidden = false;
-          $("zona-qr").style.color = "#ef4444";
-          $("zona-qr").textContent = "⚠️ Peringatan: Silakan pindai QR Code di lokasi patroli terlebih dahulu!";
+          $("zona-qr").style.border = "1px solid rgba(239, 68, 68, 0.4)";
+          $("zona-qr").style.background = "rgba(239, 68, 68, 0.15)";
+          $("zona-qr").style.color = "#fca5a5";
+          $("zona-qr").innerHTML = "<span>⚠️</span> <span>Silakan pindai QR Code di lokasi patroli terlebih dahulu.</span>";
         }
       }
-    } catch (e) { /* abaikan */ }
+    } catch (e) {}
 
     var tersimpan = null;
-    try { tersimpan = localStorage.getItem(KUNCI_NAMA); } catch (e) { /* abaikan */ }
+    try { tersimpan = localStorage.getItem(KUNCI_NAMA); } catch (e) {}
     if (tersimpan && master.daftarNama.indexOf(tersimpan) >= 0) $("nama").value = tersimpan;
 
     Array.prototype.forEach.call(document.querySelectorAll('input[name="tingkat"]'), function (r) {
@@ -155,7 +147,7 @@
     $("catatan").addEventListener("input", ubah);
     $("btn-semua").addEventListener("click", function () {
       var n = cl.isiSemuaSesuai();
-      PC.toast(n ? n + " item ditandai Sesuai. Ubah yang bermasalah." : "Semua item sudah dijawab.", n ? "ok" : "");
+      PC.toast(n ? n + " item ditandai Sesuai." : "Semua item sudah dijawab.", n ? "ok" : "");
     });
     $("btn-foto").addEventListener("click", ambilFoto);
     $("btn-kirim").addEventListener("click", kirim);
@@ -168,12 +160,11 @@
     ubah();
   }
 
-  /* ------------------------------------------------ Draft Lokal */
   function bacaDraft() {
     try {
       var d = JSON.parse(localStorage.getItem(KUNCI_DRAFT));
       if (d && Date.now() - d.t < 12 * 3600 * 1000) return d;
-    } catch (e) { /* abaikan */ }
+    } catch (e) {}
     return null;
   }
   function simpanDraft() {
@@ -181,10 +172,9 @@
       localStorage.setItem(KUNCI_DRAFT, JSON.stringify({
         t: Date.now(), zona: zona, cl: cl.ekspor(), tingkat: tingkat, catatan: $("catatan").value
       }));
-    } catch (e) { /* abaikan */ }
+    } catch (e) {}
   }
 
-  /* ------------------------------------------------ Status Form */
   function kekurangan() {
     var k = [], c = cl.nilai();
     if (!cbNama.nilai()) k.push("nama petugas");
@@ -212,12 +202,11 @@
     $("jml-foto").textContent = foto.daftar().length + " dari 3";
     var siapFoto = !!cbNama.nilai() && !!zona;
     $("btn-foto").disabled = !siapFoto || foto.penuh();
-    $("btn-foto-teks").textContent = foto.penuh() ? "Foto sudah 3 (maksimal)" : (foto.daftar().length ? "Tambah foto" : "Ambil foto");
-    $("hint-foto").textContent = siapFoto ? "" : "Pilih nama petugas dan scan QR lokasi dulu.";
+    $("btn-foto-teks").textContent = foto.penuh() ? "Foto maksimal 3" : (foto.daftar().length ? "Tambah Foto" : "Ambil Foto Bukti");
+    $("hint-foto").textContent = siapFoto ? "" : "Pilih nama petugas dan pindai QR lokasi terlebih dahulu.";
     $("kurang").textContent = k.length ? "Lengkapi: " + k.join(", ") : "Semua isian lengkap. Siap dikirim.";
     $("kurang").className = "kurang" + (k.length ? "" : " siap");
     
-    // Kunci tombol kirim
     $("btn-kirim").disabled = mengirim || k.length > 0 || diluarArea;
 
     $("b-nama").classList.toggle("selesai", !!cbNama.nilai());
@@ -228,7 +217,6 @@
     timerDraft = setTimeout(simpanDraft, 500);
   }
 
-  /* ------------------------------------------------ Foto */
   function ambilFoto() {
     PC.Kamera.buka({
       baris: function (now) {
@@ -240,10 +228,9 @@
     });
   }
 
-  /* ------------------------------------------------ Kirim */
   function setMengirim(v) {
     mengirim = v;
-    $("btn-kirim").textContent = v ? "Mengirim..." : "Kirim laporan patroli";
+    $("btn-kirim").textContent = v ? "Mengirim Laporan..." : "Kirim Laporan Patroli";
     ubah();
   }
 
@@ -253,14 +240,16 @@
     zonaQR = "";
     if ($("zona-qr")) {
       $("zona-qr").hidden = false;
-      $("zona-qr").style.color = "#ef4444";
-      $("zona-qr").textContent = "⚠️ Peringatan: Pindai QR Code lokasi patroli untuk titik berikutnya!";
+      $("zona-qr").style.border = "1px solid rgba(239, 68, 68, 0.4)";
+      $("zona-qr").style.background = "rgba(239, 68, 68, 0.15)";
+      $("zona-qr").style.color = "#fca5a5";
+      $("zona-qr").innerHTML = "<span>⚠️</span> <span>Silakan pindai QR Code lokasi patroli untuk titik berikutnya.</span>";
     }
     $("catatan").value = "";
     tingkat = "";
     foto.kosongkan();
     idLaporan = PC.buatId();
-    try { localStorage.removeItem(KUNCI_DRAFT); } catch (e) { /* abaikan */ }
+    try { localStorage.removeItem(KUNCI_DRAFT); } catch (e) {}
     window.scrollTo({ top: 0, behavior: "smooth" });
     ubah();
   }
@@ -285,7 +274,7 @@
     PC.api("simpanPatroli", { payload: payload }).then(function (r) {
       if (r.status === "SUCCESS") {
         var hasil = $("hasil");
-        hasil.textContent = "Laporan patroli tercatat" + (r.waktu ? " pukul " + r.waktu + " WIB" : "") + ". Zona: " + zonaTeks + ".";
+        hasil.textContent = "Laporan patroli berhasil tercatat" + (r.waktu ? " pukul " + r.waktu + " WIB" : "") + ". Lokasi: " + zonaTeks + ".";
         hasil.hidden = false;
         PC.toast("Laporan tersimpan.", "ok");
         reset();
@@ -306,7 +295,7 @@
         reset();
         antrean.segarkan();
       }).catch(function () {
-        PC.toast("Tidak ada sinyal dan penyimpanan perangkat gagal. Isian tetap di layar, coba kirim lagi.", "bad");
+        PC.toast("Tidak ada sinyal dan penyimpanan lokal gagal. Coba kirim kembali.", "bad");
       });
     }).then(function () { setMengirim(false); });
   }
