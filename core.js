@@ -42,7 +42,12 @@
     KAMERA: '<path d="M3.8 8.2h3.2l1.5-2.4h7l1.5 2.4h3.2v10.6H3.8z"/><circle cx="12" cy="13.4" r="3.5"/>',
     BUKA: '<path d="M12 19V6.5"/><path d="M6.4 11.6 12 6l5.6 5.6"/>',
     TUTUP: '<rect x="5.2" y="10.4" width="13.6" height="9.4" rx="1.6"/><path d="M8.4 10.4V8a3.6 3.6 0 0 1 7.2 0v2.4"/>',
-    PANAH: '<path d="M9 5.5 15.5 12 9 18.5"/>'
+    PANAH: '<path d="M9 5.5 15.5 12 9 18.5"/>',
+    PENSIL: '<path d="M4 20l1-4.2L16.6 4.2a2 2 0 0 1 2.8 0l.4.4a2 2 0 0 1 0 2.8L8.2 19z"/><path d="M14.5 6.3l3.2 3.2"/>',
+    SAKLAR: '<path d="M12 3.5v8"/><path d="M7.3 6.6a7.5 7.5 0 1 0 9.4 0"/>',
+    SAMPAH: '<path d="M4.5 7h15"/><path d="M9.5 7V4.8h5V7"/><path d="M6.5 7l.8 12.2h9.4L17.5 7"/><path d="M10.2 10.5v5.5M13.8 10.5v5.5"/>',
+    KUNCI: '<circle cx="8.5" cy="14.5" r="3.7"/><path d="M11.2 11.8 19.5 3.5"/><path d="M16 7l2.5 2.5"/>',
+    CARI: '<circle cx="10.8" cy="10.8" r="6"/><path d="M15.4 15.4 20 20"/>'
   };
   function ikon(nama) {
     var t = document.createElement("template");
@@ -610,23 +615,41 @@
     };
   }
 
-  /* ------------------------------------------------------- Checklist */
+  /* ------------------------------------------------------- Checklist
+     Dua tampilan: "fokus" (satu item per layar, bagus untuk satu tangan) dan "daftar" (semua item sekaligus).
+     Pilihan disimpan di perangkat. API ke luar sama di kedua tampilan. */
   function Checklist(wadah, o) {
-    var items = [], state = {}, baris = {}, mulaiIsi = 0;
+    var items = [], state = {}, baris = {}, mulaiIsi = 0, idx = 0, mode = "fokus", timerLanjut = null;
     o = o || {};
+    try { if (localStorage.getItem("dp_cl_mode") === "daftar") mode = "daftar"; } catch (e) { /* abaikan */ }
 
     function ubah() { if (!mulaiIsi) mulaiIsi = Date.now(); if (o.onUbah) o.onUbah(); }
 
     function perbarui(nama) {
       var st = state[nama], b = baris[nama];
+      if (!b) return;
       b.el.classList.toggle("temuan", st.s === "TEMUAN");
       b.el.classList.toggle("terisi", st.s !== "");
       b.catWrap.hidden = st.s !== "TEMUAN";
       b.cat.value = st.c;
     }
 
-    function render() {
-      kosongkan(wadah);
+    function ubahMode(m) {
+      mode = m;
+      try { localStorage.setItem("dp_cl_mode", m); } catch (e) { /* abaikan */ }
+      if (m === "fokus") idx = Math.max(0, items.findIndex(function (n) { return !state[n].s; }));
+      render();
+    }
+
+    function bilahMode() {
+      return h("div", { class: "cl-mode" },
+        h("button", { type: "button", class: "cl-mode-btn", "aria-pressed": mode === "fokus" ? "true" : "false", text: "Satu per satu",
+          onclick: function () { if (mode !== "fokus") ubahMode("fokus"); } }),
+        h("button", { type: "button", class: "cl-mode-btn", "aria-pressed": mode === "daftar" ? "true" : "false", text: "Daftar",
+          onclick: function () { if (mode !== "daftar") ubahMode("daftar"); } }));
+    }
+
+    function renderDaftar(tujuan) {
       baris = {};
       items.forEach(function (nama, i) {
         var st = state[nama], gn = "cl" + i;
@@ -649,17 +672,83 @@
             o.izinNA === false ? null : opsi("NA", "N/A", "seg-na")),
           catWrap);
         baris[nama] = { el: el, cat: cat, catWrap: catWrap, radios: radios };
-        wadah.appendChild(el);
+        tujuan.appendChild(el);
         perbarui(nama);
       });
     }
 
+    function renderFokus(tujuan) {
+      baris = {};
+      if (!items.length) return;
+      if (idx >= items.length) idx = items.length - 1;
+      if (idx < 0) idx = 0;
+      var nama = items[idx], st = state[nama];
+      var terisi = items.filter(function (n) { return state[n].s; }).length;
+
+      var titik = h("div", { class: "fokus-titik", role: "group", "aria-label": "Item checklist" });
+      items.forEach(function (n, i) {
+        var s = state[n].s;
+        titik.appendChild(h("button", { type: "button",
+          class: "titik" + (i === idx ? " aktif" : "") + (s === "OK" ? " ok" : (s === "TEMUAN" ? " bad" : (s === "NA" ? " na" : ""))),
+          "aria-label": "Item " + (i + 1) + (s ? ", sudah dijawab" : ", belum dijawab"), "aria-current": i === idx ? "true" : null,
+          onclick: function () { clearTimeout(timerLanjut); idx = i; render(); } }));
+      });
+
+      function pilih(val) {
+        clearTimeout(timerLanjut);
+        st.s = val;
+        if (val !== "TEMUAN") st.c = "";
+        ubah();
+        if (val === "TEMUAN") { render(); return; }
+        if (idx < items.length - 1) { timerLanjut = setTimeout(function () { idx++; render(); }, 220); render(); }
+        else render();
+      }
+      function tombol(val, label, kls) {
+        return h("button", { type: "button", class: "fokus-pilih " + kls, "aria-pressed": st.s === val ? "true" : "false",
+          onclick: function () { pilih(val); } }, ikon(val), h("span", { text: label }));
+      }
+      var cat = null;
+      if (st.s === "TEMUAN") {
+        cat = h("textarea", { rows: "3", maxlength: "200", class: "input cl-cat", placeholder: "Jelaskan temuan (wajib)",
+          "aria-label": "Penjelasan temuan: " + nama,
+          oninput: function () { st.c = cat.value; ubah(); lanjut.disabled = cat.value.trim().length < 3 && idx < items.length - 1; } });
+        cat.value = st.c;
+      }
+      var lanjut = h("button", { type: "button", class: "btn btn-utama fokus-lanjut",
+        text: idx < items.length - 1 ? "Lanjut" : "Selesai",
+        disabled: (st.s === "TEMUAN" && st.c.trim().length < 3 && idx < items.length - 1) || (idx < items.length - 1 && !st.s),
+        onclick: function () { if (idx < items.length - 1) { idx++; render(); } else { o.onSelesai && o.onSelesai(); } } });
+      var sebelum = h("button", { type: "button", class: "btn btn-garis", text: "Sebelumnya", disabled: idx === 0,
+        onclick: function () { clearTimeout(timerLanjut); idx--; render(); } });
+
+      tujuan.appendChild(h("div", { class: "fokus" },
+        h("div", { class: "fokus-atas" }, h("span", { text: "Item " + (idx + 1) + " dari " + items.length }),
+          h("span", { class: "fokus-hitung", text: terisi + " terjawab" })),
+        titik,
+        h("div", { class: "fokus-nama", text: nama }),
+        h("div", { class: "fokus-aksi", role: "group", "aria-label": nama },
+          tombol("OK", "Sesuai", "seg-ok"), tombol("TEMUAN", "Temuan", "seg-bad"), o.izinNA === false ? null : tombol("NA", "N/A", "seg-na")),
+        cat ? h("div", { class: "cl-catatan" }, cat) : null,
+        h("div", { class: "fokus-nav" }, sebelum, lanjut)));
+      if (cat && !st.c) setTimeout(function () { try { cat.focus({ preventScroll: true }); } catch (e) { /* abaikan */ } }, 30);
+    }
+
+    function render() {
+      kosongkan(wadah);
+      wadah.appendChild(bilahMode());
+      var isi = h("div", { class: "cl-isi" });
+      wadah.appendChild(isi);
+      if (mode === "fokus") renderFokus(isi); else renderDaftar(isi);
+    }
+
     return {
       set: function (daftar, awal) {
+        clearTimeout(timerLanjut);
         items = daftar.slice();
         state = {};
         mulaiIsi = 0;
         items.forEach(function (n) { state[n] = awal && awal[n] ? { s: awal[n].s || "", c: awal[n].c || "" } : { s: "", c: "" }; });
+        idx = Math.max(0, items.findIndex(function (n) { return !state[n].s; }));
         render();
       },
       nilai: function () {
@@ -681,11 +770,10 @@
         items.forEach(function (nama) {
           if (state[nama].s) return;
           state[nama].s = "OK";
-          baris[nama].radios.OK.checked = true;
-          perbarui(nama);
           n++;
         });
         ubah();
+        render();
         return n;
       },
       durasiDetik: function () { return mulaiIsi ? Math.round((Date.now() - mulaiIsi) / 1000) : 0; }
@@ -738,11 +826,44 @@
     }
   }
 
+  /* ------------------------------------------------- Logo + tema */
+  IKON.BULAN = '<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>';
+  IKON.MATAHARI = '<circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6 7 7M17 17l1.4 1.4M5.6 18.4 7 17M17 7l1.4-1.4"/>';
+
+  // Logo hanya muncul bila CFG.LOGO diisi dengan nama file di folder situs (CSP hanya mengizinkan gambar dari situs sendiri).
+  function pasangLogo(wadah) {
+    if (!CFG.LOGO || !/^[A-Za-z0-9_\-\/]+\.(png|jpg|jpeg|svg|webp)$/i.test(CFG.LOGO)) return;
+    var img = h("img", { class: "logo-merek", src: CFG.LOGO, alt: "", onerror: function () { img.remove(); } });
+    wadah.insertBefore(img, wadah.firstChild);
+  }
+
+  function pasangTema(wadah) {
+    var btn = h("button", { type: "button", class: "btn-tema" });
+    function segar() {
+      var gelap = document.documentElement.getAttribute("data-tema") === "gelap";
+      kosongkan(btn);
+      btn.appendChild(ikon(gelap ? "MATAHARI" : "BULAN"));
+      btn.setAttribute("aria-label", gelap ? "Ganti ke tampilan terang" : "Ganti ke tampilan gelap");
+      btn.title = btn.getAttribute("aria-label");
+      var meta = document.querySelector('meta[name="theme-color"]');
+      if (meta) meta.setAttribute("content", gelap ? "#1E3A7A" : "#3F6AD8");
+    }
+    btn.addEventListener("click", function () {
+      var gelap = document.documentElement.getAttribute("data-tema") === "gelap";
+      var baru = gelap ? "terang" : "gelap";
+      document.documentElement.setAttribute("data-tema", baru);
+      try { localStorage.setItem("dp_tema", baru); } catch (e) { /* abaikan */ }
+      segar();
+    });
+    segar();
+    wadah.appendChild(btn);
+  }
+
   /* ------------------------------------------------------ Eksport */
   w.PC = {
     h: h, kosongkan: kosongkan, buatId: buatId, api: api, Jam: Jam, sinkronJam: sinkronJam, fmtWIB: fmtWIB,
     namaHari: namaHari, toast: toast, tanya: tanya, Lokasi: Lokasi, teksGps: teksGps, pasangStempel: pasangStempel,
     Kamera: Kamera, FotoGrid: FotoGrid, Antrean: Antrean, pasangAntrean: pasangAntrean, Combobox: Combobox,
-    Checklist: Checklist, pasangPWA: pasangPWA, CFG: CFG, ikon: ikon
+    Checklist: Checklist, pasangPWA: pasangPWA, CFG: CFG, ikon: ikon, pasangLogo: pasangLogo, pasangTema: pasangTema
   };
 })(window);

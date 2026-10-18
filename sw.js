@@ -3,9 +3,9 @@
      jatuh ke salinan tersimpan saat sinyal lemah atau offline.
    - Permintaan ke API Google dan foto TIDAK pernah di-cache.
    - dashboard.html sengaja tidak ditangani (data admin tidak disimpan di perangkat). */
-const VERSI = "dp-v9";
+const VERSI = "dp-v12";
 const FONT = "dp-font-v1";
-const SHELL = ["./", "index.html", "tenant.html", "core.js", "index.js", "tenant.js", "petugas.css", "config.js", "manifest.webmanifest",
+const SHELL = ["./", "index.html", "tenant.html", "core.js", "index.js", "tenant.js", "tema.js", "petugas.css", "config.js", "manifest.webmanifest",
   "icons/icon-192.png", "icons/icon-512.png", "icons/apple-touch-icon.png"];
 
 self.addEventListener("install", function (e) {
@@ -47,7 +47,7 @@ self.addEventListener("fetch", function (e) {
 
   if (url.origin !== location.origin) return;
   // Dashboard admin (halaman dan skripnya) tidak disimpan di perangkat.
-  if (/\/(dashboard|laporan|kelola|tenant-awal|dashboard-mulai)(\.[a-z]+)?$/.test(url.pathname)) return;
+  if (/\/(dashboard|laporan|kelola|tenant-awal|dashboard-mulai|cakupan|qr|qrcode|notif)(\.[a-z]+)?$/.test(url.pathname)) return;
 
   e.respondWith(caches.open(VERSI).then(function (c) {
     return denganBatas(req, 6000).then(function (r) {

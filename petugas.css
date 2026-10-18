@@ -391,3 +391,91 @@ dialog.dialog h3 { font: 700 18px/1.2 var(--jam); }
 .kamera-stempel::first-line { font: 700 18px/1.3 var(--jam); }
 .kamera-senter.aktif { background: var(--emas); border-color: var(--emas); }
 .kamera-jepret { box-shadow: 0 0 0 2px var(--emas); }
+
+/* Zona bertingkat: tombol lantai di atas, titik kecil di bawah */
+.ubin-zona.rapat { grid-template-columns: repeat(auto-fill, minmax(68px, 1fr)); gap: 8px; }
+.ubin-zona.rapat .ubin-z { justify-content: center; text-align: center; min-height: 46px; padding: 6px; font-size: 16px; font-weight: 700; }
+.ubin-zona.rapat > div[data-grup="Lainnya"] { grid-column: span 2; }
+#zona-plakat { margin-top: 4px; }
+#zona-plakat span { font-size: 12px; font-weight: 600; color: var(--abu); }
+
+/* Pencarian zona */
+.ubin-zona.rapat:not(.cari) .pfx { display: none; }
+.ubin-zona.rapat.cari { grid-template-columns: 1fr 1fr; }
+.ubin-zona.rapat.cari > div[data-grup="Lainnya"] { grid-column: auto; }
+.ubin-zona.rapat.cari .ubin-z { justify-content: flex-start; text-align: left; font-size: 14px; }
+input[type="search"].input { -webkit-appearance: none; appearance: none; }
+
+/* Sedikit warna: kepala biru, kartu bergaris atas yang menandai progres */
+.kepala { background: linear-gradient(135deg, #3F6AD8 0%, #5B8DEF 100%); color: #fff; box-shadow: 0 4px 16px rgba(63, 106, 216, 0.25); }
+.sub { color: rgba(255, 255, 255, 0.82); }
+.nav-app a { color: rgba(255, 255, 255, 0.85); }
+.nav-app a:hover { background: rgba(255, 255, 255, 0.14); color: #fff; }
+.nav-app a[aria-current="page"] { background: rgba(255, 255, 255, 0.22); color: #fff; }
+.bagian { border-top: 3px solid var(--emas); }
+.bagian.selesai { border-top-color: #3AC47D; }
+.langkah { background: var(--emas); color: #fff; }
+.bagian > h2 { color: var(--arang); }
+input:checked + .ubin-buka { background: #1E9E5F; border-color: #1E9E5F; }
+input:checked + .ubin-tutup { background: #E8830C; border-color: #E8830C; }
+.ubin-buka .ikon { color: #1E9E5F; }
+.ubin-tutup .ikon { color: #E8830C; }
+input:checked + .ubin .ikon { color: #fff; }
+.plakat { background: #E8EEFB; border-left: 4px solid var(--emas); }
+.btn-foto { border-color: var(--emas); }
+.bar-kirim .btn-utama:not(:disabled) { background: linear-gradient(135deg, #3F6AD8, #5B8DEF); border-color: #3F6AD8; }
+
+/* ======== v12: logo opsional, tombol tema, checklist satu per satu, mode gelap ======== */
+.merek-grup { display: flex; align-items: center; gap: 10px; }
+.logo-merek { height: 36px; width: auto; max-width: 120px; object-fit: contain; border-radius: 4px; background: rgba(255, 255, 255, 0.92); padding: 3px; }
+.kepala-isi { align-items: center; }
+.btn-tema { width: 36px; height: 36px; display: inline-grid; place-items: center; flex: none; margin-left: 8px; background: rgba(255, 255, 255, 0.16); border: 1px solid rgba(255, 255, 255, 0.35); color: #fff; border-radius: var(--r); cursor: pointer; }
+.btn-tema:hover { background: rgba(255, 255, 255, 0.26); }
+.btn-tema .ikon { width: 18px; height: 18px; }
+
+.cl-mode { display: inline-flex; gap: 0; margin: 0 0 12px; border: 1px solid var(--garis-2); border-radius: var(--r); overflow: hidden; }
+.cl-mode-btn { min-height: 34px; padding: 0 14px; font: 600 12.5px/1 var(--teks); background: var(--putih); color: var(--abu); border: 0; cursor: pointer; }
+.cl-mode-btn + .cl-mode-btn { border-left: 1px solid var(--garis-2); }
+.cl-mode-btn[aria-pressed="true"] { background: var(--emas); color: #fff; }
+
+.fokus { display: grid; gap: 12px; }
+.fokus-atas { display: flex; justify-content: space-between; align-items: baseline; font-size: 12.5px; font-weight: 600; color: var(--abu); }
+.fokus-hitung { font-weight: 500; }
+.fokus-titik { display: flex; flex-wrap: wrap; gap: 5px; }
+.titik { width: 18px; height: 8px; padding: 0; border: 0; border-radius: 4px; background: var(--garis-2); cursor: pointer; }
+.titik.ok { background: #3AC47D; } .titik.bad { background: var(--merah); } .titik.na { background: var(--abu-2); }
+.titik.aktif { height: 12px; box-shadow: 0 0 0 2px var(--emas); }
+.fokus-nama { font: 600 18px/1.35 var(--teks); min-height: 50px; display: flex; align-items: center; }
+.fokus-aksi { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.fokus-pilih { min-height: 52px; display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font: 600 13px/1 var(--teks); background: var(--putih); color: var(--arang); border: 1px solid var(--garis-2); border-radius: var(--r); cursor: pointer; }
+.fokus-pilih:hover { border-color: var(--emas); }
+.fokus-pilih.seg-ok[aria-pressed="true"] { background: #1E9E5F; border-color: #1E9E5F; color: #fff; }
+.fokus-pilih.seg-bad[aria-pressed="true"] { background: var(--merah); border-color: var(--merah); color: #fff; }
+.fokus-pilih.seg-na[aria-pressed="true"] { background: var(--abu); border-color: var(--abu); color: #fff; }
+.fokus-nav { display: grid; grid-template-columns: 1fr 2fr; gap: 8px; }
+.fokus-nav .btn { min-height: 46px; }
+
+/* Peringatan zona dari QR */
+.petunjuk.qr { color: var(--hijau); font-weight: 600; }
+
+/* ---------- Mode gelap ---------- */
+html[data-tema="gelap"] {
+  --arang: #E6EAEE; --arang-2: #D5DAE0; --gading: #14181D; --gading-2: #1B2026; --putih: #1F252C;
+  --garis: #2C343C; --garis-2: #3A444E; --abu: #A2ACB6; --abu-2: #8A949E;
+  --emas: #5B8DEF; --emas-tua: #7AA5F5; --emas-muda: #2D3F66; --emas-bg: #223250;
+  --hijau: #3FD28A; --hijau-bg: #17382A; --merah: #FF6B8B; --merah-bg: #3B1A24; --ambar: #E8B84A; --ambar-bg: #3A2F12;
+  color-scheme: dark;
+}
+html[data-tema="gelap"] body { background: var(--gading); color: var(--arang); }
+html[data-tema="gelap"] .kepala { background: linear-gradient(135deg, #1E3A7A 0%, #2D56B3 100%); box-shadow: none; }
+html[data-tema="gelap"] .plakat { background: var(--emas-bg); }
+html[data-tema="gelap"] .input::placeholder { color: #6F7983; }
+html[data-tema="gelap"] .btn-utama, html[data-tema="gelap"] .bar-kirim .btn-utama:not(:disabled) { color: #fff; }
+html[data-tema="gelap"] .bar-kirim .btn-utama:disabled { background: #2C343C; border-color: #2C343C; color: #7C8691; }
+html[data-tema="gelap"] .bar-kirim { background: var(--gading-2); border-top-color: var(--garis); }
+html[data-tema="gelap"] .btn-semua { background: var(--hijau-bg); border-color: #2A5E45; }
+html[data-tema="gelap"] .cl-catatan .input { border-color: #6B3A48; }
+html[data-tema="gelap"] .ubin-buka .ikon { color: #3FD28A; }
+html[data-tema="gelap"] .ubin-tutup .ikon { color: #F2A24B; }
+html[data-tema="gelap"] .stempel { background: var(--gading-2); }
+html[data-tema="gelap"] .logo-merek { background: #fff; }

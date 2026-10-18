@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap">
-<link rel="stylesheet" href="dashboard.css">
+<link rel="stylesheet" href="dashboard.css?v=12">
 </head>
 <body>
 
@@ -24,8 +24,8 @@
     </div>
     <div class="pita" aria-hidden="true"></div>
     <div class="masuk-isi">
-      <div class="medan"><label for="u">Username</label><input id="u" class="input" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" required></div>
-      <div class="medan"><label for="p">Password</label><input id="p" class="input" type="password" autocomplete="current-password" required></div>
+      <div class="medan"><label for="u">Nama pengguna</label><input id="u" class="input" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" required></div>
+      <div class="medan"><label for="p">Kata sandi</label><input id="p" class="input" type="password" autocomplete="current-password" required></div>
       <p id="g-masuk" class="galat" role="alert" hidden></p>
       <button type="submit" id="btn-masuk" class="btn btn-utama btn-lebar">Masuk</button>
       <p class="catatan">Halaman ini khusus admin, supervisor, dan manager. Petugas patroli tidak perlu masuk.</p>
@@ -38,12 +38,13 @@
   <aside class="sisi" id="sisi">
     <div class="sisi-merek">
       <div><b>Admin</b><span>Mall 23Semarang</span></div>
+      <button type="button" class="btn-sisi-tutup" id="btn-sisi-tutup" aria-label="Minimalkan panel menu" title="Minimalkan panel menu">&#171;</button>
     </div>
     <nav class="menu" id="menu" aria-label="Menu utama"></nav>
     <div class="sisi-bawah">
       <div class="pengguna" id="pengguna"></div>
       <div class="sisi-aksi">
-        <button type="button" class="btn btn-kecil btn-garis-terang" id="btn-sandi">Ganti password</button>
+        <button type="button" class="btn btn-kecil btn-garis-terang" id="btn-sandi">Ganti kata sandi</button>
         <button type="button" class="btn btn-kecil btn-garis-terang" id="btn-keluar">Keluar</button>
       </div>
       <a class="tautan-petugas" href="index.html" target="_blank" rel="noopener">Buka form petugas</a>
@@ -55,6 +56,16 @@
       <button type="button" class="btn-menu" id="btn-menu" aria-label="Sembunyikan menu" aria-expanded="true" aria-controls="sisi"><i></i><i></i><i></i></button>
       <h1 id="judul-halaman">Laporan</h1>
       <span class="atas-info" id="atas-info"></span>
+      <div class="notif" id="notif">
+        <button type="button" class="btn-ikon-atas" id="btn-notif" aria-label="Notifikasi" aria-expanded="false" aria-controls="panel-notif" title="Notifikasi">
+          <svg class="ikon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.6 2H4.4z"/><path d="M10 21h4"/></svg>
+          <span class="notif-n" id="notif-n" hidden>0</span>
+        </button>
+        <div class="panel-notif" id="panel-notif" role="region" aria-label="Daftar notifikasi" hidden></div>
+      </div>
+      <button type="button" class="btn-ikon-atas" id="btn-penuh" aria-pressed="false" title="Layar penuh" aria-label="Layar penuh">
+        <svg class="ikon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+      </button>
     </header>
     <div class="tirai-menu" id="tirai-menu"></div>
     <main class="isi" id="isi"></main>
@@ -66,10 +77,10 @@
 <!-- ============ DIALOG ============ -->
 <dialog class="dialog" id="dlg-sandi">
   <form id="form-sandi">
-    <h3>Ganti password</h3>
-    <div class="medan"><label for="s-lama">Password saat ini</label><input id="s-lama" class="input" type="password" autocomplete="current-password" required></div>
-    <div class="medan"><label for="s-baru">Password baru (minimal 8 karakter)</label><input id="s-baru" class="input" type="password" autocomplete="new-password" minlength="8" required></div>
-    <div class="medan"><label for="s-konf">Ulangi password baru</label><input id="s-konf" class="input" type="password" autocomplete="new-password" minlength="8" required></div>
+    <h3>Ganti kata sandi</h3>
+    <div class="medan"><label for="s-lama">Kata sandi saat ini</label><input id="s-lama" class="input" type="password" autocomplete="current-password" required></div>
+    <div class="medan"><label for="s-baru">Kata sandi baru (minimal 8 karakter)</label><input id="s-baru" class="input" type="password" autocomplete="new-password" minlength="8" required></div>
+    <div class="medan"><label for="s-konf">Ulangi kata sandi baru</label><input id="s-konf" class="input" type="password" autocomplete="new-password" minlength="8" required></div>
     <p id="g-sandi" class="galat" role="alert" hidden></p>
     <div class="dialog-aksi">
       <button type="button" class="btn btn-garis" id="s-batal">Batal</button>
@@ -105,12 +116,16 @@
   </form>
 </dialog>
 
-<script src="config.js"></script>
-<script src="core.js"></script>
-<script src="dashboard.js"></script>
-<script src="laporan.js"></script>
-<script src="tenant-awal.js"></script>
-<script src="kelola.js"></script>
-<script src="dashboard-mulai.js"></script>
+<script src="config.js?v=12"></script>
+<script src="core.js?v=12"></script>
+<script src="dashboard.js?v=12"></script>
+<script src="laporan.js?v=12"></script>
+<script src="cakupan.js?v=12"></script>
+<script src="notif.js?v=12"></script>
+<script src="tenant-awal.js?v=12"></script>
+<script src="kelola.js?v=12"></script>
+<script src="qrcode.js?v=12"></script>
+<script src="qr.js?v=12"></script>
+<script src="dashboard-mulai.js?v=12"></script>
 </body>
 </html>

@@ -12,6 +12,8 @@
     mengirim = false, timerDraft = null;
   var cbTenant, cbNama, cl, foto;
 
+  PC.pasangLogo(document.querySelector(".merek-grup"));
+  PC.pasangTema(document.querySelector(".kepala-isi"));
   PC.pasangStempel($("stempel"));
   PC.Lokasi.mulai();
   var antrean = PC.pasangAntrean($("antrean-wadah"));
@@ -202,6 +204,11 @@
   }
 
   /* ------------------------------------------------ status form */
+  // Foto tenant: wajib bila ada temuan, atau bila admin memilih "selalu" di Pengaturan.
+  function fotoWajib() {
+    return !!(cl && cl.nilai().adaTemuan) || !!(master && master.fotoTenant === "selalu");
+  }
+
   function kekurangan() {
     var k = [], c = cl.nilai();
     if (!kategori) { k.push("buka atau tutup"); return k; }
@@ -212,7 +219,7 @@
       if (c.catatanKurang) k.push("penjelasan temuan");
       if (!tingkat) k.push("tingkat temuan");
     }
-    if (!foto.daftar().length) k.push("foto");
+    if (fotoWajib() && !foto.daftar().length) k.push("foto");
     return k;
   }
 
@@ -225,7 +232,9 @@
       tingkat = "";
       Array.prototype.forEach.call(document.querySelectorAll('input[name="tingkat"]'), function (r) { r.checked = false; });
     }
-    $("jml-foto").textContent = foto.daftar().length + " dari 3";
+    $("jml-foto").textContent = foto.daftar().length + " dari 3" + (fotoWajib() ? "" : " (opsional)");
+    if (kategori) $("petunjuk-foto").textContent = PETUNJUK_FOTO[kategori] + " Tanggal, jam, tenant, petugas, dan GPS tercetak otomatis." +
+      (fotoWajib() ? "" : " Foto tidak wajib bila tidak ada temuan.");
     var siapFoto = !!kategori && !!cbTenant.nilai() && !!cbNama.nilai();
     $("btn-foto").disabled = !siapFoto || foto.penuh();
     $("btn-foto-teks").textContent = foto.penuh() ? "Foto sudah 3 (maksimal)" : (foto.daftar().length ? "Tambah foto" : "Ambil foto");

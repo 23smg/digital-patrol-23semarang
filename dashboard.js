@@ -9,7 +9,14 @@
   var DB = window.DB = {
     S: { token: "", user: null },
     views: {}, urutan: [], aktif: null, lencana: {},
+    data: null, pendengar: [],
     $: $
+  };
+
+  // Data pantauan terbaru (diisi laporan.js tiap muat). Halaman lain dan lonceng notifikasi berlangganan di sini.
+  DB.saatData = function (fn) { DB.pendengar.push(fn); };
+  DB.umumkanData = function () {
+    DB.pendengar.forEach(function (fn) { try { fn(DB.data); } catch (e) { console.error(e); } });
   };
 
   /* ------------------------------------------------------------ util dipakai halaman */
@@ -43,7 +50,7 @@
     var t = DB.S.token;
     hapusSesi();
     if (panggilServer && t) PC.api("logout", { token: t }, 8000).catch(function () { /* abaikan */ });
-    DB.S.token = ""; DB.S.user = null;
+    DB.S.token = ""; DB.S.user = null; DB.data = null;
     if (DB.aktif && DB.views[DB.aktif] && DB.views[DB.aktif].tinggalkan) DB.views[DB.aktif].tinggalkan();
     DB.aktif = null;
     DB.tutupLapisan();
@@ -75,12 +82,16 @@
   $("btn-keluar").addEventListener("click", function () { DB.keluar("", true); });
 
   /* ------------------------------------------------------------ menu */
-  var GRUP = { pantau: "Pantau", data: "Data master", sistem: "Sistem" };
+  var GRUP = { pantau: "Pemantauan", data: "Data master", sistem: "Sistem" };
 
   function bangunMenu() {
     var m = $("menu");
     PC.kosongkan(m);
     var grupTerakhir = "";
+    var RANK = { pantau: 0, data: 1, sistem: 2 };
+    DB.urutan = DB.urutan.map(function (id, i) { return { id: id, i: i }; }).sort(function (a, b) {
+      return (RANK[DB.views[a.id].grup] || 0) - (RANK[DB.views[b.id].grup] || 0) || a.i - b.i;
+    }).map(function (x) { return x.id; });
     DB.urutan.forEach(function (id) {
       var v = DB.views[id];
       if (!DB.izin(v)) return;
@@ -151,9 +162,27 @@
       setSisiTutup(!$("app").classList.contains("sisi-tutup"), true);
     }
   });
+  $("btn-sisi-tutup").addEventListener("click", function () {
+    if (layarSempit()) { $("app").classList.remove("menu-buka"); $("btn-menu").setAttribute("aria-expanded", "false"); }
+    else setSisiTutup(true, true);
+  });
   $("tirai-menu").addEventListener("click", function () {
     $("app").classList.remove("menu-buka");
     $("btn-menu").setAttribute("aria-expanded", "false");
+  });
+
+  /* Layar kontrol penuh: menu disembunyikan dan browser masuk mode layar penuh (untuk monitor di pos keamanan). */
+  $("btn-penuh").addEventListener("click", function () {
+    var el = document.documentElement;
+    if (document.fullscreenElement) { document.exitFullscreen(); return; }
+    if (el.requestFullscreen) el.requestFullscreen().catch(function () { PC.toast("Browser menolak mode layar penuh.", "bad"); });
+    setSisiTutup(true, false);
+  });
+  document.addEventListener("fullscreenchange", function () {
+    var p = !!document.fullscreenElement;
+    $("btn-penuh").setAttribute("aria-pressed", p ? "true" : "false");
+    $("btn-penuh").title = p ? "Keluar dari layar penuh" : "Layar penuh";
+    if (!p) { try { setSisiTutup(localStorage.getItem(KUNCI_SISI) === "1", false); } catch (e) { /* abaikan */ } }
   });
 
   DB.mulaiApp = function () {
@@ -164,6 +193,7 @@
     p.appendChild(h("b", { text: u.nama }));
     p.appendChild(h("span", { text: u.role + (u.bisaUbah ? "" : " (hanya lihat)") }));
     bangunMenu();
+    if (DB.saatMulaiApp) DB.saatMulaiApp();
     DB.buka(location.hash.replace("#", "") || "laporan");
   };
 
@@ -266,15 +296,15 @@
   $("form-sandi").addEventListener("submit", function (e) {
     e.preventDefault();
     var g = $("g-sandi");
-    if ($("s-baru").value !== $("s-konf").value) { g.textContent = "Konfirmasi password tidak cocok."; g.hidden = false; return; }
+    if ($("s-baru").value !== $("s-konf").value) { g.textContent = "Konfirmasi kata sandi tidak cocok."; g.hidden = false; return; }
     var btn = $("s-simpan"); btn.disabled = true;
     DB.panggil("gantiPassword", { passLama: $("s-lama").value, passBaru: $("s-baru").value }, 25000).then(function (r) {
       if (r.status === "SUCCESS") {
         // Server mencabut semua sesi lama dan memberi token baru untuk sesi ini.
         if (r.token) { DB.S.token = r.token; simpanSesi(); }
-        dlgSandi.close(); PC.toast("Password diperbarui. Sesi di perangkat lain dikeluarkan.", "ok");
+        dlgSandi.close(); PC.toast("Kata sandi diperbarui. Sesi di perangkat lain dikeluarkan.", "ok");
       } else if (r.kode !== "SESI") {
-        g.textContent = r.message || "Gagal mengganti password."; g.hidden = false;
+        g.textContent = r.message || "Gagal mengganti kata sandi."; g.hidden = false;
       }
     }).then(function () { btn.disabled = false; });
   });

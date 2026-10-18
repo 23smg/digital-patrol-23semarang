@@ -10,7 +10,7 @@
     timer: null, memuat: false, tindak: {}, terbuka: { patroli: [], tenant: [] },
     tlSemua: false, rincianAktif: null, aksiStatus: null, dari: "", sampai: "", cari: "", rentang: "hari", otoDetik: 30, tampil: false
   };
-  var STATUS_LABEL = { BARU: "Baru", DITANGANI: "Ditangani", SELESAI: "Selesai" };
+  var STATUS_LABEL = { BARU: "Baru", DITANGANI: "Diproses", SELESAI: "Selesai" };
   var STATUS_KLS = { BARU: "l-baru", DITANGANI: "l-proses", SELESAI: "l-ok" };
   var RANK_TINGKAT = { Tinggi: 0, Sedang: 1, Rendah: 2 };
   var RANK_STATUS = { BARU: 0, DITANGANI: 1 };
@@ -23,6 +23,7 @@
     KIRIM_TERTUNDA: "Dikirim setelah offline",
     JAM_PERANGKAT: "Jam dari perangkat",
     ULANG_HARI_INI: "Laporan ulang hari ini",
+    ZONA_QR: "Zona dipilih lewat QR di lokasi",
     ISI_TERLALU_CEPAT: "Checklist diisi sangat cepat, periksa kemungkinan asal tandai"
   };
   var FLAG_PENTING = { WAKTU_TIDAK_SINKRON: 1, DI_LUAR_AREA: 1, FOTO_DARI_BERKAS: 1 };
@@ -65,7 +66,7 @@
     var e = epoch(ts);
     if (!e) return "-";
     var d = Math.max(0, Math.round((Date.now() - e) / 1000));
-    if (d < 3600) return Math.max(1, Math.round(d / 60)) + " mnt lalu";
+    if (d < 3600) return Math.max(1, Math.round(d / 60)) + " menit lalu";
     if (d < 86400) return Math.floor(d / 3600) + " jam lalu";
     return Math.floor(d / 86400) + " hari lalu";
   }
@@ -139,11 +140,15 @@
       if (r.status !== "SUCCESS") { if (st2 && r.kode !== "SESI") st2.textContent = r.message || "Gagal memuat."; return; }
       S.hariIni = r.hariIni; S.patroli = r.patroli; S.tenant = r.tenant; S.master = r.master;
       S.tindak = r.tindak || {}; S.terbuka = r.terbuka || { patroli: [], tenant: [] };
+      S.tren = r.tren || [];
+      DB.data = { hariIni: r.hariIni, cakupan: r.cakupan, tren: r.tren || [], pengaturan: r.pengaturan, terbuka: S.terbuka,
+        tindak: S.tindak, patroli: r.patroli, tenant: r.tenant, master: r.master, waktu: Date.now() };
       if (r.user) { DB.S.user = r.user; DB.simpanSesi(); }
       deteksiBaru(r.patroli.concat(r.tenant));
       DB.info("Diperbarui " + PC.fmtWIB(new Date()).jam + " WIB");
       var buka = semuaTerbuka();
       DB.badge("laporan", buka.length || null, buka.length > 0);
+      DB.umumkanData();
       if (S.tampil) render();
     }).then(function () { S.memuat = false; if (S.tampil && $("status-muat")) $("status-muat").textContent = ""; });
   }
@@ -180,7 +185,7 @@
     var cari = h("input", { id: "cari", type: "search", class: "input", placeholder: "Nama, zona, tenant, temuan", style: { width: "100%" } });
     cari.value = S.cari;
     cari.addEventListener("input", function () { S.cari = cari.value; S.halaman = 1; render(); });
-    var oto = h("select", { id: "oto", class: "input", "aria-label": "Segarkan otomatis" },
+    var oto = h("select", { id: "oto", class: "input", "aria-label": "Muat ulang otomatis" },
       [["0", "Manual"], ["15", "15 detik"], ["30", "30 detik"], ["60", "1 menit"], ["300", "5 menit"]].map(function (p) {
         return h("option", { value: p[0], text: p[1], selected: String(S.otoDetik) === p[0] });
       }));
@@ -193,12 +198,13 @@
       h("div", { class: "grup" }, h("div", null, h("label", { for: "dari", text: "Dari" }), inDari), h("div", null, h("label", { for: "sampai", text: "Sampai" }), inSampai)),
       h("div", { class: "grup" }, rentangBtn("hari", "Hari ini"), rentangBtn("7", "7 hari"), rentangBtn("bulan", "Bulan ini"), rentangBtn("90", "90 hari")),
       h("div", { style: { flex: "1", minWidth: "200px", maxWidth: "340px" } }, h("label", { for: "cari", text: "Cari" }), cari),
-      h("div", null, h("label", { for: "oto", text: "Segarkan" }), oto),
+      h("div", null, h("label", { for: "oto", text: "Muat ulang" }), oto),
       h("div", { class: "grup" }, btnTemuan,
-        h("button", { type: "button", class: "btn btn-utama btn-pilih", id: "btn-segarkan", text: "Segarkan sekarang", onclick: function () { muatData(false); } })),
+        h("button", { type: "button", class: "btn btn-utama btn-pilih", id: "btn-segarkan", text: "Muat ulang", onclick: function () { muatData(false); } })),
       h("span", { class: "status-muat", id: "status-muat" })));
     wadah.appendChild(h("div", { class: "ringkas", id: "ringkas" }));
     wadah.appendChild(h("section", { class: "panel tl", id: "tl", "aria-labelledby": "tl-judul" }));
+    wadah.appendChild(h("section", { class: "panel" }, h("h2", { text: "Tren 14 hari terakhir" }), h("div", { class: "panel-isi", id: "tren" })));
     wadah.appendChild(h("div", { class: "dua-kolom" },
       h("div", { class: "panel" }, h("h2", { text: "Sesuai dan temuan" }), h("div", { class: "panel-isi", id: "donat" })),
       h("div", { class: "panel" }, h("h2", { text: "Lokasi dengan temuan terbanyak" }), h("div", { class: "panel-isi", id: "top" }))));
@@ -207,21 +213,25 @@
         onclick: function () { S.tab = id; S.halaman = 1; renderPanel(); } }, teks, n ? h("span", { class: "n", id: n, text: "0" }) : null);
     }
     wadah.appendChild(h("div", { class: "tab", role: "tablist", id: "tab" },
-      tabBtn("patroli", "Patroli", "n-patroli"), tabBtn("tenant", "Checklist tenant", "n-tenant"), tabBtn("rekap", "Rekap tenant hari ini")));
+      tabBtn("patroli", "Patroli", "n-patroli"), tabBtn("tenant", "Checklist tenant", "n-tenant"), tabBtn("rekap", "Rekap hari ini")));
     wadah.appendChild(h("div", { class: "tabel-wrap", id: "panel" }));
 
     if (S.hariIni) render();
     atur();
   }
 
+  // Pemuatan data jalan terus di latar selama sesi (untuk lonceng notifikasi dan halaman Cakupan).
+  DB.saatMulaiApp = function () { if (!S.dari) setRentang("hari"); atur(); };
+  DB.muatUlang = function () { muatData(true); };
+
   function tinggalkan() {
     S.tampil = false;
-    clearInterval(S.timer);
     DB.tutupLapisan();
     S.rincianAktif = null;
   }
   DB.setelahKeluar = function () {
     clearInterval(S.timer); S.tampil = false; S.sudahMuat = false; S.terlihat = {};
+    S.tren = [];
     S.patroli = []; S.tenant = []; S.tindak = {}; S.terbuka = { patroli: [], tenant: [] }; S.hariIni = "";
     DB.lencana = {};
   };
@@ -231,6 +241,7 @@
     if (!$("ringkas")) return;
     renderRingkas();
     renderTL();
+    renderTren();
     renderGrafik();
     renderPanel();
   }
@@ -253,12 +264,12 @@
     }
     var w = $("ringkas");
     PC.kosongkan(w);
-    w.appendChild(sel(String(p.length), "Log patroli, periode terpilih"));
+    w.appendChild(sel(String(p.length), "Total laporan patroli"));
     var terbuka = semuaTerbuka();
     var tinggi = terbuka.filter(function (o) { return o.x.tingkat === "Tinggi"; }).length;
-    w.appendChild(sel(String(terbuka.length), "Temuan perlu tindak lanjut" + (tinggi ? " (" + tinggi + " tinggi)" : ""), terbuka.length ? "bad" : ""));
-    w.appendChild(sel([String(buka), h("small", { text: " / " + total })], "Tenant sudah buka hari ini", "buka", total ? Math.round(buka * 100 / total) : 0));
-    w.appendChild(sel([String(tutup), h("small", { text: " / " + total })], "Tenant sudah tutup hari ini", "", total ? Math.round(tutup * 100 / total) : 0));
+    w.appendChild(sel(String(terbuka.length), "Temuan belum selesai" + (tinggi ? " (" + tinggi + " tinggi)" : ""), terbuka.length ? "bad" : ""));
+    w.appendChild(sel([String(buka), h("small", { text: " / " + total })], "Tenant buka hari ini", "buka", total ? Math.round(buka * 100 / total) : 0));
+    w.appendChild(sel([String(tutup), h("small", { text: " / " + total })], "Tenant tutup hari ini", "", total ? Math.round(tutup * 100 / total) : 0));
     var np = $("n-patroli"), nt = $("n-tenant");
     if (np) { np.textContent = p.length; np.className = "n" + (tp ? " bad" : ""); }
     if (nt) { nt.textContent = t.length; nt.className = "n" + (tt ? " bad" : ""); }
@@ -271,7 +282,7 @@
       return h("button", { type: "button", class: "btn btn-kecil " + (kls || ""), text: label,
         onclick: function (e) { e.stopPropagation(); bukaStatus(x, jenis, baru); } });
     }
-    if (st === "BARU") return [tombol("Tangani", "DITANGANI"), tombol("Selesai", "SELESAI", "btn-utama")];
+    if (st === "BARU") return [tombol("Proses", "DITANGANI"), tombol("Selesai", "SELESAI", "btn-utama")];
     if (st === "DITANGANI") return [tombol("Selesai", "SELESAI", "btn-utama")];
     return [tombol("Buka kembali", "BARU")];
   }
@@ -298,7 +309,7 @@
     var daftar = semuaTerbuka();
     var tinggi = daftar.filter(function (o) { return o.x.tingkat === "Tinggi"; }).length;
     w.appendChild(h("div", { class: "tl-kepala" },
-      h("h2", { id: "tl-judul", text: "Perlu tindak lanjut" }),
+      h("h2", { id: "tl-judul", text: "Temuan belum selesai" }),
       h("span", { class: "tl-hitung" + (daftar.length ? " bad" : ""),
         text: daftar.length ? daftar.length + " terbuka" + (tinggi ? ", " + tinggi + " tingkat tinggi" : "") : "Semua selesai" }),
       h("span", { class: "oleh", text: "Temuan 30 hari terakhir yang belum ditandai selesai, apa pun filter tanggalnya" })));
@@ -315,10 +326,10 @@
   var dlgS = $("dlg-status");
   function bukaStatus(x, jenis, baru) {
     S.aksiStatus = { x: x, jenis: jenis, baru: baru };
-    $("st-judul").textContent = { DITANGANI: "Tandai sedang ditangani", SELESAI: "Tandai selesai", BARU: "Buka kembali temuan" }[baru];
+    $("st-judul").textContent = { DITANGANI: "Tandai sedang diproses", SELESAI: "Tandai selesai", BARU: "Buka kembali temuan" }[baru];
     $("st-info").textContent = (jenis === "patroli" ? x.zona : x.tenant) + ", " + x.ts;
     $("st-label").textContent = baru === "SELESAI" ? "Tindakan yang dilakukan (wajib)"
-      : (baru === "DITANGANI" ? "Catatan, misalnya siapa yang menangani (opsional)" : "Alasan dibuka kembali (opsional)");
+      : (baru === "DITANGANI" ? "Catatan, misalnya siapa yang memproses (opsional)" : "Alasan dibuka kembali (opsional)");
     $("st-catatan").value = "";
     $("g-status").hidden = true;
     if (dlgS.showModal) dlgS.showModal(); else dlgS.setAttribute("open", "");
@@ -347,6 +358,59 @@
       }
     }).then(function () { btn.disabled = false; });
   });
+
+  /* ---------------------------------------------------------- tren harian (SVG polos)
+     Batang = jumlah laporan (patroli + tenant), garis = jumlah temuan. Satu sumbu, label seperlunya. */
+  var NS = "http://www.w3.org/2000/svg";
+  function se(tag, a) {
+    var e = document.createElementNS(NS, tag);
+    Object.keys(a || {}).forEach(function (k) { e.setAttribute(k, a[k]); });
+    for (var i = 2; i < arguments.length; i++) if (arguments[i]) e.appendChild(arguments[i]);
+    return e;
+  }
+  function renderTren() {
+    var w = $("tren");
+    if (!w) return;
+    PC.kosongkan(w);
+    var d = S.tren || [];
+    var total = d.reduce(function (a, x) { return a + x.patroli + x.tenant; }, 0);
+    if (!d.length || !total) { w.appendChild(h("div", { class: "kosong-info", text: "Belum ada laporan dalam 14 hari terakhir." })); return; }
+    var W = 700, H = 210, L = 34, R = 10, T = 12, B = 28, pw = W - L - R, ph = H - T - B;
+    var maks = Math.max.apply(null, d.map(function (x) { return x.patroli + x.tenant; }).concat(d.map(function (x) { return x.temuan; })));
+    var langkah = maks <= 5 ? 1 : (maks <= 12 ? 2 : (maks <= 30 ? 5 : (maks <= 80 ? 10 : (maks <= 200 ? 25 : 50))));
+    var atas = Math.ceil(maks / langkah) * langkah || 1;
+    function y(v) { return T + ph - (v / atas) * ph; }
+    var bw = pw / d.length, g = se("g");
+    for (var v = 0; v <= atas; v += langkah) {
+      g.appendChild(se("line", { x1: L, x2: W - R, y1: y(v), y2: y(v), stroke: "#E3E8ED", "stroke-width": 1 }));
+      var t = se("text", { x: L - 6, y: y(v) + 4, "text-anchor": "end", "font-size": 11, fill: "#6C757D" }); t.textContent = String(v);
+      g.appendChild(t);
+    }
+    var pts = [];
+    d.forEach(function (x, i) {
+      var n = x.patroli + x.tenant, cx = L + bw * i + bw / 2, tinggi = (n / atas) * ph;
+      var bar = se("rect", { x: L + bw * i + bw * 0.2, y: T + ph - tinggi, width: bw * 0.6, height: Math.max(tinggi, 0), rx: 3, fill: "#3F6AD8", opacity: 0.85 });
+      var tip = se("title"); tip.textContent = x.tgl.split("-").reverse().join("/") + ": " + n + " laporan (" + x.patroli + " patroli, " + x.tenant + " tenant), " + x.temuan + " temuan";
+      var kolom = se("g", {}, se("rect", { x: L + bw * i, y: T, width: bw, height: ph, fill: "transparent" }), bar, tip);
+      g.appendChild(kolom);
+      pts.push([cx, y(x.temuan)]);
+      if (i % 2 === (d.length - 1) % 2) {
+        var lb = se("text", { x: cx, y: H - 9, "text-anchor": "middle", "font-size": 11, fill: "#6C757D" });
+        lb.textContent = x.tgl.slice(8, 10) + "/" + x.tgl.slice(5, 7);
+        g.appendChild(lb);
+      }
+    });
+    g.appendChild(se("polyline", { points: pts.map(function (p) { return p.join(","); }).join(" "), fill: "none", stroke: "#D92550", "stroke-width": 2, "stroke-linejoin": "round" }));
+    pts.forEach(function (p, i) {
+      if (d[i].temuan) g.appendChild(se("circle", { cx: p[0], cy: p[1], r: 4, fill: "#D92550", stroke: "#fff", "stroke-width": 2 }));
+    });
+    var totalTemuan = d.reduce(function (a, x) { return a + x.temuan; }, 0);
+    w.appendChild(h("div", { class: "legenda tren-legenda" },
+      h("div", null, h("i", { style: { background: "#3F6AD8", borderRadius: "2px" } }), "Laporan per hari: " + total + " selama 14 hari"),
+      h("div", null, h("i", { style: { background: "#D92550", height: "3px", borderRadius: "2px", verticalAlign: "3px" } }), "Temuan per hari: " + totalTemuan)));
+    w.appendChild(se("svg", { viewBox: "0 0 " + W + " " + H, class: "tren-svg", role: "img",
+      "aria-label": "Grafik tren 14 hari: " + total + " laporan, " + totalTemuan + " temuan. Arahkan kursor ke batang untuk rincian harian." }, g));
+  }
 
   /* ---------------------------------------------------------- grafik */
   function renderGrafik() {
@@ -562,11 +626,11 @@
       ? [["Waktu", "ts"], ["Petugas", "nama"], ["Zona", "zona"], ["Kondisi", "kondisi"], ["Tingkat", "tingkat"],
         ["Temuan", "catatan"], ["Latitude", "lat"], ["Longitude", "lng"], ["Akurasi (m)", "akurasi"], ["Waktu foto", "waktuFoto"],
         ["Catatan sistem", "flag"], ["Status tindak lanjut", "tlStatus"], ["Catatan tindak lanjut", "tlCatatan"],
-        ["Diubah oleh", "tlOleh"], ["Diubah pada", "tlWaktu"], ["Link foto", "foto"], ["ID", "id"]]
+        ["Diubah oleh", "tlOleh"], ["Diubah pada", "tlWaktu"], ["Tautan foto", "foto"], ["ID", "id"]]
       : [["Waktu", "ts"], ["Kategori", "kategori"], ["Tenant", "tenant"], ["Petugas", "petugas"], ["Hasil", "hasil"],
         ["Tingkat", "tingkat"], ["Temuan", "ringkasan"], ["Catatan", "catatan"], ["Latitude", "lat"], ["Longitude", "lng"],
         ["Akurasi (m)", "akurasi"], ["Waktu foto", "waktuFoto"], ["Catatan sistem", "flag"], ["Status tindak lanjut", "tlStatus"],
-        ["Catatan tindak lanjut", "tlCatatan"], ["Diubah oleh", "tlOleh"], ["Diubah pada", "tlWaktu"], ["Link foto", "foto"], ["ID", "id"]];
+        ["Catatan tindak lanjut", "tlCatatan"], ["Diubah oleh", "tlOleh"], ["Diubah pada", "tlWaktu"], ["Tautan foto", "foto"], ["ID", "id"]];
     var csv = [kolom.map(function (k) { return selCsv(k[0]); }).join(",")]
       .concat(baris.map(function (x) { return kolom.map(function (k) { return selCsv(x[k[1]]); }).join(","); })).join("\r\n");
     var blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8" });

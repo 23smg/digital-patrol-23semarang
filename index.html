@@ -3,13 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#FFFFFF">
+<meta name="theme-color" content="#3F6AD8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src https://script.google.com https://script.googleusercontent.com; media-src blob:; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Patrol 23">
+<script src="tema.js"></script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" type="image/png" href="icons/icon-192.png">
@@ -17,7 +18,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap">
-<link rel="stylesheet" href="petugas.css">
+<link rel="stylesheet" href="petugas.css?v=12">
 </head>
 <body>
 
@@ -57,7 +58,16 @@
 
     <section class="bagian" id="b-zona">
       <h2><span class="langkah"><span>2</span></span>Zona patroli</h2>
+      <div class="medan" id="zona-cari-wadah" hidden>
+        <label for="zona-cari">Cari zona</label>
+        <input id="zona-cari" class="input" type="search" autocomplete="off" placeholder="Ketik, misalnya L4 5">
+      </div>
+      <p class="petunjuk qr" id="zona-qr" hidden></p>
+      <p class="petunjuk" id="zona-petunjuk" hidden>Pilih lantai atau area dulu, lalu pilih titiknya.</p>
+      <div class="lantai-grup" id="zona-lantai" role="group" aria-label="Lantai atau area" hidden></div>
       <div class="ubin-zona" id="zona-grup" role="radiogroup" aria-label="Zona patroli"></div>
+      <p class="petunjuk" id="zona-kosong" hidden>Zona tidak ditemukan. Periksa penulisan atau pilih lewat tombol lantai.</p>
+      <div class="plakat" id="zona-plakat" hidden><span>Lokasi patroli</span><b id="zona-plakat-nama"></b></div>
     </section>
 
     <section class="bagian" id="b-cl">
@@ -99,8 +109,8 @@
   </div>
 </div>
 
-<script src="config.js"></script>
-<script src="core.js"></script>
-<script src="index.js"></script>
+<script src="config.js?v=12"></script>
+<script src="core.js?v=12"></script>
+<script src="index.js?v=12"></script>
 </body>
 </html>
