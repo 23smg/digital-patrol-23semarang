@@ -596,7 +596,7 @@
     function item() { return o.items() || []; }
     function pastikanTampak() {
       var r = ul.getBoundingClientRect(), batas = (w.innerHeight || 600) - 120;   // sisakan ruang untuk bar kirim
-      if (r.bottom > batas) w.scrollBy({ top: Math.min(r.bottom - batas + 8, r.top - 90), behavior: "smooth" });
+      if (r.bottom > batas) w.scrollBy({ top: Math.min(r.bottom - batas + 8, r.top - 150), behavior: "smooth" });
     }
     function render(semua) {
       var q = semua ? "" : inp.value.trim().toLowerCase();
@@ -675,8 +675,6 @@
       if (!b) return;
       b.el.classList.toggle("temuan", st.s === "TEMUAN");
       b.el.classList.toggle("terisi", st.s !== "");
-      b.catWrap.hidden = st.s !== "TEMUAN";
-      b.cat.value = st.c;
     }
 
     function ubahMode(m) {
@@ -705,18 +703,13 @@
             onchange: function () { st.s = val; perbarui(nama); ubah(); } });
           return [radios[val], h("label", { for: id, class: "seg " + kls }, ikon(val), h("span", { text: label }))];
         }
-        var cat = h("textarea", { rows: "2", maxlength: "200", class: "input cl-cat",
-          placeholder: "Jelaskan temuan (wajib)", "aria-label": "Penjelasan temuan: " + nama,
-          oninput: function () { st.c = cat.value; ubah(); } });
-        var catWrap = h("div", { class: "cl-catatan", hidden: true }, cat);
         var el = h("div", { class: "cl-baris" },
           h("div", { class: "cl-nama", text: nama }),
           h("div", { class: "seg-grup", role: "radiogroup", "aria-label": nama },
             opsi("OK", "Sesuai", "seg-ok"),
             opsi("TEMUAN", "Temuan", "seg-bad"),
-            o.izinNA === false ? null : opsi("NA", "N/A", "seg-na")),
-          catWrap);
-        baris[nama] = { el: el, cat: cat, catWrap: catWrap, radios: radios };
+            o.izinNA === false ? null : opsi("NA", "N/A", "seg-na")));
+        baris[nama] = { el: el, radios: radios };
         tujuan.appendChild(el);
         perbarui(nama);
       });
@@ -742,9 +735,8 @@
       function pilih(val) {
         clearTimeout(timerLanjut);
         st.s = val;
-        if (val !== "TEMUAN") st.c = "";
+        st.c = "";
         ubah();
-        if (val === "TEMUAN") { render(); return; }
         if (idx < items.length - 1) { timerLanjut = setTimeout(function () { idx++; render(); }, 220); render(); }
         else render();
       }
@@ -752,16 +744,9 @@
         return h("button", { type: "button", class: "fokus-pilih " + kls, "aria-pressed": st.s === val ? "true" : "false",
           onclick: function () { pilih(val); } }, ikon(val), h("span", { text: label }));
       }
-      var cat = null;
-      if (st.s === "TEMUAN") {
-        cat = h("textarea", { rows: "3", maxlength: "200", class: "input cl-cat", placeholder: "Jelaskan temuan (wajib)",
-          "aria-label": "Penjelasan temuan: " + nama,
-          oninput: function () { st.c = cat.value; ubah(); lanjut.disabled = cat.value.trim().length < 3 && idx < items.length - 1; } });
-        cat.value = st.c;
-      }
       var lanjut = h("button", { type: "button", class: "btn btn-utama fokus-lanjut",
         text: idx < items.length - 1 ? "Lanjut" : "Selesai",
-        disabled: (st.s === "TEMUAN" && st.c.trim().length < 3 && idx < items.length - 1) || (idx < items.length - 1 && !st.s),
+        disabled: idx < items.length - 1 && !st.s,
         onclick: function () { if (idx < items.length - 1) { idx++; render(); } else { o.onSelesai && o.onSelesai(); } } });
       var sebelum = h("button", { type: "button", class: "btn btn-garis", text: "Sebelumnya", disabled: idx === 0,
         onclick: function () { clearTimeout(timerLanjut); idx--; render(); } });
@@ -773,9 +758,7 @@
         h("div", { class: "fokus-nama", text: nama }),
         h("div", { class: "fokus-aksi", role: "group", "aria-label": nama },
           tombol("OK", "Sesuai", "seg-ok"), tombol("TEMUAN", "Temuan", "seg-bad"), o.izinNA === false ? null : tombol("NA", "N/A", "seg-na")),
-        cat ? h("div", { class: "cl-catatan" }, cat) : null,
         h("div", { class: "fokus-nav" }, sebelum, lanjut)));
-      if (cat && !st.c) setTimeout(function () { try { cat.focus({ preventScroll: true }); } catch (e) { /* abaikan */ } }, 30);
     }
 
     function render() {
@@ -801,8 +784,8 @@
         items.forEach(function (n) {
           var st = state[n];
           if (st.s) terisi++;
-          if (st.s === "TEMUAN") { adaTemuan = true; if (st.c.trim().length < 3) catKurang = true; }
-          daftar.push({ i: n, s: st.s, c: st.s === "TEMUAN" ? st.c.trim() : "" });
+          if (st.s === "TEMUAN") adaTemuan = true;
+          daftar.push({ i: n, s: st.s, c: "" });
         });
         return { daftar: daftar, terisi: terisi, total: items.length, lengkap: items.length > 0 && terisi === items.length,
           adaTemuan: adaTemuan, catatanKurang: catKurang };
@@ -903,6 +886,31 @@
     segar();
     wadah.appendChild(btn);
   }
+
+  /* ------------------------------------------------- Pindah halaman (Patroli <-> Tenant)
+     Isi halaman memudar dan bergeser sebentar sebelum pindah; halaman tujuan masuk dari arah yang sama.
+     Header dan jam tetap di tempat karena hanya <main> yang beranimasi. */
+  function pasangNavigasi() {
+    var kurangGerak = w.matchMedia && w.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    try {
+      var arah = sessionStorage.getItem("dp_arah");
+      if (arah) { document.documentElement.setAttribute("data-arah", arah); sessionStorage.removeItem("dp_arah"); }
+    } catch (e) { /* abaikan */ }
+    Array.prototype.forEach.call(document.querySelectorAll(".nav-app a"), function (a) {
+      a.addEventListener("click", function (e) {
+        if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button) return;
+        e.preventDefault();
+        if (a.getAttribute("aria-current") === "page" || document.documentElement.classList.contains("keluar")) return;
+        var maju = /tenant/i.test(a.getAttribute("href") || "");
+        try { sessionStorage.setItem("dp_arah", maju ? "maju" : "mundur"); } catch (er) { /* abaikan */ }
+        document.documentElement.setAttribute("data-arah", maju ? "maju" : "mundur");
+        document.documentElement.classList.add("keluar");
+        setTimeout(function () { w.location.href = a.href; }, kurangGerak ? 0 : 170);
+      });
+    });
+    w.addEventListener("pageshow", function () { document.documentElement.classList.remove("keluar"); });
+  }
+  pasangNavigasi();
 
   /* ------------------------------------------------------ Eksport */
   w.PC = {

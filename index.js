@@ -34,18 +34,49 @@
     t.style.height = Math.min(t.scrollHeight + 2, 96) + "px";
   }
 
-  /* ---------- Tombol izin lokasi + kamera ---------- */
+  /* ---------- Tombol izin lokasi + kamera ----------
+     Tombol kecil di samping judul "Lokasi". Muncul hanya bila lokasi atau kamera belum diizinkan,
+     dan otomatis hilang setelah keduanya aktif. */
+  var KUNCI_KAMERA_OK = "dp_kamera_ok", izinLokasi = false, izinKamera = false, lokasiPerm = false;
+
+  function tandaiKameraOk() { try { localStorage.setItem(KUNCI_KAMERA_OK, "1"); } catch (e) {} izinKamera = true; segarIzin(); }
+
+  function segarIzin() {
+    var btn = $("btn-izin"); if (!btn) return;
+    var st = PC.Lokasi.status();
+    izinLokasi = lokasiPerm || st === "baik" || st === "lemah" || st === "buruk";
+    btn.hidden = izinLokasi && izinKamera;
+  }
+
+  function cekIzin() {
+    try { izinKamera = localStorage.getItem(KUNCI_KAMERA_OK) === "1"; } catch (e) {}
+    segarIzin();
+    if (!navigator.permissions || !navigator.permissions.query) return;
+    function pantau(nama, baca) {
+      navigator.permissions.query({ name: nama }).then(function (p) {
+        function f() { baca(p.state); segarIzin(); }
+        f(); p.onchange = f;
+      }).catch(function () { /* browser tidak mendukung: andalkan hasil nyata */ });
+    }
+    pantau("geolocation", function (s) { lokasiPerm = s === "granted"; });
+    pantau("camera", function (s) {
+      if (s === "granted") { try { localStorage.setItem(KUNCI_KAMERA_OK, "1"); } catch (e) {} izinKamera = true; }
+      else if (s === "denied") { try { localStorage.removeItem(KUNCI_KAMERA_OK); } catch (e) {} izinKamera = false; }
+    });
+  }
+
   function mintaAkses() {
     var btn = $("btn-izin"), hasil = { lokasi: "", kamera: "" };
-    btn.disabled = true; btn.textContent = "Meminta izin...";
+    btn.disabled = true; btn.textContent = "Meminta...";
     PC.Lokasi.minta().then(function (st) {
       hasil.lokasi = st === "ditolak" ? "ditolak" : (st === "tidakada" ? "tidakada" : "ok");
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { hasil.kamera = "tidakada"; return; }
       return navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } }, audio: false })
-        .then(function (s) { s.getTracks().forEach(function (t) { t.stop(); }); hasil.kamera = "ok"; })
+        .then(function (s) { s.getTracks().forEach(function (t) { t.stop(); }); hasil.kamera = "ok"; tandaiKameraOk(); })
         .catch(function (e) { hasil.kamera = e && e.name === "NotAllowedError" ? "ditolak" : "tidakada"; });
     }).then(function () {
-      btn.disabled = false; btn.textContent = "Izinkan akses lokasi & kamera";
+      btn.disabled = false; btn.textContent = "Izinkan akses";
+      segarIzin();
       var masalah = [];
       if (hasil.lokasi !== "ok") masalah.push("lokasi");
       if (hasil.kamera !== "ok") masalah.push("kamera");
@@ -189,7 +220,7 @@
       throw e;
     }).then(function (st) {
       if ($("scan").hidden) { st.getTracks().forEach(function (t) { t.stop(); }); throw new Error("batal"); }   // dibatalkan saat menunggu izin
-      scanStream = st;
+      scanStream = st; tandaiKameraOk();
       v.srcObject = st;
       $("scan-teks").textContent = "Arahkan ke QR lokasi";
       var pl = v.play();
@@ -266,25 +297,23 @@
   }
 
   /* ---------- Muat data ---------- */
+  /* Data dari cache dipakai langsung (halaman terbuka tanpa menunggu), lalu disegarkan di latar belakang. */
   function muat() {
-    var muatEl = $("muat");
-    muatEl.hidden = false;
-    PC.kosongkan(muatEl);
-    muatEl.textContent = "Memuat...";
+    var muatEl = $("muat"), sudahMulai = false, cache = null;
+    try { cache = JSON.parse(localStorage.getItem(KUNCI_MASTER)); } catch (e) {}
+    if (cache && cache.checklist && cache.daftarNama) { master = cache; sudahMulai = true; mulai(); }
+    else { muatEl.hidden = false; PC.kosongkan(muatEl); muatEl.textContent = "Memuat..."; }
     var t0 = Date.now();
     PC.api("ambilDropdown", {}, 25000).then(function (r) {
       if (r.status !== "SUCCESS") throw new Error(r.message);
       PC.Jam.sinkron(r.waktuServer + (Date.now() - t0) / 2);
       master = r;
       try { localStorage.setItem(KUNCI_MASTER, JSON.stringify(r)); } catch (e) {}
+      if (!sudahMulai) { sudahMulai = true; mulai(); } else periksaGeofence();
     }).catch(function () {
-      try {
-        var c = JSON.parse(localStorage.getItem(KUNCI_MASTER));
-        if (c && c.checklist) { master = c; PC.toast("Data offline.", "bad"); }
-      } catch (e) {}
-    }).then(function () {
-      if (master) { mulai(); return; }
+      if (sudahMulai) { if (!PC.Jam.terpercaya()) PC.sinkronJam(); return; }
       PC.kosongkan(muatEl);
+      muatEl.hidden = false;
       muatEl.appendChild(h("p", { text: "Gagal memuat." }));
       muatEl.appendChild(h("button", { type: "button", class: "btn btn-utama", text: "Coba Lagi", onclick: muat }));
     });
@@ -332,6 +361,8 @@
     $("catatan").addEventListener("input", ubah);
     $("catatan").addEventListener("input", rapatkanCatatan);
     $("btn-izin").addEventListener("click", mintaAkses);
+    PC.Lokasi.on(segarIzin);
+    cekIzin();
     $("btn-scan").addEventListener("click", bukaScan);
     $("scan-batal").addEventListener("click", tutupScan);
     window.addEventListener("pagehide", tutupScan);
@@ -366,7 +397,6 @@
     s.push({ ok: !!cbNama.nilai(), label: "nama" });
     s.push({ ok: !!c.lengkap, label: "checklist (" + c.terisi + "/" + c.total + ")" });
     if (c.adaTemuan) {
-      s.push({ ok: !c.catatanKurang, label: "keterangan temuan" });
       s.push({ ok: !!tingkat, label: "tingkat temuan" });
     }
     s.push({ ok: foto.daftar().length > 0, label: "foto" });

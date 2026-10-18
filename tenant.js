@@ -76,25 +76,27 @@
   }
 
   /* ------------------------------------------------ memuat master */
+  /* Data dari cache dipakai langsung (halaman terbuka tanpa menunggu), lalu disegarkan di latar belakang. */
   function muat() {
-    var muatEl = $("muat");
-    muatEl.hidden = false;
-    PC.kosongkan(muatEl);
-    muatEl.textContent = "Memuat daftar tenant...";
+    var muatEl = $("muat"), sudahMulai = false, cache = null;
+    try { cache = JSON.parse(localStorage.getItem(KUNCI_MASTER)); } catch (e) {}
+    if (cache && cache.daftarTenant && cache.daftarNama && cache.checklist) { master = cache; sudahMulai = true; mulai(); }
+    else { muatEl.hidden = false; PC.kosongkan(muatEl); muatEl.textContent = "Memuat daftar tenant..."; }
     var t0 = Date.now();
     PC.api("ambilDropdown", {}, 25000).then(function (r) {
       if (r.status !== "SUCCESS") throw new Error(r.message);
       PC.Jam.sinkron(r.waktuServer + (Date.now() - t0) / 2);
       master = r;
       try { localStorage.setItem(KUNCI_MASTER, JSON.stringify(r)); } catch (e) { /* abaikan */ }
+      if (!sudahMulai) { sudahMulai = true; mulai(); return; }
+      // Daftar sudah tampil dari cache: perbarui peta tenant dan tombol lantai tanpa mengganggu isian.
+      petaTenant = {};
+      master.daftarTenant.forEach(function (t) { petaTenant[t.n] = t; });
+      bangunLantai();
     }).catch(function () {
-      try {
-        var c = JSON.parse(localStorage.getItem(KUNCI_MASTER));
-        if (c && c.daftarTenant) { master = c; PC.toast("Tanpa sinyal. Memakai daftar yang tersimpan.", "bad"); }
-      } catch (e) { /* abaikan */ }
-    }).then(function () {
-      if (master) { mulai(); return; }
+      if (sudahMulai) { if (!PC.Jam.terpercaya()) PC.sinkronJam(); return; }
       PC.kosongkan(muatEl);
+      muatEl.hidden = false;
       muatEl.appendChild(h("p", { text: "Daftar belum bisa dimuat. Periksa sinyal, lalu coba lagi." }));
       muatEl.appendChild(h("button", { type: "button", class: "btn btn-utama", text: "Coba lagi", onclick: muat }));
     });
@@ -122,6 +124,7 @@
         ubah();
       } });
     foto = PC.FotoGrid($("foto-grid"), { maks: 3, onUbah: ubah });
+    try { localStorage.setItem("dp_cl_mode", "daftar"); } catch (e) { /* abaikan */ }   // tampilan daftar: semua item terlihat sekaligus
     cl = PC.Checklist($("checklist"), { onUbah: ubah });
     bangunLantai();
 
@@ -135,7 +138,10 @@
     Array.prototype.forEach.call(document.querySelectorAll('input[name="tingkat"]'), function (r) {
       r.addEventListener("change", function () { tingkat = r.value; ubah(); });
     });
-    $("catatan").addEventListener("input", ubah);
+    $("catatan").addEventListener("input", function () {
+      var t = $("catatan"); t.style.height = "auto"; t.style.height = Math.min(t.scrollHeight + 2, 96) + "px";
+      ubah();
+    });
     $("btn-semua").addEventListener("click", function () {
       var n = cl.isiSemuaSesuai();
       PC.toast(n ? n + " item ditandai Sesuai. Ubah yang bermasalah." : "Semua item sudah dijawab.", n ? "ok" : "");
@@ -218,7 +224,6 @@
     if (!cbNama.nilai()) k.push("nama petugas");
     if (!c.lengkap) k.push("checklist (" + c.terisi + "/" + c.total + ")");
     if (c.adaTemuan) {
-      if (c.catatanKurang) k.push("penjelasan temuan");
       if (!tingkat) k.push("tingkat temuan");
     }
     if (fotoWajib() && !foto.daftar().length) k.push("foto");
