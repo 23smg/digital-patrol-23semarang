@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" data-tema="gelap">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#3F6AD8">
+<meta name="theme-color" content="#0f172a">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src https://script.google.com https://script.googleusercontent.com; media-src blob:; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
 <meta name="mobile-web-app-capable" content="yes">
@@ -18,7 +18,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap">
-<link rel="stylesheet" href="petugas.css?v=12">
+<link rel="stylesheet" href="petugas.css?v=13">
 </head>
 <body>
 
@@ -26,7 +26,7 @@
   <div class="kepala-isi">
     <div class="merek-grup">
       <div>
-        <div class="judul">Patroli</div>
+        <div class="judul">Patroli Digital</div>
         <div class="sub">Mall 23Semarang</div>
       </div>
     </div>
@@ -41,44 +41,44 @@
 <main class="app">
   <div id="antrean-wadah"></div>
   <div id="hasil" class="hasil" role="status" hidden></div>
-  <div id="muat" class="muat">Memuat daftar petugas dan zona...</div>
+  <div id="muat" class="muat">Memuat konfigurasi sistem...</div>
 
   <form id="form" hidden novalidate>
+    <!-- LANGKAH 1: NAMA PETUGAS -->
     <section class="bagian" id="b-nama">
-      <h2><span class="langkah"><span>1</span></span>Nama petugas</h2>
+      <h2><span class="langkah"><span>1</span></span>Nama Petugas Patroli</h2>
       <div class="medan">
-        <label for="nama">Pilih nama Anda</label>
+        <label for="nama">Pilih Nama Anda</label>
         <div class="kombo">
-          <input id="nama" class="input" type="text" autocomplete="off" placeholder="Ketik untuk mencari nama" aria-controls="daftar-nama">
+          <input id="nama" class="input" type="text" autocomplete="off" placeholder="Ketik atau pilih nama Anda..." aria-controls="daftar-nama">
           <ul id="daftar-nama" class="daftar" role="listbox" hidden></ul>
         </div>
         <p id="g-nama" class="galat" role="alert" hidden></p>
       </div>
     </section>
 
-    <section class="bagian" id="b-zona">
-      <h2><span class="langkah"><span>2</span></span>Zona patroli</h2>
-      <div class="medan" id="zona-cari-wadah" hidden>
-        <label for="zona-cari">Cari zona</label>
-        <input id="zona-cari" class="input" type="search" autocomplete="off" placeholder="Ketik, misalnya L4 5">
-      </div>
-      <p class="petunjuk qr" id="zona-qr" hidden></p>
-      <p class="petunjuk" id="zona-petunjuk" hidden>Pilih lantai atau area dulu, lalu pilih titiknya.</p>
-      <div class="lantai-grup" id="zona-lantai" role="group" aria-label="Lantai atau area" hidden></div>
-      <div class="ubin-zona" id="zona-grup" role="radiogroup" aria-label="Zona patroli"></div>
-      <p class="petunjuk" id="zona-kosong" hidden>Zona tidak ditemukan. Periksa penulisan atau pilih lewat tombol lantai.</p>
-      <div class="plakat" id="zona-plakat" hidden><span>Lokasi patroli</span><b id="zona-plakat-nama"></b></div>
+    <!-- STATUS LOKASI QR CODE & GEOFENCE (LETAK PALING ATAS DI ATAS CHECKLIST) -->
+    <div id="zona-qr" class="notif-zona-qr" hidden></div>
+    <div id="pesan-geofence" class="pesan-geofence-warning" hidden></div>
+
+    <!-- ELEMEN ZONA LAMA (DISEMBUNYIKAN OTOMATIS OLEH CSS) -->
+    <section class="bagian" id="b-zona" hidden>
+      <div class="medan" id="zona-cari-wadah" hidden><input id="zona-cari" class="input" type="search"></div>
+      <p class="petunjuk" id="zona-petunjuk" hidden></p>
+      <div class="lantai-grup" id="zona-lantai" hidden></div>
+      <div class="ubin-zona" id="zona-grup" hidden></div>
+      <div class="plakat" id="zona-plakat" hidden><b id="zona-plakat-nama"></b></div>
     </section>
 
+    <!-- LANGKAH 2: CHECKLIST PATROLI -->
     <section class="bagian" id="b-cl">
-      <h2><span class="langkah"><span>3</span></span>Kondisi area <small id="progres">0 dari 0</small></h2>
-      <p class="petunjuk">Jawab setiap item. Pilih Temuan jika ada yang tidak normal, lalu jelaskan.</p>
-      <button type="button" id="btn-semua" class="btn btn-semua">Tandai semua sesuai</button>
-      <p class="petunjuk" id="petunjuk-semua">Pintasan untuk item yang belum dijawab. Setelah itu ubah hanya item yang bermasalah.</p>
+      <h2><span class="langkah"><span>2</span></span>Kondisi Area Patroli <small id="progres">0 dari 0</small></h2>
+      <p class="petunjuk">Periksa area lalu jawab checklist di bawah ini.</p>
+      <button type="button" id="btn-semua" class="btn btn-semua">Tandai Semua Sesuai</button>
       <div id="checklist"></div>
       <div id="blok-temuan" hidden>
         <div class="medan">
-          <span class="label" id="lbl-tingkat">Tingkat temuan</span>
+          <span class="label" id="lbl-tingkat">Tingkat Temuan</span>
           <div class="tingkat" role="radiogroup" aria-labelledby="lbl-tingkat">
             <input type="radio" name="tingkat" id="t1" value="Rendah"><label class="seg t-rendah" for="t1">Rendah</label>
             <input type="radio" name="tingkat" id="t2" value="Sedang"><label class="seg t-sedang" for="t2">Sedang</label>
@@ -87,30 +87,32 @@
         </div>
       </div>
       <div class="medan">
-        <label for="catatan">Catatan tambahan (opsional)</label>
-        <textarea id="catatan" class="input" rows="2" maxlength="500" placeholder="Kronologi atau instruksi khusus"></textarea>
+        <label for="catatan">Catatan Tambahan (Opsional)</label>
+        <textarea id="catatan" class="input" rows="2" maxlength="500" placeholder="Tambahkan rincian atau kronologi jika ada..."></textarea>
       </div>
     </section>
 
+    <!-- LANGKAH 3: FOTO BUKTI -->
     <section class="bagian" id="b-foto">
-      <h2><span class="langkah"><span>4</span></span>Foto bukti <small id="jml-foto">0 dari 3</small></h2>
-      <p class="petunjuk">Foto langsung dari kamera. Tanggal, jam, petugas, zona, dan GPS tercetak otomatis pada foto.</p>
+      <h2><span class="langkah"><span>3</span></span>Foto Bukti Lapangan <small id="jml-foto">0 dari 3</small></h2>
+      <p class="petunjuk">Ambil foto kondisi area langsung melalui kamera HP.</p>
       <div id="foto-grid" class="foto-grid"></div>
-      <button type="button" id="btn-foto" class="btn btn-foto"><span id="ikon-foto"></span><span id="btn-foto-teks">Ambil foto</span></button>
+      <button type="button" id="btn-foto" class="btn btn-foto"><span id="ikon-foto"></span><span id="btn-foto-teks">Ambil Foto Bukti</span></button>
       <p id="hint-foto" class="petunjuk"></p>
     </section>
   </form>
 </main>
 
+<!-- SUBMIT BAR FIXED AT BOTTOM -->
 <div class="bar-kirim" id="bar-kirim" hidden>
   <div class="bar-isi">
     <p id="kurang" class="kurang"></p>
-    <button type="button" id="btn-kirim" class="btn btn-utama btn-lebar" disabled>Kirim laporan patroli</button>
+    <button type="button" id="btn-kirim" class="btn btn-utama" disabled>Kirim Laporan Patroli</button>
   </div>
 </div>
 
-<script src="config.js?v=12"></script>
-<script src="core.js?v=12"></script>
-<script src="index.js?v=12"></script>
+<script src="config.js?v=13"></script>
+<script src="core.js?v=13"></script>
+<script src="index.js?v=13"></script>
 </body>
 </html>
