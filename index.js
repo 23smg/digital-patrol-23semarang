@@ -1,12 +1,13 @@
-/* index.js - Form Patroli Petugas (Ringkas & Hard Geofence) */
+/* index.js v16 - Form Patroli Petugas (QR zona + Hard Geofence) */
 (function () {
   "use strict";
   var PC = window.PC, h = PC.h;
   var $ = function (id) { return document.getElementById(id); };
   var KUNCI_DRAFT = "dp_draft_patroli_v2", KUNCI_MASTER = "dp_master_v2", KUNCI_NAMA = "dp_nama";
-  var master = null, idLaporan = PC.buatId(), tingkat = "", zona = "", mengirim = false, timerDraft = null;
-  var cbNama, cl, foto, zonaQR = "";
-  var diluarArea = false;
+  var TOLERANSI_GPS_MAKS = 30; // meter; akurasi GPS dipakai sbg toleransi, maksimal segini. Isi 0 = geofence mutlak.
+  var master = null, idLaporan = PC.buatId(), tingkat = "", zona = "", zonaQR = "", mengirim = false, timerDraft = null;
+  var cbNama, cl, foto;
+  var geoState = "none"; // none | cari | ok | luar
 
   PC.pasangLogo(document.querySelector(".merek-grup"));
   PC.pasangTema(document.querySelector(".kepala-isi"));
@@ -18,6 +19,7 @@
   document.addEventListener("visibilitychange", function () { if (!document.hidden) PC.sinkronJam(); });
   if ($("ikon-foto")) $("ikon-foto").appendChild(PC.ikon("KAMERA"));
 
+  /* ---------- Geofence ---------- */
   function hitungJarakM(lat1, lng1, lat2, lng2) {
     var R = 6371000, rad = Math.PI / 180;
     var dLat = (lat2 - lat1) * rad, dLng = (lng2 - lng1) * rad;
@@ -26,39 +28,59 @@
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   }
 
-  function periksaGeofence() {
-    var gps = PC.Lokasi.saatIni();
-    var geo = master && master.geo ? master.geo : null;
-    var pesanEl = $("pesan-geofence");
-
-    if (geo && geo.lat && geo.lng && geo.radius) {
-      var latMall = parseFloat(geo.lat), lngMall = parseFloat(geo.lng), radiusMaks = parseFloat(geo.radius);
-
-      if (!gps || gps.lat === null || gps.lng === null) {
-        diluarArea = true;
-        if (pesanEl) {
-          pesanEl.textContent = "⚠️ Mencari lokasi GPS...";
-          pesanEl.hidden = false;
-        }
-        return;
-      }
-
-      var jarak = hitungJarakM(gps.lat, gps.lng, latMall, lngMall);
-
-      if (jarak > radiusMaks) {
-        diluarArea = true;
-        if (pesanEl) {
-          pesanEl.textContent = "🚫 Posisi di luar area (" + Math.round(jarak) + "m / maks " + radiusMaks + "m). Tombol dikunci.";
-          pesanEl.hidden = false;
-        }
-        return;
-      }
-    }
-
-    diluarArea = false;
-    if (pesanEl) pesanEl.hidden = true;
+  function tampilGeo(state, teks) {
+    var el = $("geo-status");
+    if (!el) return;
+    el.hidden = state === "none";
+    el.setAttribute("data-state", state);
+    $("geo-teks").textContent = teks || "";
   }
 
+  function periksaGeofence() {
+    var geo = master && master.geo ? master.geo : null;
+    var lat0 = geo ? parseFloat(geo.lat) : NaN, lng0 = geo ? parseFloat(geo.lng) : NaN, radius = geo ? parseFloat(geo.radius) : NaN;
+    if (!geo || isNaN(lat0) || isNaN(lng0) || isNaN(radius)) {
+      geoState = "none"; tampilGeo("none"); return;
+    }
+    var gps = PC.Lokasi.saatIni();
+    if (!gps || gps.lat === null || gps.lng === null) {
+      geoState = "cari";
+      tampilGeo("cari", "Mencari sinyal GPS... pastikan izin lokasi aktif.");
+      return;
+    }
+    var jarak = hitungJarakM(gps.lat, gps.lng, lat0, lng0);
+    var toleransi = Math.min(Math.max(parseFloat(gps.akurasi) || 0, 0), TOLERANSI_GPS_MAKS);
+    if (jarak - toleransi > radius) {
+      geoState = "luar";
+      tampilGeo("luar", "Di luar area mall (" + Math.round(jarak) + " m dari titik pusat, maks " + Math.round(radius) + " m). Pengiriman dikunci.");
+    } else {
+      geoState = "ok";
+      tampilGeo("ok", "Posisi di dalam area mall.");
+    }
+  }
+
+  /* ---------- Lokasi (QR) ---------- */
+  function tampilLokasi() {
+    var ada = !!zona;
+    $("lokasi-nama").textContent = ada ? zona : "Belum ada lokasi";
+    $("lokasi-tag").textContent = ada ? "Terverifikasi QR" : "Belum dipindai";
+    $("lokasi-petunjuk").hidden = ada;
+    $("b-lokasi").classList.toggle("selesai", ada);
+
+    var elBadge = $("st-lokasi-badge");
+    if (!ada) { if (elBadge) elBadge.remove(); return; }
+    if (!elBadge) {
+      var stMeta = $("stempel") && $("stempel").querySelector(".st-meta");
+      if (!stMeta) return;
+      elBadge = document.createElement("div");
+      elBadge.id = "st-lokasi-badge";
+      elBadge.className = "st-lokasi-badge";
+      stMeta.appendChild(elBadge);
+    }
+    elBadge.textContent = "📍 " + zona;
+  }
+
+  /* ---------- Muat data ---------- */
   function muat() {
     var muatEl = $("muat");
     muatEl.hidden = false;
@@ -98,10 +120,10 @@
     foto = PC.FotoGrid($("foto-grid"), { maks: 3, onUbah: ubah });
     cl = PC.Checklist($("checklist"), { onUbah: ubah });
 
+    // Draft: checklist, tingkat, catatan. Lokasi TIDAK dipulihkan dari draft: hanya sah dari pindai QR.
     var draft = bacaDraft();
     cl.set(master.checklist.PATROLI, draft && draft.cl);
     if (draft) {
-      if (draft.zona) zona = draft.zona;
       $("catatan").value = draft.catatan || "";
       if (draft.tingkat) {
         tingkat = draft.tingkat;
@@ -110,26 +132,11 @@
       }
     }
 
-    // Tangkap QR & Tampilkan Badge Lokasi di Bawah Jam pada Stempel Header
     try {
       var zq = new URLSearchParams(location.search).get("zona");
-      var stempelWadah = $("stempel");
-      if (zq && master.daftarZona.indexOf(zq) >= 0) {
-        zona = zq;
-        zonaQR = zq;
-        if (stempelWadah) {
-          var elBadge = document.getElementById("st-lokasi-badge");
-          if (!elBadge) {
-            elBadge = document.createElement("div");
-            elBadge.id = "st-lokasi-badge";
-            elBadge.className = "st-lokasi-badge";
-            var stMeta = stempelWadah.querySelector(".st-meta");
-            if (stMeta) stMeta.appendChild(elBadge);
-          }
-          elBadge.textContent = "📍 " + zq;
-        }
-      }
+      if (zq && master.daftarZona.indexOf(zq) >= 0) { zona = zq; zonaQR = zq; }
     } catch (e) {}
+    tampilLokasi();
 
     var tersimpan = null;
     try { tersimpan = localStorage.getItem(KUNCI_NAMA); } catch (e) {}
@@ -146,14 +153,12 @@
     $("btn-foto").addEventListener("click", ambilFoto);
     $("btn-kirim").addEventListener("click", kirim);
 
-    setInterval(function () {
-      periksaGeofence();
-      ubah();
-    }, 3000);
-
+    // Pantau GPS tanpa menyimpan draft berulang-ulang
+    setInterval(render, 3000);
     ubah();
   }
 
+  /* ---------- Draft ---------- */
   function bacaDraft() {
     try {
       var d = JSON.parse(localStorage.getItem(KUNCI_DRAFT));
@@ -164,52 +169,76 @@
   function simpanDraft() {
     try {
       localStorage.setItem(KUNCI_DRAFT, JSON.stringify({
-        t: Date.now(), zona: zona, cl: cl.ekspor(), tingkat: tingkat, catatan: $("catatan").value
+        t: Date.now(), cl: cl.ekspor(), tingkat: tingkat, catatan: $("catatan").value
       }));
     } catch (e) {}
   }
 
-  function kekurangan() {
-    var k = [], c = cl.nilai();
-    if (!cbNama.nilai()) k.push("nama petugas");
-    if (!zona) k.push("pindai QR lokasi");
-    if (!c.lengkap) k.push("checklist (" + c.terisi + "/" + c.total + ")");
+  /* ---------- Syarat kirim ---------- */
+  function syarat() {
+    var c = cl.nilai(), s = [];
+    s.push({ ok: !!zona, label: "pindai QR lokasi" });
+    s.push({ ok: !!cbNama.nilai(), label: "nama petugas" });
+    s.push({ ok: !!c.lengkap, label: "checklist (" + c.terisi + "/" + c.total + ")" });
     if (c.adaTemuan) {
-      if (c.catatanKurang) k.push("penjelasan temuan");
-      if (!tingkat) k.push("tingkat temuan");
+      s.push({ ok: !c.catatanKurang, label: "penjelasan temuan" });
+      s.push({ ok: !!tingkat, label: "tingkat temuan" });
     }
-    if (!foto.daftar().length) k.push("foto");
-    if (diluarArea) k.push("posisi berada di luar area mall");
-    return k;
+    s.push({ ok: foto.daftar().length > 0, label: "foto" });
+    if (geoState !== "none") {
+      s.push({ ok: geoState === "ok", label: geoState === "cari" ? "sinyal GPS" : "posisi di dalam area mall" });
+    }
+    return s;
+  }
+  function kekurangan() {
+    return syarat().filter(function (x) { return !x.ok; }).map(function (x) { return x.label; });
+  }
+
+  /* ---------- Render ---------- */
+  function render() {
+    if (!cl) return;
+    periksaGeofence();
+    var c = cl.nilai(), s = syarat();
+    var k = s.filter(function (x) { return !x.ok; }).map(function (x) { return x.label; });
+    var selesaiN = s.length - k.length;
+
+    $("progres").textContent = c.terisi + " dari " + c.total;
+    $("blok-temuan").hidden = !c.adaTemuan;
+    if (!c.adaTemuan && tingkat) {
+      tingkat = "";
+      Array.prototype.forEach.call(document.querySelectorAll('input[name="tingkat"]'), function (r) { r.checked = false; });
+    }
+
+    var nFoto = foto.daftar().length;
+    var lokasiOk = geoState === "none" || geoState === "ok";
+    var siapFoto = !!cbNama.nilai() && !!zona && lokasiOk;
+    $("jml-foto").textContent = nFoto + " dari 3";
+    $("btn-foto").disabled = !siapFoto || foto.penuh();
+    $("btn-foto-teks").textContent = foto.penuh() ? "Foto maks 3" : (nFoto ? "Tambah Foto" : "Ambil Foto");
+    $("hint-foto").textContent = siapFoto ? "" :
+      (!zona || !cbNama.nilai() ? "Pindai QR lokasi dan pilih nama dulu." : "Foto aktif setelah posisi Anda di dalam area mall.");
+
+    $("kurang").textContent = k.length ? "Lengkapi: " + k.join(", ") : "Semua isian lengkap. Siap dikirim.";
+    $("kurang").className = "kurang" + (k.length ? "" : " siap");
+    var bar = $("bar-progres");
+    bar.max = s.length; bar.value = selesaiN;
+    bar.className = k.length ? "" : "siap";
+
+    $("btn-kirim").disabled = mengirim || k.length > 0;
+
+    $("b-nama").classList.toggle("selesai", !!cbNama.nilai());
+    $("b-cl").classList.toggle("selesai", !!c.lengkap && (!c.adaTemuan || (!c.catatanKurang && !!tingkat)));
+    $("b-foto").classList.toggle("selesai", nFoto > 0);
   }
 
   function ubah() {
     if (!cl) return;
-    periksaGeofence();
-    var c = cl.nilai(), k = kekurangan();
-    $("progres").textContent = c.terisi + " dari " + c.total;
-    $("blok-temuan").hidden = !c.adaTemuan;
-    if (!c.adaTemuan) {
-      tingkat = "";
-      Array.prototype.forEach.call(document.querySelectorAll('input[name="tingkat"]'), function (r) { r.checked = false; });
-    }
-    $("jml-foto").textContent = foto.daftar().length + " dari 3";
-    var siapFoto = !!cbNama.nilai() && !!zona;
-    $("btn-foto").disabled = !siapFoto || foto.penuh();
-    $("btn-foto-teks").textContent = foto.penuh() ? "Foto maks 3" : (foto.daftar().length ? "Tambah Foto" : "Ambil Foto");
-    $("hint-foto").textContent = siapFoto ? "" : "Pilih nama dan scan QR lokasi dulu.";
-    $("kurang").textContent = k.length ? "Lengkapi: " + k.join(", ") : "Semua isian lengkap. Siap dikirim.";
-    $("kurang").className = "kurang" + (k.length ? "" : " siap");
-    
-    $("btn-kirim").disabled = mengirim || k.length > 0 || diluarArea;
-
-    $("b-nama").classList.toggle("selesai", !!cbNama.nilai());
-    if ($("b-cl")) $("b-cl").classList.toggle("selesai", c.lengkap && (!c.adaTemuan || (!c.catatanKurang && !!tingkat)));
-    if ($("b-foto")) $("b-foto").classList.toggle("selesai", foto.daftar().length > 0);
+    render();
     clearTimeout(timerDraft);
     timerDraft = setTimeout(simpanDraft, 500);
   }
 
+  /* ---------- Foto ---------- */
   function ambilFoto() {
     PC.Kamera.buka({
       baris: function (now) {
@@ -221,6 +250,7 @@
     });
   }
 
+  /* ---------- Kirim ---------- */
   function setMengirim(v) {
     mengirim = v;
     $("btn-kirim").textContent = v ? "Mengirim..." : "Kirim Laporan Patroli";
@@ -229,10 +259,8 @@
 
   function reset() {
     cl.set(master.checklist.PATROLI);
-    zona = "";
-    zonaQR = "";
-    var elBadge = document.getElementById("st-lokasi-badge");
-    if (elBadge) elBadge.remove();
+    zona = ""; zonaQR = "";
+    tampilLokasi();
     $("catatan").value = "";
     tingkat = "";
     foto.kosongkan();
@@ -245,9 +273,10 @@
   function kirim() {
     periksaGeofence();
     var k = kekurangan();
-    if (mengirim || k.length) { 
-      if (k.length) PC.toast("Lengkapi: " + k.join(", "), "bad"); 
-      return; 
+    if (mengirim || k.length) {
+      if (k.length) PC.toast("Lengkapi: " + k.join(", "), "bad");
+      render();
+      return;
     }
     var c = cl.nilai(), gps = PC.Lokasi.saatIni();
     var payload = {
@@ -255,7 +284,7 @@
       checklist: c.daftar, tingkat: c.adaTemuan ? tingkat : "", catatan: $("catatan").value.trim(),
       lat: gps ? gps.lat : null, lng: gps ? gps.lng : null, akurasi: gps ? gps.akurasi : null,
       fotos: foto.daftar().map(function (f) { return { b64: f.b64, t: f.t, sumber: f.sumber }; }),
-      jamPerangkat: !PC.Jam.terpercaya(), durasiDetik: cl.durasiDetik(), qr: true
+      jamPerangkat: !PC.Jam.terpercaya(), durasiDetik: cl.durasiDetik(), qr: !!zonaQR
     };
     var zonaTeks = payload.zona;
     setMengirim(true);

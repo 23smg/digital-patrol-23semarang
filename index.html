@@ -18,7 +18,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap">
-<link rel="stylesheet" href="petugas.css?v=15">
+<link rel="stylesheet" href="petugas.css?v=16">
 </head>
 <body>
 
@@ -37,18 +37,28 @@
   </div>
 </header>
 
-<!-- BARIS STEMPEL: JAM & BADGE LOKASI DI BAWAHNYA -->
+<!-- Jam & badge lokasi -->
 <div class="stempel" id="stempel" aria-label="Waktu dan lokasi"></div>
 
 <main class="app">
   <div id="antrean-wadah"></div>
   <div id="hasil" class="hasil" role="status" hidden></div>
-  <div id="muat" class="muat">Memuat konfigurasi sistem...</div>
+  <div id="muat" class="muat" role="status">Memuat konfigurasi sistem...</div>
 
   <form id="form" hidden novalidate>
-    <!-- LANGKAH 1: NAMA PETUGAS -->
+    <!-- LANGKAH 1: LOKASI (QR) + STATUS AREA -->
+    <section class="bagian" id="b-lokasi">
+      <h2><span class="langkah"><span>1</span></span>Lokasi Patroli <small id="lokasi-tag">Belum dipindai</small></h2>
+      <div class="lokasi-nama" id="lokasi-nama">Belum ada lokasi</div>
+      <p class="petunjuk" id="lokasi-petunjuk">Pindai QR di titik patroli menggunakan kamera HP.</p>
+      <div class="geo" id="geo-status" data-state="cari" role="status" aria-live="polite" hidden>
+        <span class="dot" aria-hidden="true"></span><span id="geo-teks">Memeriksa posisi...</span>
+      </div>
+    </section>
+
+    <!-- LANGKAH 2: NAMA PETUGAS -->
     <section class="bagian" id="b-nama">
-      <h2><span class="langkah"><span>1</span></span>Nama Petugas Patroli</h2>
+      <h2><span class="langkah"><span>2</span></span>Nama Petugas</h2>
       <div class="medan">
         <label for="nama">Pilih Nama Anda</label>
         <div class="kombo">
@@ -59,18 +69,9 @@
       </div>
     </section>
 
-    <!-- SECTION ZONA MANUAL (DISEMBUNYIKAN OTOMATIS) -->
-    <section class="bagian" id="b-zona" hidden>
-      <div class="medan" id="zona-cari-wadah" hidden><input id="zona-cari" class="input" type="search"></div>
-      <p class="petunjuk" id="zona-petunjuk" hidden></p>
-      <div class="lantai-grup" id="zona-lantai" hidden></div>
-      <div class="ubin-zona" id="zona-grup" hidden></div>
-      <div class="plakat" id="zona-plakat" hidden><b id="zona-plakat-nama"></b></div>
-    </section>
-
-    <!-- LANGKAH 2: CHECKLIST PATROLI -->
+    <!-- LANGKAH 3: CHECKLIST -->
     <section class="bagian" id="b-cl">
-      <h2><span class="langkah"><span>2</span></span>Kondisi Area Patroli <small id="progres">0 dari 0</small></h2>
+      <h2><span class="langkah"><span>3</span></span>Kondisi Area <small id="progres">0 dari 0</small></h2>
       <p class="petunjuk">Periksa area lalu jawab checklist di bawah ini.</p>
       <button type="button" id="btn-semua" class="btn btn-semua">Tandai Semua Sesuai</button>
       <div id="checklist"></div>
@@ -90,28 +91,27 @@
       </div>
     </section>
 
-    <!-- LANGKAH 3: FOTO BUKTI -->
+    <!-- LANGKAH 4: FOTO -->
     <section class="bagian" id="b-foto">
-      <h2><span class="langkah"><span>3</span></span>Foto Bukti Lapangan <small id="jml-foto">0 dari 3</small></h2>
-      <p class="petunjuk">Ambil foto kondisi area langsung melalui kamera HP.</p>
+      <h2><span class="langkah"><span>4</span></span>Foto Bukti <small id="jml-foto">0 dari 3</small></h2>
+      <p class="petunjuk">Ambil foto kondisi area langsung lewat kamera HP.</p>
       <div id="foto-grid" class="foto-grid"></div>
-      <button type="button" id="btn-foto" class="btn btn-foto"><span id="ikon-foto"></span><span id="btn-foto-teks">Ambil Foto Bukti</span></button>
+      <button type="button" id="btn-foto" class="btn btn-foto"><span id="ikon-foto"></span><span id="btn-foto-teks">Ambil Foto</span></button>
       <p id="hint-foto" class="petunjuk"></p>
     </section>
   </form>
 </main>
 
-<!-- SUBMIT BAR & NOTIFIKASI GEOFENCE KECIL DI BAWAH TOMBOL -->
 <div class="bar-kirim" id="bar-kirim" hidden>
   <div class="bar-isi">
-    <p id="kurang" class="kurang"></p>
+    <progress id="bar-progres" max="1" value="0" aria-label="Kelengkapan laporan"></progress>
+    <p id="kurang" class="kurang" role="status" aria-live="polite"></p>
     <button type="button" id="btn-kirim" class="btn btn-utama" disabled>Kirim Laporan Patroli</button>
-    <div id="pesan-geofence" class="pesan-geofence-kecil" hidden></div>
   </div>
 </div>
 
-<script src="config.js?v=15"></script>
-<script src="core.js?v=15"></script>
-<script src="index.js?v=15"></script>
+<script src="config.js?v=16"></script>
+<script src="core.js?v=16"></script>
+<script src="index.js?v=16"></script>
 </body>
 </html>
