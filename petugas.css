@@ -1,5 +1,4 @@
-/* petugas.css - Tampilan Ringkas, Adaptif Tema (Light/Dark Mode)
-   Pembaruan: Lokasi di bawah jam, tulisan 'Jam server' disembunyikan, geofence kecil di bawah submit. */
+/* petugas.css - Perbaikan Bug Ikon SVG Raksasa, Spasi Label, & Layout Ringkas */
 
 :root {
   --bg-utama: #f8fafc;
@@ -43,6 +42,19 @@ body {
   line-height: 1.5;
 }
 
+/* ======================================================================
+   PERBAIKAN KRITIS: KUNCI UKURAN SEMUA IKON SVG (MENCEGAH SEGITIGA RAKSASA)
+   ====================================================================== */
+svg, .ikon, svg.ikon, .seg svg, .ubin svg {
+  width: 18px !important;
+  height: 18px !important;
+  max-width: 18px !important;
+  max-height: 18px !important;
+  flex: none !important;
+  display: inline-block !important;
+  vertical-align: middle !important;
+}
+
 [hidden],
 .st-sumber,
 .cl-mode,
@@ -53,7 +65,7 @@ body {
   display: none !important;
 }
 
-/* Header & Stempel Ringkas */
+/* Header & Stempel Header */
 .kepala {
   background: var(--bg-kartu);
   color: var(--teks-utama);
@@ -69,7 +81,7 @@ body {
 }
 .nav-app a[aria-current="page"] { color: #ffffff; background: var(--emas); }
 
-/* Stempel Header: Jam & Badge Lokasi di Bawahnya */
+/* Baris Stempel: Jam & Badge Lokasi */
 .stempel {
   background: var(--bg-kartu);
   border-bottom: 1px solid var(--border-kartu);
@@ -79,16 +91,16 @@ body {
   justify-content: space-between;
 }
 .st-jam { font-size: 22px; font-weight: 700; line-height: 1; color: var(--teks-utama); }
-.st-tgl { font-size: 11px; color: var(--teks-sekunder); }
+.st-tgl { font-size: 11px; color: var(--teks-sekunder); display: block; margin-top: 2px; }
 
 .st-lokasi-badge {
   display: inline-block;
-  margin-top: 2px;
+  margin-top: 3px;
   font-size: 11px;
   font-weight: 600;
   color: var(--hijau);
   background: var(--hijau-bg);
-  padding: 2px 6px;
+  padding: 2px 8px;
   border-radius: 4px;
   border: 1px solid rgba(5, 150, 105, 0.3);
 }
@@ -99,18 +111,18 @@ body {
   font-size: 11px; font-weight: 600; color: var(--teks-sekunder);
 }
 
-/* App & Form Section */
+/* App & Layout Kartu */
 .app { max-width: 560px; margin: 0 auto; padding: 14px 14px 140px; }
 .bagian {
   background: var(--bg-kartu);
   border: 1px solid var(--border-kartu);
   border-radius: var(--radius);
-  padding: 14px;
+  padding: 16px;
   margin-bottom: 12px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.03);
 }
 .bagian > h2 {
-  margin: 0 0 10px; font-size: 15px; font-weight: 700; color: var(--teks-utama);
+  margin: 0 0 12px; font-size: 15px; font-weight: 700; color: var(--teks-utama);
   display: flex; align-items: center; justify-content: space-between;
 }
 .langkah {
@@ -121,29 +133,41 @@ body {
 
 .petunjuk { font-size: 12.5px; color: var(--teks-sekunder); margin-bottom: 10px; }
 
-/* Input */
+/* Input & Form Area */
 .medan { margin-bottom: 12px; }
 .medan > label, .label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; margin-bottom: 6px; color: var(--teks-sekunder); }
 .input {
-  width: 100%; padding: 8px 12px; border: 1px solid var(--input-border); border-radius: 8px;
+  width: 100%; padding: 10px 12px; border: 1px solid var(--input-border); border-radius: 8px;
   background: var(--input-bg); color: var(--teks-utama); font-size: 14px;
 }
 textarea.input { min-height: 60px; }
 
-/* Checklist Baris */
+/* Checklist Patroli */
 .cl-baris { padding: 10px 0; border-top: 1px solid var(--border-kartu); }
 .cl-baris:first-child { border-top: 0; padding-top: 0; }
 .cl-nama { font-weight: 600; font-size: 13.5px; margin-bottom: 8px; color: var(--teks-utama); }
 .seg-grup { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
 .seg-grup input { position: absolute; opacity: 0; pointer-events: none; }
 .seg {
-  min-height: 38px; display: flex; align-items: center; justify-content: center;
+  min-height: 40px; display: flex; align-items: center; justify-content: center; gap: 6px;
   border: 1px solid var(--input-border); border-radius: 6px; background: var(--input-bg);
   font-size: 12.5px; font-weight: 600; color: var(--teks-sekunder); cursor: pointer;
 }
 input:checked + .seg-ok { background: var(--hijau); border-color: var(--hijau); color: #ffffff; }
 input:checked + .seg-bad { background: var(--merah); border-color: var(--merah); color: #ffffff; }
 input:checked + .seg-na { background: var(--teks-sekunder); border-color: var(--teks-sekunder); color: #ffffff; }
+
+/* Form Tenant (Buka / Tutup & Pilihan Tenant) */
+.ubin-grup { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+.ubin-grup input { position: absolute; opacity: 0; pointer-events: none; }
+.ubin {
+  display: flex; align-items: center; gap: 8px; padding: 12px;
+  border: 1px solid var(--input-border); border-radius: 8px; background: var(--input-bg);
+  cursor: pointer; font-size: 14px; font-weight: 600; color: var(--teks-utama);
+}
+.ubin small { display: block; font-size: 11px; font-weight: 400; color: var(--teks-sekunder); margin-top: 2px; }
+input:checked + .ubin { background: var(--emas); border-color: var(--emas); color: #ffffff; }
+input:checked + .ubin small { color: rgba(255, 255, 255, 0.8); }
 
 /* Foto Grid */
 .foto-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
@@ -154,7 +178,7 @@ input:checked + .seg-na { background: var(--teks-sekunder); border-color: var(--
   border: none; background: var(--merah); color: #ffffff; font-size: 12px; font-weight: 700; cursor: pointer;
 }
 
-/* Tombol */
+/* Tombol Aksi */
 .btn {
   display: inline-flex; align-items: center; justify-content: center;
   min-height: 42px; padding: 0 16px; font-size: 13.5px; font-weight: 600; border-radius: 8px; border: none; cursor: pointer;
@@ -162,7 +186,7 @@ input:checked + .seg-na { background: var(--teks-sekunder); border-color: var(--
 .btn-semua { width: 100%; margin-bottom: 10px; background: var(--hijau-bg); color: var(--hijau); border: 1px solid var(--hijau); }
 .btn-foto { width: 100%; background: var(--emas-bg); color: var(--emas); border: 1px dashed var(--emas); }
 
-/* Submit Bar & Geofence Kecil Di Bawah Tombol */
+/* Bar Kirim Fixed Di Bawah & Notifikasi Geofence Kecil */
 .bar-kirim {
   position: fixed; left: 0; right: 0; bottom: 0;
   background: var(--bg-kartu); border-top: 1px solid var(--border-kartu); padding: 10px 14px; z-index: 40;
