@@ -364,9 +364,18 @@
         gagal("Kamera tidak tersedia di browser ini. Buka halaman lewat HTTPS dan gunakan browser terbaru.");
         return;
       }
-      navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: "environment" }, width: { ideal: 1920 }, height: { ideal: 1080 } },
-        audio: false
+      // Coba resolusi tinggi dulu; bila ditolak perangkat, ulangi dengan setelan paling sederhana;
+      // bila kamera sedang dipakai proses lain (NotReadableError), tunggu sebentar lalu coba sekali lagi.
+      function minta(c) { return navigator.mediaDevices.getUserMedia({ video: c, audio: false }); }
+      minta({ facingMode: { ideal: "environment" }, width: { ideal: 1920 }, height: { ideal: 1080 } })
+      .catch(function (e) {
+        if (e && e.name === "NotAllowedError") throw e;
+        return minta(true).catch(function (e2) {
+          if (e2 && e2.name === "NotReadableError") {
+            return new Promise(function (ok) { setTimeout(ok, 900); }).then(function () { return minta(true); });
+          }
+          throw e2;
+        });
       }).then(function (s) {
         stream = s;
         video.srcObject = s;
@@ -375,9 +384,9 @@
         btnSenter.hidden = !(cap && cap.torch);
         return video.play();
       }).catch(function (e) {
-        gagal(e && e.name === "NotAllowedError"
+        gagal((e && e.name === "NotAllowedError"
           ? "Izin kamera ditolak. Izinkan kamera pada pengaturan browser, lalu coba lagi."
-          : "Kamera tidak dapat dibuka.");
+          : "Kamera tidak dapat dibuka.") + (e && e.name ? " [" + e.name + "]" : ""));
       });
     }
 
@@ -430,6 +439,14 @@
 
     return {
       buka: function (o) {
+        try { bukaAman(o); } catch (e) {
+          toast("Kamera gagal dibuka: " + (e && e.message ? e.message : e), "bad");
+          try { if (!modal) bangun(); opsi = o; modal.hidden = false; modal.style.display = "block"; mode("live"); gagal("Kamera tidak dapat dibuka. Pakai kamera bawaan HP."); } catch (e2) { /* abaikan */ }
+        }
+      }
+    };
+    function bukaAman(o) {
+      {
         bangun();
         if (w.document.fonts && w.document.fonts.load) {   // pastikan font stempel siap sebelum foto diambil
           w.document.fonts.load('700 24px "Open Sans"').catch(function () {});
@@ -443,7 +460,7 @@
         tick = setInterval(isiStempel, 500);
         nyalakan();
       }
-    };
+    }
   })();
 
   function FotoGrid(wadah, o) {
@@ -921,6 +938,12 @@
     w.addEventListener("pageshow", function () { document.documentElement.classList.remove("keluar"); });
   }
   pasangNavigasi();
+
+  // Galat JavaScript yang tak tertangkap ditampilkan sebagai toast (membantu menelusuri masalah di HP petugas).
+  w.addEventListener("error", function (ev) {
+    if (!ev || !ev.filename) return;
+    toast("Galat: " + (ev.message || "tidak diketahui") + " (" + String(ev.filename).split("/").pop().split("?")[0] + ":" + ev.lineno + ")", "bad");
+  });
 
   /* ------------------------------------------------------ Eksport */
   w.PC = {
