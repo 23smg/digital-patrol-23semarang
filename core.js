@@ -290,7 +290,7 @@
   var Kamera = (function () {
     var modal, video, stempelEl, hasilImg, pesanEl, pesanTeks, btnJepret, btnSenter, btnTutup, btnUlang, btnPakai,
       inputBerkas, aksiLive, aksiHasil;
-    var stream = null, track = null, tick = null, opsi = null, hasil = null, senterOn = false;
+    var stream = null, track = null, tick = null, opsi = null, hasil = null, senterOn = false, jagaKamera = null;
 
     function bangun() {
       if (modal) return;
@@ -316,6 +316,10 @@
       aksiHasil = h("div", { class: "kamera-aksi hasil", hidden: true }, btnUlang, btnPakai);
       modal = h("div", { class: "kamera", hidden: true, role: "dialog", "aria-modal": "true", "aria-label": "Kamera" },
         video, hasilImg, stempelEl, pesanEl, btnTutup, aksiLive, aksiHasil, inputBerkas);
+      // Gaya inti dipasang langsung supaya kamera tetap layar penuh walau CSS di perangkat belum diperbarui (cache).
+      modal.style.cssText = "position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;background:#000;color:#fff;overflow:hidden;display:none";
+      video.style.cssText = "position:absolute;top:0;left:0;width:100%;height:100%;max-width:none;object-fit:cover;background:#000";
+      hasilImg.style.cssText = "position:absolute;top:0;left:0;width:100%;height:100%;max-width:none;object-fit:contain;background:#000";
       document.body.appendChild(modal);
       document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !modal.hidden) tutup(); });
     }
@@ -338,7 +342,8 @@
     function tutup() {
       henti();
       if (tick) { clearInterval(tick); tick = null; }
-      modal.hidden = true;
+      clearTimeout(jagaKamera);
+      modal.hidden = true; modal.style.display = "none";
       document.body.classList.remove("kamera-terbuka");
     }
 
@@ -350,6 +355,11 @@
 
     function nyalakan() {
       pesanEl.hidden = true;
+      // Bila 6 detik tanpa gambar (izin tertunda / kamera macet), tawarkan kamera bawaan HP.
+      clearTimeout(jagaKamera);
+      jagaKamera = setTimeout(function () {
+        if (!modal.hidden && !hasil && !(video.videoWidth > 0)) gagal("Kamera tidak merespons. Periksa izin kamera di browser, atau pakai kamera bawaan HP.");
+      }, 6000);
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         gagal("Kamera tidak tersedia di browser ini. Buka halaman lewat HTTPS dan gunakan browser terbaru.");
         return;
@@ -427,7 +437,7 @@
         }
         opsi = o;
         mode("live");
-        modal.hidden = false;
+        modal.hidden = false; modal.style.display = "block";
         document.body.classList.add("kamera-terbuka");
         isiStempel();
         tick = setInterval(isiStempel, 500);
