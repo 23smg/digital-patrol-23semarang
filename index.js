@@ -122,10 +122,11 @@
   /* ---------- Lokasi (QR) ---------- */
   function tampilLokasi() {
     var ada = !!zona;
-    $("lokasi-nama").textContent = zona;
+    $("lokasi-nama").textContent = zona + (zona && !zonaQR ? " (manual)" : "");
     $("lokasi-nama").hidden = !ada;
     $("btn-scan").textContent = ada ? "Scan Ulang" : "Scan QR";
     $("b-lokasi").classList.toggle("selesai", ada);
+    saranZona();
 
     var elBadge = $("st-lokasi-badge");
     if (!ada) { if (elBadge) elBadge.remove(); return; }
@@ -137,7 +138,37 @@
       elBadge.className = "st-lokasi-badge";
       stMeta.appendChild(elBadge);
     }
-    elBadge.textContent = "📍 " + zona;
+    elBadge.textContent = "📍 " + zona + (zonaQR ? "" : " (manual)");
+  }
+
+  /* ---------- Daftar zona terjadwal ---------- */
+  // Saran zona berikutnya: yang terlambat atau belum dipatroli hari ini.
+  function saranZona() {
+    var el = $("zona-saran");
+    if (!el || !master) return;
+    var d = zona ? null : PC.ZonaJadwal.daftar(master.daftarZona).filter(function (x) { return x.s === "terlambat" || x.s === "belum"; })[0];
+    el.hidden = !d;
+    if (d) el.textContent = "Berikutnya: " + d.z + " · " + d.teks;
+  }
+
+  function bukaDaftarZona() {
+    if (!master) return;
+    var isi = h("ul", { class: "zona-daftar" });
+    var lb = PC.Lembar({ judul: "Pilih zona patroli",
+      sub: "Zona yang perlu didatangi ada di atas. Scan QR di lokasi tetap dianjurkan.", isi: isi });
+    if (!lb) return;
+    function gambar() {
+      PC.kosongkan(isi);
+      var d = PC.ZonaJadwal.daftar(master.daftarZona);
+      if (!d.length) { isi.appendChild(h("li", { class: "zona-kosong", text: "Belum ada zona." })); return; }
+      d.forEach(function (x) {
+        isi.appendChild(h("li", null, h("button", { type: "button", class: "zona-item s-" + x.s + (x.z === zona ? " dipilih" : ""),
+          onclick: function () { lb.tutup(); setZona(x.z, true); PC.toast("Lokasi: " + x.z + " (manual)", "ok"); } },
+          h("span", { class: "zona-nama", text: x.z }), h("span", { class: "zona-status", text: x.teks }))));
+      });
+    }
+    gambar();
+    PC.ZonaJadwal.muat().then(function () { if (lb.el.isConnected) gambar(); });
   }
 
   /* ---------- Scan QR lokasi (langsung dari form) ---------- */
@@ -156,12 +187,13 @@
     var o = $("scan"); if (o) o.hidden = true;
   }
 
-  function setZona(z) {
+  // manual = dipilih dari daftar zona (tanpa scan QR); server menandainya ZONA_MANUAL.
+  function setZona(z, manual) {
     if (zona && zona !== z && foto.daftar().length) {
       foto.kosongkan();
       PC.toast("Lokasi berubah, foto direset.", "bad");
     }
-    zona = z; zonaQR = z;
+    zona = z; zonaQR = manual ? "" : z;
     tampilLokasi();
     ubah();
   }
@@ -352,6 +384,9 @@
       if (zq && master.daftarZona.indexOf(zq) >= 0) { zona = zq; zonaQR = zq; }
     } catch (e) {}
     tampilLokasi();
+    $("btn-zona").addEventListener("click", bukaDaftarZona);
+    PC.ZonaJadwal.muat().then(saranZona);
+    setInterval(saranZona, 60000);
 
     try { localStorage.removeItem(KUNCI_NAMA); } catch (e) {}   // nama tidak lagi terisi otomatis
 
@@ -393,7 +428,7 @@
   /* ---------- Syarat kirim ---------- */
   function syarat() {
     var c = cl.nilai(), s = [];
-    s.push({ ok: !!zona, label: "scan QR" });
+    s.push({ ok: !!zona, label: "lokasi" });
     s.push({ ok: !!cbNama.nilai(), label: "nama" });
     s.push({ ok: !!c.lengkap, label: "checklist (" + c.terisi + "/" + c.total + ")" });
     if (c.adaTemuan) {
@@ -507,7 +542,9 @@
         hasil.textContent = "Tercatat" + (r.waktu ? " " + r.waktu + " WIB" : "") + " · " + zonaTeks;
         hasil.hidden = false;
         PC.toast("Terkirim.", "ok");
+        PC.Riwayat.catat({ id: payload.id, jenis: "PATROLI", judul: zonaTeks, zona: zonaTeks, temuan: c.adaTemuan, status: "terkirim" });
         reset();
+        PC.ZonaJadwal.muat().then(saranZona);
         return;
       }
       PC.toast(r.message || "Ditolak.", "bad");
@@ -520,6 +557,7 @@
       if (!e.jaringan) { PC.toast("Gagal mengirim.", "bad"); return; }
       PC.Antrean.simpan({ id: payload.id, aksi: "simpanPatroli", payload: payload, dibuat: Date.now(),
         status: "menunggu", label: "Patroli " + zonaTeks }).then(function () {
+        PC.Riwayat.catat({ id: payload.id, jenis: "PATROLI", judul: zonaTeks, zona: zonaTeks, temuan: c.adaTemuan, status: "menunggu" });
         PC.toast("Offline. Tersimpan di HP.", "ok");
         $("hasil").hidden = true;
         reset();

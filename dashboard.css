@@ -522,3 +522,9 @@ table th:last-child { width: 1%; }
   .notif { position: static; }
   .panel-notif { position: fixed; top: 62px; left: 12px; right: 12px; width: auto; }
 }
+
+/* Foto privat: kotak penanda saat gambar belum dimuat / gagal */
+.thumb.memuat, .foto-besar img.memuat { background: var(--garis); animation: foto-kedip 1.2s ease-in-out infinite; }
+.thumb.gagal, .foto-besar img.gagal { background: var(--garis); opacity: 0.55; }
+@keyframes foto-kedip { 50% { opacity: 0.5; } }
+.lightbox-teks { color: #fff; font-size: 14px; }

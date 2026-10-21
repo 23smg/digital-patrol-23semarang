@@ -24,6 +24,7 @@
     JAM_PERANGKAT: "Jam dari perangkat",
     ULANG_HARI_INI: "Laporan ulang hari ini",
     ZONA_QR: "Zona dipilih lewat QR di lokasi",
+    ZONA_MANUAL: "Zona dipilih manual dari daftar (tanpa scan QR)",
     ISI_TERLALU_CEPAT: "Checklist diisi sangat cepat, periksa kemungkinan asal tandai"
   };
   var FLAG_PENTING = { WAKTU_TIDAK_SINKRON: 1, DI_LUAR_AREA: 1, FOTO_DARI_BERKAS: 1 };
@@ -35,12 +36,58 @@
     return d.getUTCFullYear() + "-" + ("0" + (d.getUTCMonth() + 1)).slice(-2) + "-" + ("0" + d.getUTCDate()).slice(-2);
   }
   function isTemuan(x) { return /temuan/i.test(x.kondisi || x.hasil || ""); }
+  // Foto bersifat privat di Drive: hanya ID yang dipakai, gambar dimuat lewat server dengan token sesi.
   function fotoList(s) {
     return String(s || "").split("|").map(function (u) { return u.trim(); }).map(function (u) {
       var m = u.match(/\/d\/([A-Za-z0-9_-]+)/) || u.match(/[?&]id=([A-Za-z0-9_-]+)/);
-      return m ? { thumb: "https://lh3.googleusercontent.com/d/" + m[1] + "=w300",
-        besar: "https://lh3.googleusercontent.com/d/" + m[1] + "=w1600", asli: "https://drive.google.com/file/d/" + m[1] + "/view" } : null;
+      return m ? { id: m[1] } : null;
     }).filter(Boolean);
+  }
+  var FOTO = { cache: {}, janji: {}, antre: { thumb: [], besar: [] }, timer: null, aktif: 0, MAKS_SERENTAK: 2, GRUP: 6 };
+  function ambilFotoPrivat(id, ukuran) {
+    var k = ukuran + ":" + id;
+    if (FOTO.cache[k]) return Promise.resolve(FOTO.cache[k]);
+    if (FOTO.janji[k]) return FOTO.janji[k];
+    var p = new Promise(function (ok) { FOTO.antre[ukuran].push({ id: id, ok: ok, k: k }); });
+    FOTO.janji[k] = p;
+    if (!FOTO.timer) FOTO.timer = setTimeout(function () { FOTO.timer = null; jalankanFoto(); }, 40);
+    return p;
+  }
+  function jalankanFoto() {
+    ["thumb", "besar"].forEach(function (u) {
+      while (FOTO.antre[u].length && FOTO.aktif < FOTO.MAKS_SERENTAK) {
+        kirimGrupFoto(u, FOTO.antre[u].splice(0, FOTO.GRUP));
+      }
+    });
+  }
+  function kirimGrupFoto(ukuran, grup) {
+    FOTO.aktif++;
+    DB.panggil("ambilFoto", { ids: grup.map(function (g) { return g.id; }), ukuran: ukuran }, 90000).then(function (r) {
+      grup.forEach(function (g) {
+        var d = r && r.status === "SUCCESS" && r.foto ? r.foto[g.id] : null;
+        if (d) FOTO.cache[g.k] = d;
+        delete FOTO.janji[g.k];
+        g.ok(d || "");
+      });
+    }).catch(function () {
+      grup.forEach(function (g) { delete FOTO.janji[g.k]; g.ok(""); });
+    }).then(function () { FOTO.aktif--; jalankanFoto(); });
+  }
+  // Pasang gambar ke <img>; dimuat saat mulai terlihat supaya satu halaman tabel tidak memuat semuanya sekaligus.
+  function pasangFoto(img, id, ukuran) {
+    img.classList.add("memuat");
+    function muat() {
+      ambilFotoPrivat(id, ukuran).then(function (d) {
+        if (d) { img.src = d; img.classList.remove("memuat"); }
+        else { img.classList.remove("memuat"); img.classList.add("gagal"); img.alt = "Foto tidak tersedia"; }
+      });
+    }
+    if (!("IntersectionObserver" in window)) { muat(); return img; }
+    var io = new IntersectionObserver(function (es) {
+      if (es.some(function (e) { return e.isIntersecting; })) { io.disconnect(); muat(); }
+    }, { rootMargin: "120px" });
+    io.observe(img);
+    return img;
   }
   function flags(s) { return String(s || "").split(",").map(function (x) { return x.trim(); }).filter(Boolean); }
   function lencana(teks, kls) { return h("span", { class: "lencana " + kls, text: teks }); }
@@ -471,7 +518,7 @@
     var tbody = h("tbody");
     potong.forEach(function (x) {
       var f = fotoList(x.foto), fl = flags(x.flag);
-      var thumb = f.length ? h("img", { class: "thumb", src: f[0].thumb, alt: "Foto " + (x.zona || x.tenant), loading: "lazy", referrerpolicy: "no-referrer" })
+      var thumb = f.length ? pasangFoto(h("img", { class: "thumb", alt: "Foto " + (x.zona || x.tenant) }), f[0].id, "thumb")
         : h("span", { class: "oleh", text: "-" });
       var sel;
       if (S.tab === "patroli") {
@@ -579,7 +626,7 @@
     if (foto.length) {
       isi.appendChild(h("div", { class: "foto-besar" }, foto.map(function (f, i) {
         return h("button", { type: "button", "aria-label": "Perbesar foto " + (i + 1), onclick: function () { lightbox(f); } },
-          h("img", { src: f.thumb, alt: "Foto " + (i + 1), referrerpolicy: "no-referrer" }));
+          pasangFoto(h("img", { alt: "Foto " + (i + 1) }), f.id, "thumb"));
       })));
     } else isi.appendChild(h("div", { class: "oleh", text: "Tidak ada foto." }));
     if (link) {
@@ -598,10 +645,16 @@
   }
 
   function lightbox(f) {
+    var img = h("img", { alt: "Foto diperbesar" });
+    var teks = h("div", { class: "lightbox-teks", text: "Memuat foto..." });
     var lb = h("div", { class: "lightbox", role: "dialog", "aria-modal": "true", onclick: function () { lb.remove(); } },
-      h("img", { src: f.besar, alt: "Foto diperbesar", referrerpolicy: "no-referrer" }),
+      img, teks,
       h("button", { type: "button", class: "btn btn-kuning", text: "Tutup", onclick: function () { lb.remove(); } }));
     document.body.appendChild(lb);
+    ambilFotoPrivat(f.id, "besar").then(function (d) {
+      if (!lb.isConnected) return;
+      if (d) { img.src = d; teks.hidden = true; } else { teks.textContent = "Foto tidak bisa dimuat."; }
+    });
   }
   document.addEventListener("keydown", function (e) {
     if (e.key !== "Escape") return;

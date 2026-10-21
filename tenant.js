@@ -316,6 +316,7 @@
           ". Tenant: " + payload.tenant + ".";
         hasil.hidden = false;
         PC.toast("Checklist tersimpan.", "ok");
+        PC.Riwayat.catat({ id: payload.id, jenis: payload.kategori, judul: payload.tenant, temuan: !!(payload.tingkat), status: "terkirim" });
         reset();
         return;
       }
@@ -332,6 +333,7 @@
       if (!e.jaringan) { PC.toast("Gagal mengirim. Coba lagi.", "bad"); return; }
       PC.Antrean.simpan({ id: payload.id, aksi: "simpanTenant", payload: payload, dibuat: Date.now(),
         status: "menunggu", label: label }).then(function () {
+        PC.Riwayat.catat({ id: payload.id, jenis: payload.kategori, judul: payload.tenant, temuan: !!(payload.tingkat), status: "menunggu" });
         PC.toast("Tidak ada sinyal. Laporan disimpan di perangkat dan dikirim otomatis nanti.", "ok");
         $("hasil").hidden = true;
         reset();

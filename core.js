@@ -62,6 +62,25 @@
     return Array.prototype.map.call(a, function (b) { return ("0" + b.toString(16)).slice(-2); }).join("");
   }
 
+  /* ------------------------------------------------- Status jaringan
+     "ok" diperbarui dari hasil panggilan API yang nyata (bukan hanya navigator.onLine,
+     karena HP bisa terhubung WiFi tanpa internet). */
+  var Jaringan = (function () {
+    var ok = true, subs = [];
+    function set(v) {
+      if (ok === v) return;
+      ok = v;
+      subs.forEach(function (f) { try { f(ok); } catch (e) { /* abaikan */ } });
+    }
+    w.addEventListener("offline", function () { set(false); });
+    w.addEventListener("online", function () { set(true); });
+    return {
+      ok: function () { return ok && w.navigator.onLine !== false; },
+      set: set,
+      on: function (f) { subs.push(f); }
+    };
+  })();
+
   /* --------------------------------------------------------------- API */
   function api(aksi, data, ms) {
     var ctl = new AbortController();
@@ -77,9 +96,11 @@
       return r.json();
     }).then(function (j) {
       clearTimeout(t);
+      Jaringan.set(true);
       return j;
     }).catch(function () {
       clearTimeout(t);
+      Jaringan.set(false);
       var er = new Error("Tidak dapat terhubung ke server.");
       er.jaringan = true;
       throw er;
@@ -482,6 +503,132 @@
     };
   }
 
+  /* ------------------------------------------------- Riwayat laporan (di HP ini) */
+  var Riwayat = (function () {
+    var KUNCI = "dp_riwayat_v1", MAKS = 80, UMUR = 3 * 86400000, subs = [];
+    function baca() {
+      try { var a = JSON.parse(w.localStorage.getItem(KUNCI)); return Array.isArray(a) ? a : []; } catch (e) { return []; }
+    }
+    function tulis(a) {
+      var batas = Date.now() - UMUR;
+      a = a.filter(function (x) { return x && x.id && x.t > batas; }).slice(0, MAKS);
+      try { w.localStorage.setItem(KUNCI, JSON.stringify(a)); } catch (e) { /* abaikan */ }
+      subs.forEach(function (f) { try { f(); } catch (e) { /* abaikan */ } });
+    }
+    function sekarang() { return Jam.kini().getTime(); }
+    // e: { id, jenis: PATROLI|BUKA|TUTUP, judul, zona, temuan, status: terkirim|menunggu }
+    function catat(e) {
+      var a = baca().filter(function (x) { return x.id !== e.id; });
+      a.unshift({ id: e.id, t: e.t || sekarang(), jenis: e.jenis, judul: e.judul || "", zona: e.zona || "",
+        temuan: !!e.temuan, status: e.status || "terkirim" });
+      tulis(a);
+    }
+    function tandai(id, status) {
+      var a = baca(), ubah = false;
+      a.forEach(function (x) { if (x.id === id && x.status !== status) { x.status = status; ubah = true; } });
+      if (ubah) tulis(a);
+    }
+    function hariIni() {
+      var hari = fmtWIB(new Date(sekarang())).tgl;
+      return baca().filter(function (x) { return fmtWIB(new Date(x.t)).tgl === hari; });
+    }
+    // zona -> waktu (ms) patroli terakhir dari HP ini hari ini (termasuk yang masih antre)
+    function zonaTerakhir() {
+      var m = {};
+      hariIni().forEach(function (x) {
+        if (x.jenis === "PATROLI" && x.zona && (!m[x.zona] || x.t > m[x.zona])) m[x.zona] = x.t;
+      });
+      return m;
+    }
+    return { catat: catat, tandai: tandai, hariIni: hariIni, zonaTerakhir: zonaTerakhir,
+      on: function (f) { subs.push(f); } };
+  })();
+
+  /* ------------------------------------------------- Zona terjadwal
+     Status tiap zona dari server (kapan terakhir dipatroli hari ini), digabung dengan laporan dari HP ini
+     supaya langsung berubah setelah kirim dan tetap berguna saat offline. */
+  var ZonaJadwal = (function () {
+    var KUNCI = "dp_zona_status_v1", data = null;
+    try { data = JSON.parse(w.localStorage.getItem(KUNCI)); } catch (e) { data = null; }
+    function hariSama(ms) { return fmtWIB(new Date(ms)).tgl === fmtWIB(new Date()).tgl; }
+    if (data && !(data.diambil && hariSama(data.diambil))) data = null;   // data kemarin tidak berlaku
+
+    function muat() {
+      return api("statusZona", {}, 20000).then(function (r) {
+        if (r && r.status === "SUCCESS" && r.zona) {
+          r.diambil = Date.now();
+          data = r;
+          try { w.localStorage.setItem(KUNCI, JSON.stringify(r)); } catch (e) { /* abaikan */ }
+        }
+        return data;
+      }).catch(function () { return data; });
+    }
+    function teksMenit(m) {
+      if (m === null || m === undefined) return "";
+      if (m < 1) return "baru saja";
+      if (m < 60) return m + " mnt lalu";
+      return Math.floor(m / 60) + " j " + (m % 60) + " mnt lalu";
+    }
+    var URUT = { terlambat: 0, belum: 1, ok: 2, luar: 3 };
+    // [{ z, menit, s: terlambat|belum|ok|luar, teks }] terurut: yang perlu didatangi lebih dulu
+    function daftar(namaZona) {
+      var lokal = Riwayat.zonaTerakhir(), sekarang = Jam.kini().getTime();
+      var jalan = data && data.diambil ? (Date.now() - data.diambil) / 60000 : 0;
+      var dasar = {};
+      if (data) data.zona.forEach(function (x) { dasar[x.z] = x; });
+      var interval = data ? data.interval : 60, aktif = data ? !!data.aktif : true;
+      var hasil = (namaZona || (data ? data.zona.map(function (x) { return x.z; }) : [])).map(function (z) {
+        var menit = dasar[z] && dasar[z].menit !== null ? Math.round(dasar[z].menit + jalan) : null;
+        if (lokal[z]) {
+          var m2 = Math.max(0, Math.round((sekarang - lokal[z]) / 60000));
+          if (menit === null || m2 < menit) menit = m2;
+        }
+        var st = !aktif ? "luar" : (menit === null ? "belum" : (menit > interval ? "terlambat" : "ok"));
+        var teks = st === "belum" ? "Belum dipatroli" :
+          (st === "terlambat" ? "Terlambat · " + teksMenit(menit) :
+          (st === "ok" ? "Sudah · " + teksMenit(menit) :
+          (menit === null ? "Di luar jam patroli" : "Di luar jam · " + teksMenit(menit))));
+        return { z: z, menit: menit, s: st, teks: teks };
+      });
+      hasil.sort(function (a, b) {
+        if (URUT[a.s] !== URUT[b.s]) return URUT[a.s] - URUT[b.s];
+        if (a.s === "terlambat" || a.s === "ok") return (b.menit || 0) - (a.menit || 0);   // yang paling lama dulu
+        return a.z.localeCompare(b.z, "id");
+      });
+      return hasil;
+    }
+    return { muat: muat, daftar: daftar, ada: function () { return !!data; } };
+  })();
+
+  /* ------------------------------------------------- Lembar (panel dari bawah) */
+  function Lembar(o) {
+    if (document.querySelector(".lembar")) return null;
+    var tirai = h("div", { class: "lembar-tirai" });
+    var tutupBtn = h("button", { type: "button", class: "btn btn-kecil btn-garis", text: "Tutup" });
+    var sub = o.sub ? h("p", { class: "lembar-sub", text: o.sub }) : null;
+    var badan = h("div", { class: "lembar-badan" }, o.isi);
+    var el = h("div", { class: "lembar", role: "dialog", "aria-modal": "true", "aria-label": o.judul },
+      h("div", { class: "lembar-kepala" }, h("div", null, h("h2", { text: o.judul }), sub), tutupBtn),
+      badan, o.aksi || null);
+    var selesai = false;
+    function tombol(e) { if (e.key === "Escape") tutup(); }
+    function tutup() {
+      if (selesai) return;
+      selesai = true;
+      document.removeEventListener("keydown", tombol);
+      document.body.classList.remove("lembar-buka");
+      el.classList.add("tutup"); tirai.classList.add("tutup");
+      setTimeout(function () { el.remove(); tirai.remove(); if (o.onTutup) o.onTutup(); }, 180);
+    }
+    tirai.addEventListener("click", tutup);
+    tutupBtn.addEventListener("click", tutup);
+    document.addEventListener("keydown", tombol);
+    document.body.classList.add("lembar-buka");
+    document.body.appendChild(tirai);
+    document.body.appendChild(el);
+    return { tutup: tutup, badan: badan, el: el, sub: function (t) { if (sub) sub.textContent = t; } };
+  }
+
   /* ------------------------------------------------- Antrean offline */
   var Antrean = (function () {
     var dbp = null, sibuk = false;
@@ -519,8 +666,9 @@
     var KODE_PIN_LAMA = { PIN: 1, PIN_KOSONG: 1, TERKUNCI: 1 };
 
     function proses() {
-      if (sibuk) return Promise.resolve();
+      if (sibuk) return Promise.resolve(0);
       sibuk = true;
+      var terkirim = 0;
       return semua().then(function (list) {
         return Promise.all(list.filter(function (x) { return x.status === "ditolak" && KODE_PIN_LAMA[x.kode]; })
           .map(function (x) {
@@ -537,7 +685,9 @@
             var payload = Object.assign({}, item.payload, { tertunda: true, konfirmasiUlang: true });
             delete payload.pin;
             return api(item.aksi, { payload: payload }).then(function (r) {
-              if (r.status === "SUCCESS") return hapus(item.id).then(function () { return true; });
+              if (r.status === "SUCCESS") return hapus(item.id).then(function () {
+                terkirim++; Riwayat.tandai(item.id, "terkirim"); return true;
+              });
               if (KODE_HENTI[r.kode]) return false;
               if (KODE_TUNGGU[r.kode]) {
                 item.tunggu = r.message || "Menunggu, dicoba lagi otomatis.";
@@ -552,7 +702,7 @@
           });
         });
         return urut;
-      }).catch(function () { /* IndexedDB tidak tersedia */ }).then(function () { sibuk = false; });
+      }).catch(function () { /* IndexedDB tidak tersedia */ }).then(function () { sibuk = false; return terkirim; });
     }
 
     // Laporan yang ditolak masih menyimpan foto dan checklist: petugas boleh mencoba kirim ulang.
@@ -569,10 +719,82 @@
     return { semua: semua, simpan: simpan, hapus: hapus, proses: proses, ulangi: ulangi };
   })();
 
+  var JENIS_LABEL = { PATROLI: "Patroli", BUKA: "Buka tenant", TUTUP: "Tutup tenant" };
+
+  // Panel "Riwayat saya": laporan hari ini dari HP ini, digabung dengan antrean kirim.
+  function bukaRiwayat(kirimLagi) {
+    var isi = h("div", { class: "riwayat" });
+    var tombolKirim = h("button", { type: "button", class: "btn btn-utama", text: "Kirim sekarang", hidden: true,
+      onclick: function () { tombolKirim.disabled = true; kirimLagi().then(function () { tombolKirim.disabled = false; gambar(); }); } });
+    var aksi = h("div", { class: "lembar-aksi" }, tombolKirim);
+    var lb = Lembar({ judul: "Riwayat saya", sub: "Memuat...", isi: isi, aksi: aksi });
+    if (!lb) return;
+
+    function gambar() {
+      Antrean.semua().catch(function () { return []; }).then(function (antre) {
+        var peta = {}, baris = [];
+        antre.forEach(function (q) { peta[q.id] = q; });
+        var ada = {};
+        Riwayat.hariIni().forEach(function (x) {
+          ada[x.id] = 1;
+          var q = peta[x.id], st = "terkirim", ket = "";
+          if (q) { st = q.status === "ditolak" ? "ditolak" : "menunggu"; ket = st === "ditolak" ? (q.pesan || "") : (q.tunggu || ""); }
+          baris.push({ t: x.t, judul: x.judul || "-", jenis: x.jenis, temuan: x.temuan, st: st, ket: ket });
+        });
+        antre.forEach(function (q) {   // antrean yang belum punya catatan riwayat (dibuat sebelum pembaruan)
+          if (ada[q.id]) return;
+          baris.push({ t: q.dibuat, judul: q.label || "Laporan", jenis: "", temuan: null,
+            st: q.status === "ditolak" ? "ditolak" : "menunggu", ket: q.status === "ditolak" ? (q.pesan || "") : (q.tunggu || "") });
+        });
+        baris.sort(function (a, b) { return b.t - a.t; });
+
+        kosongkan(isi);
+        var n = { terkirim: 0, menunggu: 0, ditolak: 0 };
+        baris.forEach(function (b) { n[b.st]++; });
+        lb.sub(baris.length
+          ? n.terkirim + " terkirim" + (n.menunggu ? " · " + n.menunggu + " menunggu" : "") + (n.ditolak ? " · " + n.ditolak + " ditolak" : "")
+          : "Laporan hari ini dari HP ini");
+        tombolKirim.hidden = !n.menunggu;
+        if (!baris.length) { isi.appendChild(h("p", { class: "riwayat-kosong", text: "Belum ada laporan hari ini." })); return; }
+
+        var ul = h("ul", { class: "riwayat-daftar" });
+        baris.forEach(function (b) {
+          var hasilTeks = b.temuan === null ? "" : (b.temuan ? "Ada temuan" : (b.jenis === "PATROLI" ? "Aman" : "Sesuai"));
+          var meta = [JENIS_LABEL[b.jenis] || "", hasilTeks].filter(Boolean).join(" · ");
+          ul.appendChild(h("li", { class: "riwayat-item" },
+            h("span", { class: "r-jam", text: fmtWIB(new Date(b.t)).jam.slice(0, 5) }),
+            h("div", { class: "r-isi" },
+              h("strong", { text: b.judul }),
+              meta ? h("small", { class: b.temuan ? "r-temuan" : "", text: meta }) : null,
+              b.ket ? h("small", { class: "r-ket", text: b.ket }) : null),
+            h("span", { class: "r-status s-" + b.st, text: { terkirim: "Terkirim", menunggu: "Menunggu", ditolak: "Ditolak" }[b.st] })));
+        });
+        isi.appendChild(ul);
+        isi.appendChild(h("p", { class: "riwayat-catatan", text: "Riwayat hanya tersimpan di HP ini selama 3 hari." }));
+      });
+    }
+    gambar();
+  }
+
   function pasangAntrean(wadah) {
+    var status = h("span", { class: "strip-status", "data-s": "ok", text: "Online" });
+    var btnRiwayat = h("button", { type: "button", class: "strip-riwayat", text: "Riwayat saya",
+      onclick: function () { bukaRiwayat(kirimLagi); } });
+    var strip = h("div", { class: "strip" }, h("span", { class: "strip-dot", "aria-hidden": "true" }), status, btnRiwayat);
     var panel = h("div", { class: "antrean", hidden: true });
+    wadah.appendChild(strip);
     wadah.appendChild(panel);
+
+    function segarStrip() {
+      var off = !Jaringan.ok();
+      strip.setAttribute("data-s", off ? "offline" : "ok");
+      status.textContent = off ? "Offline · laporan disimpan di HP" : "Online";
+      var n = Riwayat.hariIni().length;
+      btnRiwayat.textContent = "Riwayat saya" + (n ? " (" + n + ")" : "");
+    }
+
     function segarkan() {
+      segarStrip();
       Antrean.semua().then(function (list) {
         kosongkan(panel);
         var menunggu = list.filter(function (x) { return x.status !== "ditolak"; });
@@ -584,7 +806,7 @@
             h("span", { text: menunggu.length + " laporan menunggu terkirim. " +
               (tertahan ? tertahan.tunggu : "Akan dikirim otomatis saat sinyal tersedia.") }),
             h("button", { type: "button", class: "btn btn-kecil", text: "Kirim sekarang",
-              onclick: function () { Antrean.proses().then(segarkan); } })));
+              onclick: kirimLagi })));
         }
         ditolak.forEach(function (it) {
           var judul = (it.label || "Laporan") + " ditolak server: " + it.pesan;
@@ -596,7 +818,7 @@
           // Nama yang belum terdaftar bisa diperbaiki admin, jadi laporan boleh dicoba lagi.
           var coba = it.kode === "NAMA"
             ? h("button", { type: "button", class: "btn btn-kecil btn-utama", text: "Coba lagi",
-                onclick: function () { Antrean.ulangi(it.id).then(function () { return Antrean.proses(); }).then(segarkan); } })
+                onclick: function () { Antrean.ulangi(it.id).then(kirimLagi); } })
             : null;
           panel.appendChild(h("div", { class: "antrean-tolak" },
             h("span", { text: judul }),
@@ -604,10 +826,20 @@
         });
       }).catch(function () { panel.hidden = true; });
     }
+
+    // Mengirim isi antrean. Mengembalikan Promise agar bisa dipakai tombol di panel riwayat.
+    function kirimLagi() {
+      return Antrean.proses().then(function (n) {
+        if (n > 0) toast(n + " laporan tertunda berhasil terkirim.", "ok");
+      }).then(segarkan);
+    }
+
     segarkan();
-    function kirimLagi() { Antrean.proses().then(segarkan); }
     setInterval(kirimLagi, 30000);
     w.addEventListener("online", kirimLagi);
+    document.addEventListener("visibilitychange", function () { if (!document.hidden) kirimLagi(); });
+    Jaringan.on(function (ok) { if (ok) kirimLagi(); else segarStrip(); });
+    Riwayat.on(segarStrip);
     kirimLagi();
     return { segarkan: segarkan };
   }
@@ -950,6 +1182,7 @@
     h: h, kosongkan: kosongkan, buatId: buatId, api: api, Jam: Jam, sinkronJam: sinkronJam, fmtWIB: fmtWIB,
     namaHari: namaHari, toast: toast, tanya: tanya, Lokasi: Lokasi, teksGps: teksGps, pasangStempel: pasangStempel,
     Kamera: Kamera, FotoGrid: FotoGrid, Antrean: Antrean, pasangAntrean: pasangAntrean, Combobox: Combobox,
+    Riwayat: Riwayat, ZonaJadwal: ZonaJadwal, Lembar: Lembar, Jaringan: Jaringan,
     Checklist: Checklist, pasangPWA: pasangPWA, CFG: CFG, ikon: ikon, pasangLogo: pasangLogo, pasangTema: pasangTema
   };
 })(window);
