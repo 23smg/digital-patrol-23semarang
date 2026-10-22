@@ -11,7 +11,6 @@
   var master = null, petaTenant = {}, kategori = "", lantai = "", idLaporan = PC.buatId(), tingkat = "",
     mengirim = false, timerDraft = null;
   var cbTenant, cbNama, cl, foto;
-  var ronde = null, semuaLantai = false, timerRonde = null, namaRonde = "";   // penugasan lantai + progres ronde (dari server)
 
   PC.pasangLogo(document.querySelector(".merek-grup"));
   PC.pasangTema(document.querySelector(".kepala-isi"));
@@ -20,8 +19,7 @@
   var antrean = PC.pasangAntrean($("antrean-wadah"));
   PC.pasangPWA($("antrean-wadah"));
   setInterval(PC.sinkronJam, 300000);
-  document.addEventListener("visibilitychange", function () { if (!document.hidden) { PC.sinkronJam(); muatRonde(); } });
-  setInterval(function () { if (!document.hidden) muatRonde(); }, 60000);
+  document.addEventListener("visibilitychange", function () { if (!document.hidden) PC.sinkronJam(); });
   $("ik-buka").appendChild(PC.ikon("BUKA"));
   $("ik-tutup").appendChild(PC.ikon("TUTUP"));
   $("ikon-foto").appendChild(PC.ikon("KAMERA"));
@@ -38,46 +36,23 @@
     return Object.keys(hitung).sort(function (a, b) { return peringkatLantai(a) - peringkatLantai(b) || a.localeCompare(b); })
       .map(function (f) { return { f: f, n: hitung[f] }; });
   }
-  // Lantai tugas aktif hanya bila petugas punya penugasan dan sedang dalam jam shift.
-  function lantaiTugas() { return ronde && ronde.ada && ronde.aktif && ronde.lantai && ronde.lantai.length ? ronde.lantai : []; }
-  function fokusLantai() { return lantaiTugas().length && !semuaLantai; }
-  function sudahDicek(nama) { return !!(ronde && ronde.aktif && ronde.sudah && ronde.sudah.indexOf(nama) >= 0); }
-
   function namaTenant() {
-    var tugas = fokusLantai() ? lantaiTugas() : [];
-    var daftar = master.daftarTenant.filter(function (t) {
-      if (lantai) return t.f === lantai;
-      return !tugas.length || tugas.indexOf(String(t.f || "").toUpperCase()) >= 0;
-    });
-    // Tenant yang belum dicek pada ronde ini tampil lebih dulu.
-    var belum = [], sudah = [];
-    daftar.forEach(function (t) { (sudahDicek(t.n) ? sudah : belum).push(t.n); });
-    return belum.concat(sudah);
+    return master.daftarTenant.filter(function (t) { return !lantai || t.f === lantai; })
+      .map(function (t) { return t.n; });
   }
-  function unitTenant(nama) {
-    var t = petaTenant[nama], u = t ? t.l : "";
-    return sudahDicek(nama) ? (u ? u + " \u00b7 sudah" : "sudah") : u;
-  }
+  function unitTenant(nama) { var t = petaTenant[nama]; return t ? t.l : ""; }
 
   function bangunLantai() {
     var wadah = $("lantai-grup");
     PC.kosongkan(wadah);
     var daftar = daftarLantai();
-    var tugas = fokusLantai() ? lantaiTugas() : [];
-    if (tugas.length) daftar = daftar.filter(function (x) { return tugas.indexOf(String(x.f).toUpperCase()) >= 0; });
     wadah.parentNode.hidden = !daftar.length;
-    $("lbl-lantai").textContent = tugas.length ? "Lantai tugas Anda" : "Lantai (ketuk lagi untuk semua lantai)";
     daftar.forEach(function (x) {
       wadah.appendChild(h("button", { type: "button", class: "lantai-btn", "data-lantai": x.f,
         "aria-pressed": lantai === x.f ? "true" : "false",
         onclick: function () { pilihLantai(lantai === x.f ? "" : x.f); } },
         x.f));
     });
-    if (lantaiTugas().length) {
-      wadah.appendChild(h("button", { type: "button", class: "lantai-btn lantai-lain",
-        onclick: function () { semuaLantai = !semuaLantai; lantai = ""; bangunLantai(); if (cbTenant) { if (!cbTenant.nilai()) $("tenant").value = ""; cbTenant.tutup(); } ubah(); } },
-        semuaLantai ? "Lantai tugas" : "Lantai lain"));
-    }
   }
 
   function pilihLantai(f) {
@@ -98,60 +73,6 @@
       $("plakat-unit").textContent = t.l || t.f || "-";
       $("plakat-nama").textContent = nama;
     }
-  }
-
-  /* ------------------------------------------------ penugasan dan ronde */
-  function jamTeks(j) { return String(j || "").replace(":", "."); }
-  function sisaTeks(menit) {
-    if (menit >= 60) return Math.floor(menit / 60) + " j " + (menit % 60 ? (menit % 60) + " m" : "");
-    return menit + " m";
-  }
-
-  function gambarRonde() {
-    var el = $("ronde");
-    PC.kosongkan(el);
-    if (!ronde || !ronde.ada) { el.hidden = true; return; }
-    el.hidden = false;
-    var judul = (ronde.lantai || []).join(", ") + "  \u00b7  Shift " + ronde.shift;
-    el.className = "ronde";
-    el.appendChild(h("div", { class: "ronde-judul", text: judul }));
-    if (!ronde.aktif) {
-      el.classList.add("ronde-diam");
-      el.appendChild(h("p", { class: "ronde-ket", text: (ronde.alasan || "Di luar jam shift") + (ronde.mulai ? " (" + jamTeks(ronde.mulai) + "-" + jamTeks(ronde.selesai) + ")" : "") + "." }));
-      return;
-    }
-    var persen = ronde.total ? Math.round(ronde.selesaiJml * 100 / ronde.total) : 0;
-    el.classList.toggle("ronde-lengkap", !!ronde.lengkap);
-    el.appendChild(h("div", { class: "ronde-baris" },
-      h("span", { text: "Ronde " + ronde.ronde + " dari " + ronde.totalRonde + "  \u00b7  " + jamTeks(ronde.mulaiRonde) + "-" + jamTeks(ronde.selesaiRonde) }),
-      h("b", { text: ronde.selesaiJml + " dari " + ronde.total })));
-    el.appendChild(h("progress", { max: "100", value: String(persen), "aria-label": "Progres ronde" }));
-    var ket = ronde.lengkap
-      ? "Ronde ini selesai." + (ronde.rondeBerikut ? " Ronde berikut mulai " + jamTeks(ronde.rondeBerikut) + "." : " Shift hampir berakhir.")
-      : "Sisa waktu " + sisaTeks(ronde.sisaMenit) + ". Selesaikan semua tenant sebelum " + jamTeks(ronde.selesaiRonde) + ".";
-    el.appendChild(h("p", { class: "ronde-ket", text: ket }));
-    if (!ronde.lengkap && ronde.belum && ronde.belum.length) {
-      el.appendChild(h("details", { class: "ronde-belum" },
-        h("summary", { text: "Belum dicek (" + ronde.belum.length + ")" }),
-        h("ul", null, ronde.belum.map(function (n) { return h("li", { text: n }); }))));
-    }
-  }
-
-  function muatRonde() {
-    if (!master || !cbNama) return;
-    var nama = cbNama.nilai();
-    if (!nama) { ronde = null; namaRonde = ""; semuaLantai = false; gambarRonde(); bangunLantai(); return; }
-    PC.api("statusRonde", { nama: nama }, 20000).then(function (r) {
-      if (r.status !== "SUCCESS" || cbNama.nilai() !== nama) return;
-      var baru = !namaRonde || namaRonde !== nama;
-      ronde = r.ada ? r : null;
-      if (baru) { namaRonde = nama; semuaLantai = false; }
-      var tugas = lantaiTugas();
-      // Satu lantai tugas: langsung dipilih supaya daftar tenant langsung terfokus.
-      if (baru && tugas.length === 1 && !lantai) lantai = tugas[0];
-      if (lantai && tugas.length && !semuaLantai && tugas.indexOf(String(lantai).toUpperCase()) < 0) lantai = "";
-      gambarRonde(); bangunLantai(); ubah();
-    }).catch(function () { /* tanpa sinyal: tampilan terakhir dipertahankan */ });
   }
 
   /* ------------------------------------------------ memuat master */
@@ -200,7 +121,6 @@
       onPick: function (v) {
         if (v) { try { localStorage.setItem(KUNCI_NAMA, v); } catch (e) { /* abaikan */ } }
         $("g-nama").hidden = true; $("nama").classList.remove("invalid");
-        if (v) muatRonde(); else if (ronde) { ronde = null; namaRonde = ""; gambarRonde(); bangunLantai(); }
         ubah();
       } });
     foto = PC.FotoGrid($("foto-grid"), { maks: 3, onUbah: ubah });
@@ -246,7 +166,6 @@
       }
     }
     ubah();
-    muatRonde();
   }
 
   /* ------------------------------------------------ kategori */
@@ -403,7 +322,6 @@
         PC.toast("Checklist tersimpan.", "ok");
         PC.Riwayat.catat({ id: payload.id, jenis: payload.kategori, judul: payload.tenant, temuan: !!(payload.tingkat), status: "terkirim" });
         reset();
-        muatRonde();
         return;
       }
       if (r.status === "KONFIRMASI") {

@@ -15,7 +15,7 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" type="image/png" href="icons/icon-192.png">
 <title>Patroli - Mall 23Semarang</title>
-<link rel="stylesheet" href="petugas.css?v=32">
+<link rel="stylesheet" href="petugas.css?v=33">
 </head>
 <body>
 
@@ -38,6 +38,7 @@
 <main class="app">
   <div id="antrean-wadah"></div>
   <div id="hasil" class="hasil" role="status" hidden></div>
+  <section id="ronde" class="ronde" aria-label="Tugas dan progres ronde" hidden></section>
   <div id="muat" class="muat" role="status">Memuat...</div>
 
   <form id="form" hidden novalidate>
@@ -53,13 +54,21 @@
     </section>
 
     <section class="bagian" id="b-nama">
-      <h2>Nama</h2>
+      <h2>Petugas</h2>
+      <div class="medan" id="shift-wadah" hidden>
+        <span class="label" id="lbl-shift">Shift</span>
+        <div class="lantai-grup" id="shift-grup" role="radiogroup" aria-labelledby="lbl-shift"></div>
+      </div>
       <div class="medan">
         <div class="kombo">
           <input id="nama" class="input" type="text" autocomplete="off" placeholder="Pilih nama" aria-label="Nama petugas" aria-controls="daftar-nama">
           <ul id="daftar-nama" class="daftar" role="listbox" hidden></ul>
         </div>
         <p id="g-nama" class="galat" role="alert" hidden></p>
+      </div>
+      <div class="kunci" id="kunci-info" hidden>
+        <span id="kunci-teks"></span>
+        <button type="button" id="btn-buka-kunci" class="btn-tautan">Ganti petugas / shift</button>
       </div>
     </section>
 
@@ -104,9 +113,9 @@
   </div>
 </div>
 
-<script src="config.js?v=32"></script>
-<script src="core.js?v=32"></script>
-<script src="jsqr.js?v=32"></script>
-<script src="index.js?v=32"></script>
+<script src="config.js?v=33"></script>
+<script src="core.js?v=33"></script>
+<script src="jsqr.js?v=33"></script>
+<script src="index.js?v=33"></script>
 </body>
 </html>

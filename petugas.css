@@ -353,3 +353,11 @@ body.lembar-buka { overflow: hidden; }
 .ronde-belum summary { cursor: pointer; font-weight: 600; color: var(--aksen); min-height: 32px; display: flex; align-items: center; }
 .ronde-belum ul { margin: 6px 0 0; padding-left: 18px; max-height: 180px; overflow-y: auto; color: var(--teks); }
 .lantai-lain { margin-left: 8px; font-size: 13px; color: var(--teks-2); }
+
+/* Kunci nama + shift */
+.shift-jam { display: block; margin-top: 2px; font-size: 11px; font-weight: 500; color: inherit; opacity: .75; }
+.bagian .lantai-btn:disabled { opacity: .7; }
+.kunci { margin-top: 10px; padding: 10px 12px; background: var(--hijau-bg); border: 1px solid var(--hijau); border-radius: 10px; font-size: 13.5px; font-weight: 600; color: var(--hijau); }
+.kunci[hidden] { display: none; }
+.kunci .btn-tautan { margin: 6px 0 0; padding: 4px 0; }
+#nama:disabled { background: var(--bg); color: var(--teks); opacity: 1; -webkit-text-fill-color: var(--teks); }

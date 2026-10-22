@@ -824,7 +824,7 @@
       h("div", { class: "panel-kepala" }, h("h2", { text: "Shift dan durasi ronde" })),
       h("div", { class: "panel-isi" },
         h("div", { class: "pengantar" }, h("b", { text: "Ronde dihitung dari jam mulai shift. " }),
-          "Dalam satu ronde, petugas wajib mengecek semua tenant di lantai tugasnya. Saat ronde berganti, progres kembali ke nol. Shift yang selesai lebih pagi dari jam mulainya dianggap melewati tengah malam."),
+          "Dalam satu ronde, petugas wajib mendatangi semua zona di lantai tugasnya (zona berpola \"LG - 85\" milik lantai LG). Saat ronde berganti, progres kembali ke nol. Shift yang selesai lebih pagi dari jam mulainya dianggap melewati tengah malam. Petugas memilih shift sendiri di form Patroli; HP mengunci nama dan shift itu sampai shift berakhir."),
         h("div", { class: "medan", style: { maxWidth: "220px" } }, h("label", { for: "sh-ronde", text: "Durasi ronde (jam)" }), inRonde,
           h("p", { class: "bantuan", text: "1 sampai 12, kelipatan 0,5." })),
         daftar,
@@ -833,7 +833,17 @@
             baris.push({ lama: "", nama: "", mulai: "08:00", selesai: "16:00", aktif: true }); gambar();
           } })),
         galat,
-        h("button", { type: "button", class: "btn btn-utama", text: "Simpan shift", onclick: simpan })));
+        h("div", { class: "grup" },
+          h("button", { type: "button", class: "btn btn-utama", text: "Simpan shift", onclick: simpan }),
+          h("button", { type: "button", class: "btn btn-garis", text: "Buka kunci semua petugas", onclick: function () {
+            PC.tanya("Buka kunci semua petugas?", "Semua HP petugas akan melepas kunci nama dan shift saat form patroli dibuka berikutnya. Petugas memilih lagi.", "Buka kunci", "Batal").then(function (ya) {
+              if (!ya) return;
+              kirimShift({ op: "bukaKunci" }).then(function (r) {
+                if (r.status === "SUCCESS") PC.toast("Kunci dibuka untuk semua petugas.", "ok");
+                else if (r.kode !== "SESI") PC.toast(r.message || "Gagal.", "bad");
+              });
+            });
+          } }))));
   }
 
   function panelTugas() {
@@ -852,7 +862,7 @@
     var isi = h("div", { class: "panel-isi" });
     wadah.appendChild(isi);
     isi.appendChild(h("div", { class: "pengantar" }, h("b", { text: "Satu petugas, satu lantai, satu shift. " }),
-      "Petugas yang ditugaskan hanya melihat lantainya di form Tenant, lengkap dengan progres ronde. Petugas tanpa penugasan tetap memakai form seperti biasa."));
+      "Petugas yang ditugaskan melihat progres ronde lantainya di form Patroli, dan daftar zonanya difokuskan ke lantai itu. Petugas tanpa penugasan tetap memakai form seperti biasa."));
 
     if (!petugas.length) { isi.appendChild(h("div", { class: "kosong-tabel", text: "Belum ada petugas aktif. Tambahkan di menu Petugas." })); return wadah; }
     if (!shiftAktif.length) { isi.appendChild(h("div", { class: "kosong-tabel", text: "Belum ada shift aktif. Aktifkan minimal satu shift di atas." })); return wadah; }
@@ -878,7 +888,7 @@
       if (!ada) ketStatus = lencana("Belum ditugaskan", "l-abu");
       else if (!st || !st.aktif) ketStatus = h("span", { class: "tugas-prog", text: st && st.alasan ? st.alasan : "-" });
       else ketStatus = h("span", null, lencana(st.lengkap ? "Selesai" : "Berjalan", st.lengkap ? "l-ok" : "l-warn"),
-        h("div", { class: "tugas-prog", text: "Ronde " + st.ronde + "/" + st.totalRonde + " \u00b7 " + st.selesaiJml + "/" + st.total + " tenant" }));
+        h("div", { class: "tugas-prog", text: "Ronde " + st.ronde + "/" + st.totalRonde + " \u00b7 " + st.selesaiJml + "/" + st.total + " zona" }));
       var btnSimpan = h("button", { type: "button", class: "btn btn-kecil btn-utama", text: "Simpan", onclick: function () {
         if (!dipilih.length) { PC.toast("Pilih minimal satu lantai untuk " + o.n + ".", "bad"); return; }
         btnSimpan.disabled = true;
@@ -902,7 +912,7 @@
         h("td", null, h("div", { class: "grup", style: { alignItems: "center" } }, aksi))));
     });
     isi.appendChild(h("div", { class: "tabel-wrap penuh", style: { border: "0" } },
-      h("table", { class: "tugas-tabel" }, h("thead", null, h("tr", null, ["Petugas", "Shift", "Lantai", "Ronde sekarang", ""].map(function (k) { return h("th", { text: k }); }))), tbody)));
+      h("table", { class: "tugas-tabel" }, h("thead", null, h("tr", null, ["Petugas", "Shift utama", "Lantai", "Ronde sekarang", ""].map(function (k) { return h("th", { text: k }); }))), tbody)));
     return wadah;
   }
 

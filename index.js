@@ -7,6 +7,8 @@
   var TOLERANSI_GPS_MAKS = 30; // meter; akurasi GPS dipakai sbg toleransi, maksimal segini. Isi 0 = geofence mutlak.
   var master = null, idLaporan = PC.buatId(), tingkat = "", zona = "", zonaQR = "", mengirim = false, timerDraft = null;
   var cbNama, cl, foto;
+  var KUNCI_PETUGAS = "dp_kunci_petugas_v1";
+  var kunci = null, shiftDipilih = "", ronde = null, mengunciProses = false;   // kunci nama + shift di perangkat
   var geoState = "none"; // none | cari | ok | luar
 
   PC.pasangLogo(document.querySelector(".merek-grup"));
@@ -143,10 +145,21 @@
 
   /* ---------- Daftar zona terjadwal ---------- */
   // Saran zona berikutnya: yang terlambat atau belum dipatroli hari ini.
+  // Zona yang ditampilkan: bila petugas punya lantai tugas dan shift berjalan, hanya zona lantainya (yang belum dipatroli ronde ini di atas).
+  function lantaiZonaJs(z) { var m = String(z || "").trim().match(/^([A-Za-z0-9]{1,4})\s*[-\u2013]/); return m ? m[1].toUpperCase() : ""; }
+  function zonaTampil() {
+    var semua = master ? master.daftarZona : [];
+    if (!ronde || !ronde.ada || !ronde.aktif || !ronde.lantai || !ronde.lantai.length) return semua;
+    var f = semua.filter(function (z) { return ronde.lantai.indexOf(lantaiZonaJs(z)) >= 0; });
+    if (!f.length) return semua;
+    var belum = f.filter(function (z) { return ronde.sudah.indexOf(z) < 0; }), sudah = f.filter(function (z) { return ronde.sudah.indexOf(z) >= 0; });
+    return belum.concat(sudah);
+  }
+
   function saranZona() {
     var el = $("zona-saran");
     if (!el || !master) return;
-    var d = zona ? null : PC.ZonaJadwal.daftar(master.daftarZona).filter(function (x) { return x.s === "terlambat" || x.s === "belum"; })[0];
+    var d = zona ? null : PC.ZonaJadwal.daftar(zonaTampil()).filter(function (x) { return x.s === "terlambat" || x.s === "belum"; })[0];
     el.hidden = !d;
     if (d) el.textContent = "Berikutnya: " + d.z + " · " + d.teks;
   }
@@ -159,7 +172,7 @@
     if (!lb) return;
     function gambar() {
       PC.kosongkan(isi);
-      var d = PC.ZonaJadwal.daftar(master.daftarZona);
+      var d = PC.ZonaJadwal.daftar(zonaTampil());
       if (!d.length) { isi.appendChild(h("li", { class: "zona-kosong", text: "Belum ada zona." })); return; }
       d.forEach(function (x) {
         isi.appendChild(h("li", null, h("button", { type: "button", class: "zona-item s-" + x.s + (x.z === zona ? " dipilih" : ""),
@@ -328,6 +341,121 @@
     new MutationObserver(rapi).observe(w, { childList: true, subtree: true, characterData: true });
   }
 
+  /* ---------- Shift, kunci nama + shift, dan ronde ---------- */
+  function sekarangMs() { return PC.Jam.kini().getTime(); }
+  function jamTeks(j) { return String(j || "").replace(":", "."); }
+  function jamDariMs(ms) { return PC.fmtWIB(new Date(ms)).jam.slice(0, 5).replace(":", "."); }
+  function perluShift() { return !!(master && master.shift && master.shift.length); }
+  function sisaTeks(menit) { return menit >= 60 ? Math.floor(menit / 60) + " j " + (menit % 60 ? (menit % 60) + " m" : "") : menit + " m"; }
+
+  function bacaKunci() { try { return JSON.parse(localStorage.getItem(KUNCI_PETUGAS)); } catch (e) { return null; } }
+  function simpanKunci() { try { localStorage.setItem(KUNCI_PETUGAS, JSON.stringify(kunci)); } catch (e) {} }
+
+  function gambarShift() {
+    var wadah = $("shift-grup");
+    PC.kosongkan(wadah);
+    $("shift-wadah").hidden = !perluShift();
+    (master.shift || []).forEach(function (x) {
+      wadah.appendChild(h("button", { type: "button", class: "lantai-btn", "aria-pressed": shiftDipilih === x.nama ? "true" : "false",
+        disabled: !!kunci, onclick: function () { if (kunci) return; shiftDipilih = x.nama; gambarShift(); cobaKunci(); ubah(); } },
+        x.nama, h("small", { class: "shift-jam", text: jamTeks(x.mulai) + "-" + jamTeks(x.selesai) })));
+    });
+  }
+
+  function tampilKunci() {
+    var ada = !!kunci;
+    $("nama").disabled = ada;
+    $("kunci-info").hidden = !ada;
+    $("b-nama").classList.toggle("terkunci", ada);
+    if (ada) $("kunci-teks").textContent = "Terkunci di HP ini: " + kunci.nama + " \u00b7 Shift " + kunci.shift + " (sampai " + jamDariMs(kunci.sampai) + ")";
+    gambarShift();
+  }
+
+  function bukaKunci(diam) {
+    kunci = null; shiftDipilih = ""; ronde = null;
+    try { localStorage.removeItem(KUNCI_PETUGAS); } catch (e) {}
+    $("nama").value = "";
+    tampilKunci(); gambarRonde(); saranZona(); ubah();
+    if (!diam) PC.toast("Kunci dibuka. Pilih shift dan nama lagi.", "ok");
+  }
+
+  // Kunci terpasang setelah shift dan nama dipilih, dan hanya bila shift itu memang sedang berjalan.
+  function cobaKunci() {
+    var nama = cbNama && cbNama.nilai();
+    if (kunci || mengunciProses || !nama || !shiftDipilih || !perluShift()) return;
+    mengunciProses = true;
+    PC.api("statusRonde", { nama: nama, shift: shiftDipilih }, 20000).then(function (r) {
+      if (r.status !== "SUCCESS") { PC.toast(r.message || "Gagal memeriksa shift.", "bad"); return; }
+      if (!r.shiftAktif) {
+        PC.toast("Shift " + shiftDipilih + (r.mulai ? " (" + jamTeks(r.mulai) + "-" + jamTeks(r.selesai) + ")" : "") + " sedang tidak berjalan.", "bad");
+        shiftDipilih = ""; gambarShift(); ubah(); return;
+      }
+      kunci = { nama: nama, shift: shiftDipilih, sampai: r.akhirMs, v: String(master.kunciVersi || "0") };
+      simpanKunci(); tampilKunci();
+      ronde = r.ada ? r : null;
+      gambarRonde(); saranZona(); ubah();
+      PC.toast("Terkunci: " + nama + ", shift " + shiftDipilih + ".", "ok");
+    }).catch(function () {
+      // Tanpa sinyal: kunci sementara sampai 12 jam, diperbarui saat sinyal kembali.
+      kunci = { nama: nama, shift: shiftDipilih, sampai: sekarangMs() + 12 * 3600000, v: String(master.kunciVersi || "0") };
+      simpanKunci(); tampilKunci(); ubah();
+    }).then(function () { mengunciProses = false; });
+  }
+
+  function pulihKunci() {
+    var k = bacaKunci();
+    if (!k || !k.nama || !k.shift) return;
+    var valid = k.sampai > sekarangMs() && String(k.v || "0") === String(master.kunciVersi || "0") && master.daftarNama.indexOf(k.nama) >= 0;
+    if (!valid) { try { localStorage.removeItem(KUNCI_PETUGAS); } catch (e) {} return; }
+    kunci = k; shiftDipilih = k.shift;
+    $("nama").value = k.nama;
+    tampilKunci();
+    muatRonde();
+  }
+
+  function periksaKunci() {
+    if (!kunci) return;
+    if (kunci.sampai <= sekarangMs()) { bukaKunci(true); PC.toast("Shift " + "selesai. Pilih shift dan nama lagi.", ""); return; }
+    if (master && String(kunci.v || "0") !== String(master.kunciVersi || "0")) { bukaKunci(true); PC.toast("Admin membuka kunci petugas. Pilih shift dan nama lagi.", ""); }
+  }
+
+  function gambarRonde() {
+    var el = $("ronde");
+    PC.kosongkan(el);
+    if (!ronde || !ronde.ada) { el.hidden = true; return; }
+    el.hidden = false; el.className = "ronde";
+    el.appendChild(h("div", { class: "ronde-judul", text: (ronde.lantai || []).join(", ") + "  \u00b7  Shift " + ronde.shift }));
+    if (!ronde.aktif) {
+      el.classList.add("ronde-diam");
+      el.appendChild(h("p", { class: "ronde-ket", text: (ronde.alasan || "Di luar jam shift") + "." }));
+      return;
+    }
+    var persen = ronde.total ? Math.round(ronde.selesaiJml * 100 / ronde.total) : 0;
+    el.classList.toggle("ronde-lengkap", !!ronde.lengkap);
+    el.appendChild(h("div", { class: "ronde-baris" },
+      h("span", { text: "Ronde " + ronde.ronde + " dari " + ronde.totalRonde + "  \u00b7  " + jamTeks(ronde.mulaiRonde) + "-" + jamTeks(ronde.selesaiRonde) }),
+      h("b", { text: ronde.selesaiJml + " dari " + ronde.total + " zona" })));
+    el.appendChild(h("progress", { max: "100", value: String(persen), "aria-label": "Progres ronde" }));
+    el.appendChild(h("p", { class: "ronde-ket", text: ronde.lengkap
+      ? "Ronde ini selesai." + (ronde.rondeBerikut ? " Ronde berikut mulai " + jamTeks(ronde.rondeBerikut) + "." : "")
+      : "Sisa waktu " + sisaTeks(ronde.sisaMenit) + ". Datangi semua zona sebelum " + jamTeks(ronde.selesaiRonde) + "." }));
+    if (!ronde.lengkap && ronde.belum && ronde.belum.length) {
+      el.appendChild(h("details", { class: "ronde-belum" }, h("summary", { text: "Belum dipatroli (" + ronde.belum.length + ")" }),
+        h("ul", null, ronde.belum.map(function (n) { return h("li", { text: n }); }))));
+    }
+  }
+
+  function muatRonde() {
+    if (!kunci) return;
+    var nama = kunci.nama;
+    PC.api("statusRonde", { nama: nama, shift: kunci.shift }, 20000).then(function (r) {
+      if (r.status !== "SUCCESS" || !kunci || kunci.nama !== nama) return;
+      if (r.shiftAktif && r.akhirMs && r.akhirMs !== kunci.sampai) { kunci.sampai = r.akhirMs; simpanKunci(); tampilKunci(); }
+      ronde = r.ada ? r : null;
+      gambarRonde(); saranZona(); ubah();
+    }).catch(function () {});
+  }
+
   /* ---------- Muat data ---------- */
   /* Data dari cache dipakai langsung (halaman terbuka tanpa menunggu), lalu disegarkan di latar belakang. */
   function muat() {
@@ -341,7 +469,7 @@
       PC.Jam.sinkron(r.waktuServer + (Date.now() - t0) / 2);
       master = r;
       try { localStorage.setItem(KUNCI_MASTER, JSON.stringify(r)); } catch (e) {}
-      if (!sudahMulai) { sudahMulai = true; mulai(); } else periksaGeofence();
+      if (!sudahMulai) { sudahMulai = true; mulai(); } else { periksaGeofence(); periksaKunci(); gambarShift(); }
     }).catch(function () {
       if (sudahMulai) { if (!PC.Jam.terpercaya()) PC.sinkronJam(); return; }
       PC.kosongkan(muatEl);
@@ -360,8 +488,17 @@
       items: function () { return master.daftarNama; },
       onPick: function (v) {
         $("g-nama").hidden = true; $("nama").classList.remove("invalid");
+        if (v) cobaKunci();
         ubah();
       } });
+    gambarShift();
+    pulihKunci();
+    $("btn-buka-kunci").addEventListener("click", function () {
+      PC.tanya("Ganti petugas atau shift?", "Kunci nama dan shift di HP ini dibuka. Lakukan hanya bila HP dipakai petugas lain atau Anda pindah shift.", "Buka kunci", "Batal")
+        .then(function (ya) { if (ya) bukaKunci(); });
+    });
+    setInterval(function () { periksaKunci(); if (kunci && !document.hidden) muatRonde(); }, 60000);
+    document.addEventListener("visibilitychange", function () { if (!document.hidden) { periksaKunci(); muatRonde(); } });
     foto = PC.FotoGrid($("foto-grid"), { maks: 3, onUbah: ubah });
     try { localStorage.setItem("dp_cl_mode", "daftar"); } catch (e) {}   // tampilan daftar: tanpa tombol Sebelumnya/Selesai
     cl = PC.Checklist($("checklist"), { onUbah: ubah });
@@ -433,6 +570,7 @@
   function syarat() {
     var c = cl.nilai(), s = [];
     s.push({ ok: !!zona, label: "lokasi" });
+    if (perluShift()) s.push({ ok: !!shiftDipilih, label: "shift" });
     s.push({ ok: !!cbNama.nilai(), label: "nama" });
     s.push({ ok: !!c.lengkap, label: "checklist (" + c.terisi + "/" + c.total + ")" });
     if (c.adaTemuan) {
@@ -532,7 +670,7 @@
     }
     var c = cl.nilai(), gps = PC.Lokasi.saatIni();
     var payload = {
-      id: idLaporan, nama: cbNama.nilai(), zona: zona,
+      id: idLaporan, nama: cbNama.nilai(), shift: shiftDipilih, zona: zona,
       checklist: c.daftar, tingkat: c.adaTemuan ? tingkat : "", catatan: $("catatan").value.trim(),
       lat: gps ? gps.lat : null, lng: gps ? gps.lng : null, akurasi: gps ? gps.akurasi : null,
       fotos: foto.daftar().map(function (f) { return { b64: f.b64, t: f.t, sumber: f.sumber }; }),
@@ -549,6 +687,7 @@
         PC.Riwayat.catat({ id: payload.id, jenis: "PATROLI", judul: zonaTeks, zona: zonaTeks, temuan: c.adaTemuan, status: "terkirim" });
         reset();
         PC.ZonaJadwal.muat().then(saranZona);
+        muatRonde();
         return;
       }
       PC.toast(r.message || "Ditolak.", "bad");
