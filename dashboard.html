@@ -12,25 +12,31 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap">
-<link rel="stylesheet" href="dashboard.css?v=18">
+<link rel="stylesheet" href="dashboard.css?v=23">
 </head>
 <body>
 
 <!-- ============ MASUK ============ -->
 <div class="masuk" id="masuk">
-  <form class="masuk-kartu" id="form-masuk" autocomplete="on">
-    <div class="masuk-kepala">
-      <div><h1>Admin</h1><p>Mall 23Semarang</p></div>
-    </div>
-    <div class="pita" aria-hidden="true"></div>
-    <div class="masuk-isi">
-      <div class="medan"><label for="u">Nama pengguna</label><input id="u" class="input" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" required></div>
-      <div class="medan"><label for="p">Kata sandi</label><input id="p" class="input" type="password" autocomplete="current-password" required></div>
-      <p id="g-masuk" class="galat" role="alert" hidden></p>
-      <button type="submit" id="btn-masuk" class="btn btn-utama btn-lebar">Masuk</button>
-      <p class="catatan">Halaman ini khusus admin, supervisor, dan manager. Petugas patroli tidak perlu masuk.</p>
-    </div>
-  </form>
+  <div class="lm-bungkus">
+    <form class="masuk-kartu" id="form-masuk" autocomplete="on">
+      <div class="lm-kiri">
+        <div class="lm-logo" aria-hidden="true">
+          <svg viewBox="0 0 48 48" width="26" height="26" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M24 5 8 11v12c0 10 6.8 17.2 16 20 9.2-2.8 16-10 16-20V11L24 5Z"/><path class="lt-centang" d="m16.5 24.5 5.5 5.5 10-11"/></svg>
+        </div>
+        <h1>Masuk</h1>
+        <p class="lm-ket">Gunakan akun Digital Patrol Anda untuk membuka dashboard admin Mall 23Semarang.</p>
+      </div>
+      <div class="lm-kanan">
+        <span class="lm-pil">Dashboard admin</span>
+        <div class="medan"><label for="u">Nama pengguna</label><input id="u" class="input" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" required></div>
+        <div class="medan"><label for="p">Kata sandi</label><input id="p" class="input" type="password" autocomplete="current-password" required></div>
+        <p id="g-masuk" class="galat" role="alert" hidden></p>
+        <div class="lm-aksi"><button type="submit" id="btn-masuk" class="btn btn-utama">Masuk</button></div>
+      </div>
+    </form>
+    <div class="lm-kaki"><span>Developed by alif.rizal@23semarang.id</span></div>
+  </div>
 </div>
 
 <!-- ============ APLIKASI ============ -->
@@ -118,12 +124,12 @@
 
 <script src="config.js?v=18"></script>
 <script src="core.js?v=18"></script>
-<script src="dashboard.js?v=18"></script>
+<script src="dashboard.js?v=19"></script>
 <script src="laporan.js?v=18"></script>
 <script src="cakupan.js?v=18"></script>
 <script src="notif.js?v=18"></script>
 <script src="tenant-awal.js?v=18"></script>
-<script src="kelola.js?v=18"></script>
+<script src="kelola.js?v=19"></script>
 <script src="qrcode.js?v=18"></script>
 <script src="qr.js?v=18"></script>
 <script src="dashboard-mulai.js?v=18"></script>

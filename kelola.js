@@ -774,6 +774,21 @@
     return m ? 1 + Number(m[1]) : 100;
   }
 
+  // Pemilih jam 24 jam (input type="time" mengikuti locale perangkat dan bisa tampil AM/PM).
+  function jamInput(label) {
+    function p2(n) { return (n < 10 ? "0" : "") + n; }
+    var jam = h("select", { class: "input", "aria-label": label + " (jam)" });
+    var mnt = h("select", { class: "input", "aria-label": label + " (menit)" });
+    for (var i = 0; i < 24; i++) jam.appendChild(h("option", { value: p2(i), text: p2(i) }));
+    for (var j = 0; j < 60; j++) mnt.appendChild(h("option", { value: p2(j), text: p2(j) }));
+    var w = h("div", { class: "jam24" }, jam, h("span", { class: "jam24-t", text: ":" }), mnt);
+    Object.defineProperty(w, "value", {
+      get: function () { return jam.value + ":" + mnt.value; },
+      set: function (v) { var m = /^(\d{1,2}):(\d{2})/.exec(String(v || "")); jam.value = p2(m ? Math.min(23, +m[1]) : 0); mnt.value = m ? m[2] : "00"; }
+    });
+    return w;
+  }
+
   function panelShiftJam() {
     var p = paketShift();
     var baris = p.shift.map(function (x) { return { lama: x.nama, nama: x.nama, mulai: x.mulai, selesai: x.selesai, aktif: x.aktif }; });
@@ -786,8 +801,8 @@
       PC.kosongkan(daftar);
       baris.forEach(function (x, i) {
         var nama = h("input", { class: "input", type: "text", maxlength: "30", "aria-label": "Nama shift" });
-        var mulai = h("input", { class: "input", type: "time", "aria-label": "Jam mulai" });
-        var selesai = h("input", { class: "input", type: "time", "aria-label": "Jam selesai" });
+        var mulai = jamInput("Jam mulai");
+        var selesai = jamInput("Jam selesai");
         var aktif = h("select", { class: "input", "aria-label": "Status" },
           h("option", { value: "ya", text: "Aktif", selected: x.aktif }), h("option", { value: "tidak", text: "Nonaktif", selected: !x.aktif }));
         nama.value = x.nama; mulai.value = x.mulai; selesai.value = x.selesai;

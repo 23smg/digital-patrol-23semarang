@@ -152,7 +152,9 @@
     $("btn-menu").setAttribute("aria-label", t ? "Tampilkan menu" : "Sembunyikan menu");
     if (simpan) { try { localStorage.setItem(KUNCI_SISI, t ? "1" : "0"); } catch (e) { /* abaikan */ } }
   }
-  try { if (localStorage.getItem(KUNCI_SISI) === "1") setSisiTutup(true, false); } catch (e) { /* abaikan */ }
+  // Bawaan: menu tertutup. Hanya terbuka bila admin pernah membukanya sendiri ("0").
+  function sisiTutupTersimpan() { try { return localStorage.getItem(KUNCI_SISI) !== "0"; } catch (e) { return true; } }
+  setSisiTutup(sisiTutupTersimpan(), false);
   $("btn-menu").addEventListener("click", function () {
     if (layarSempit()) {
       var buka = !$("app").classList.contains("menu-buka");
@@ -182,7 +184,7 @@
     var p = !!document.fullscreenElement;
     $("btn-penuh").setAttribute("aria-pressed", p ? "true" : "false");
     $("btn-penuh").title = p ? "Keluar dari layar penuh" : "Layar penuh";
-    if (!p) { try { setSisiTutup(localStorage.getItem(KUNCI_SISI) === "1", false); } catch (e) { /* abaikan */ } }
+    if (!p) setSisiTutup(sisiTutupTersimpan(), false);
   });
 
   DB.mulaiApp = function () {
