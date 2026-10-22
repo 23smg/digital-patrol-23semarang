@@ -361,3 +361,7 @@ body.lembar-buka { overflow: hidden; }
 .kunci[hidden] { display: none; }
 .kunci .btn-tautan { margin: 6px 0 0; padding: 4px 0; }
 #nama:disabled { background: var(--bg); color: var(--teks); opacity: 1; -webkit-text-fill-color: var(--teks); }
+
+.segar-baris { display: flex; justify-content: flex-end; margin: 0 0 10px; }
+.btn-segar { min-height: 38px; padding: 0 16px; border: 1px solid var(--input-garis); border-radius: 999px; background: var(--kartu); color: var(--teks); font: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer; }
+.btn-segar:disabled { opacity: .6; }

@@ -15,7 +15,7 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" type="image/png" href="icons/icon-192.png">
 <title>Patroli - Mall 23Semarang</title>
-<link rel="stylesheet" href="petugas.css?v=33">
+<link rel="stylesheet" href="petugas.css?v=34">
 </head>
 <body>
 
@@ -38,6 +38,7 @@
 <main class="app">
   <div id="antrean-wadah"></div>
   <div id="hasil" class="hasil" role="status" hidden></div>
+  <div class="segar-baris"><button type="button" id="btn-segar" class="btn-segar">Muat ulang</button></div>
   <section id="ronde" class="ronde" aria-label="Tugas dan progres ronde" hidden></section>
   <div id="muat" class="muat" role="status">Memuat...</div>
 
@@ -46,7 +47,6 @@
       <div class="bagian-kepala"><h2>Lokasi</h2><button type="button" id="btn-izin" class="btn-izin" hidden>Izinkan akses</button></div>
       <div class="lokasi-nama" id="lokasi-nama" hidden></div>
       <button type="button" id="btn-scan" class="btn btn-foto">Scan QR</button>
-      <p class="zona-saran" id="zona-saran" hidden></p>
       <button type="button" id="btn-zona" class="btn-tautan">Pilih dari daftar zona</button>
       <div class="geo" id="geo-status" data-state="cari" role="status" aria-live="polite" hidden>
         <span class="dot" aria-hidden="true"></span><span id="geo-teks"></span>
@@ -59,16 +59,16 @@
         <span class="label" id="lbl-shift">Shift</span>
         <div class="lantai-grup" id="shift-grup" role="radiogroup" aria-labelledby="lbl-shift"></div>
       </div>
+      <div class="medan" id="lantai-wadah" hidden>
+        <span class="label" id="lbl-lantai">Lantai</span>
+        <div class="lantai-grup" id="lantai-grup" role="radiogroup" aria-labelledby="lbl-lantai"></div>
+      </div>
       <div class="medan">
         <div class="kombo">
           <input id="nama" class="input" type="text" autocomplete="off" placeholder="Pilih nama" aria-label="Nama petugas" aria-controls="daftar-nama">
           <ul id="daftar-nama" class="daftar" role="listbox" hidden></ul>
         </div>
         <p id="g-nama" class="galat" role="alert" hidden></p>
-      </div>
-      <div class="kunci" id="kunci-info" hidden>
-        <span id="kunci-teks"></span>
-        <button type="button" id="btn-buka-kunci" class="btn-tautan">Ganti petugas / shift</button>
       </div>
     </section>
 
@@ -113,9 +113,9 @@
   </div>
 </div>
 
-<script src="config.js?v=33"></script>
-<script src="core.js?v=33"></script>
-<script src="jsqr.js?v=33"></script>
-<script src="index.js?v=33"></script>
+<script src="config.js?v=34"></script>
+<script src="core.js?v=34"></script>
+<script src="jsqr.js?v=34"></script>
+<script src="index.js?v=34"></script>
 </body>
 </html>

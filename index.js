@@ -8,7 +8,7 @@
   var master = null, idLaporan = PC.buatId(), tingkat = "", zona = "", zonaQR = "", mengirim = false, timerDraft = null;
   var cbNama, cl, foto;
   var KUNCI_PETUGAS = "dp_kunci_petugas_v1";
-  var kunci = null, shiftDipilih = "", ronde = null, mengunciProses = false;   // kunci nama + shift di perangkat
+  var kunci = null, shiftDipilih = "", lantaiDipilih = "", ronde = null, mengunciProses = false;   // kunci nama + shift di perangkat
   var geoState = "none"; // none | cari | ok | luar
 
   PC.pasangLogo(document.querySelector(".merek-grup"));
@@ -149,20 +149,14 @@
   function lantaiZonaJs(z) { var m = String(z || "").trim().match(/^([A-Za-z0-9]{1,4})\s*[-\u2013]/); return m ? m[1].toUpperCase() : ""; }
   function zonaTampil() {
     var semua = master ? master.daftarZona : [];
-    if (!ronde || !ronde.ada || !ronde.aktif || !ronde.lantai || !ronde.lantai.length) return semua;
-    var f = semua.filter(function (z) { return ronde.lantai.indexOf(lantaiZonaJs(z)) >= 0; });
+    if (!kunci || !kunci.lantai) return semua;
+    var f = semua.filter(function (z) { return lantaiZonaJs(z) === kunci.lantai; });
     if (!f.length) return semua;
-    var belum = f.filter(function (z) { return ronde.sudah.indexOf(z) < 0; }), sudah = f.filter(function (z) { return ronde.sudah.indexOf(z) >= 0; });
-    return belum.concat(sudah);
+    var sudah = ronde && ronde.sudah ? ronde.sudah : [];
+    return f.filter(function (z) { return sudah.indexOf(z) < 0; }).concat(f.filter(function (z) { return sudah.indexOf(z) >= 0; }));
   }
 
-  function saranZona() {
-    var el = $("zona-saran");
-    if (!el || !master) return;
-    var d = zona ? null : PC.ZonaJadwal.daftar(zonaTampil()).filter(function (x) { return x.s === "terlambat" || x.s === "belum"; })[0];
-    el.hidden = !d;
-    if (d) el.textContent = "Berikutnya: " + d.z + " · " + d.teks;
-  }
+  function saranZona() { var el = $("zona-saran"); if (el) el.hidden = true; }
 
   function bukaDaftarZona() {
     if (!master) return;
@@ -351,53 +345,63 @@
   function bacaKunci() { try { return JSON.parse(localStorage.getItem(KUNCI_PETUGAS)); } catch (e) { return null; } }
   function simpanKunci() { try { localStorage.setItem(KUNCI_PETUGAS, JSON.stringify(kunci)); } catch (e) {} }
 
+  function daftarLantaiForm() {
+    var u = [];
+    (master.daftarZona || []).forEach(function (z) { var f = lantaiZonaJs(z); if (f && u.indexOf(f) < 0) u.push(f); });
+    function rk(f) { if (f === "LG") return 0; var m = /^L(\d+)$/.exec(f); return m ? 1 + Number(m[1]) : 100; }
+    return u.sort(function (a, b) { return rk(a) - rk(b) || a.localeCompare(b); });
+  }
+
   function gambarShift() {
-    var wadah = $("shift-grup");
-    PC.kosongkan(wadah);
+    var wadah = $("shift-grup"), lw = $("lantai-grup");
+    PC.kosongkan(wadah); PC.kosongkan(lw);
     $("shift-wadah").hidden = !perluShift();
     (master.shift || []).forEach(function (x) {
       wadah.appendChild(h("button", { type: "button", class: "lantai-btn", "aria-pressed": shiftDipilih === x.nama ? "true" : "false",
         disabled: !!kunci, onclick: function () { if (kunci) return; shiftDipilih = x.nama; gambarShift(); cobaKunci(); ubah(); } },
         x.nama, h("small", { class: "shift-jam", text: jamTeks(x.mulai) + "-" + jamTeks(x.selesai) })));
     });
+    var lt = perluShift() ? daftarLantaiForm() : [];
+    $("lantai-wadah").hidden = !lt.length;
+    lt.forEach(function (f) {
+      lw.appendChild(h("button", { type: "button", class: "lantai-btn", "aria-pressed": lantaiDipilih === f ? "true" : "false",
+        disabled: !!kunci, onclick: function () { if (kunci) return; lantaiDipilih = f; gambarShift(); cobaKunci(); ubah(); } }, f));
+    });
   }
 
   function tampilKunci() {
     var ada = !!kunci;
     $("nama").disabled = ada;
-    $("kunci-info").hidden = !ada;
     $("b-nama").classList.toggle("terkunci", ada);
-    if (ada) $("kunci-teks").textContent = "Terkunci di HP ini: " + kunci.nama + " \u00b7 Shift " + kunci.shift + " (sampai " + jamDariMs(kunci.sampai) + ")";
     gambarShift();
   }
 
   function bukaKunci(diam) {
-    kunci = null; shiftDipilih = ""; ronde = null;
+    kunci = null; shiftDipilih = ""; lantaiDipilih = ""; ronde = null;
     try { localStorage.removeItem(KUNCI_PETUGAS); } catch (e) {}
     $("nama").value = "";
     tampilKunci(); gambarRonde(); saranZona(); ubah();
-    if (!diam) PC.toast("Kunci dibuka. Pilih shift dan nama lagi.", "ok");
+    if (!diam) PC.toast("Pilih shift, lantai, dan nama lagi.", "ok");
   }
 
   // Kunci terpasang setelah shift dan nama dipilih, dan hanya bila shift itu memang sedang berjalan.
   function cobaKunci() {
     var nama = cbNama && cbNama.nilai();
-    if (kunci || mengunciProses || !nama || !shiftDipilih || !perluShift()) return;
+    var lantaiAda = !daftarLantaiForm().length;   // zona tanpa pola lantai: lantai tidak diminta
+    if (kunci || mengunciProses || !nama || !shiftDipilih || !(lantaiDipilih || lantaiAda) || !perluShift()) return;
     mengunciProses = true;
-    PC.api("statusRonde", { nama: nama, shift: shiftDipilih }, 20000).then(function (r) {
+    PC.api("statusRonde", { nama: nama, shift: shiftDipilih, lantai: lantaiDipilih, simpan: true }, 20000).then(function (r) {
       if (r.status !== "SUCCESS") { PC.toast(r.message || "Gagal memeriksa shift.", "bad"); return; }
       if (!r.shiftAktif) {
         PC.toast("Shift " + shiftDipilih + (r.mulai ? " (" + jamTeks(r.mulai) + "-" + jamTeks(r.selesai) + ")" : "") + " sedang tidak berjalan.", "bad");
         shiftDipilih = ""; gambarShift(); ubah(); return;
       }
-      kunci = { nama: nama, shift: shiftDipilih, sampai: r.akhirMs, v: String(master.kunciVersi || "0") };
+      kunci = { nama: nama, shift: shiftDipilih, lantai: lantaiDipilih, sampai: r.akhirMs, t: r.waktuServer || sekarangMs(), v: String(master.kunciVersi || "0") };
       simpanKunci(); tampilKunci();
       ronde = r.ada ? r : null;
-      gambarRonde(); saranZona(); ubah();
-      PC.toast("Terkunci: " + nama + ", shift " + shiftDipilih + ".", "ok");
+      gambarRonde(); ubah();
     }).catch(function () {
-      // Tanpa sinyal: kunci sementara sampai 12 jam, diperbarui saat sinyal kembali.
-      kunci = { nama: nama, shift: shiftDipilih, sampai: sekarangMs() + 12 * 3600000, v: String(master.kunciVersi || "0") };
+      kunci = { nama: nama, shift: shiftDipilih, lantai: lantaiDipilih, sampai: sekarangMs() + 12 * 3600000, t: sekarangMs(), v: String(master.kunciVersi || "0") };
       simpanKunci(); tampilKunci(); ubah();
     }).then(function () { mengunciProses = false; });
   }
@@ -407,7 +411,7 @@
     if (!k || !k.nama || !k.shift) return;
     var valid = k.sampai > sekarangMs() && String(k.v || "0") === String(master.kunciVersi || "0") && master.daftarNama.indexOf(k.nama) >= 0;
     if (!valid) { try { localStorage.removeItem(KUNCI_PETUGAS); } catch (e) {} return; }
-    kunci = k; shiftDipilih = k.shift;
+    kunci = k; shiftDipilih = k.shift; lantaiDipilih = k.lantai || "";
     $("nama").value = k.nama;
     tampilKunci();
     muatRonde();
@@ -415,8 +419,25 @@
 
   function periksaKunci() {
     if (!kunci) return;
-    if (kunci.sampai <= sekarangMs()) { bukaKunci(true); PC.toast("Shift " + "selesai. Pilih shift dan nama lagi.", ""); return; }
-    if (master && String(kunci.v || "0") !== String(master.kunciVersi || "0")) { bukaKunci(true); PC.toast("Admin membuka kunci petugas. Pilih shift dan nama lagi.", ""); }
+    if (kunci.sampai <= sekarangMs()) { bukaKunci(true); PC.toast("Shift selesai. Pilih shift, lantai, dan nama lagi.", ""); return; }
+    if (master && String(kunci.v || "0") !== String(master.kunciVersi || "0")) { bukaKunci(true); PC.toast("Kunci dibuka admin. Pilih lagi.", ""); }
+  }
+
+  // Muat ulang data tanpa menutup halaman (isian dan foto tetap aman).
+  function segarkan() {
+    var b = $("btn-segar"); b.disabled = true; b.textContent = "Memuat...";
+    var t0 = Date.now();
+    PC.api("ambilDropdown", {}, 25000).then(function (r) {
+      if (r.status !== "SUCCESS") throw new Error(r.message);
+      PC.Jam.sinkron(r.waktuServer + (Date.now() - t0) / 2);
+      master = r;
+      try { localStorage.setItem(KUNCI_MASTER, JSON.stringify(r)); } catch (e) {}
+      periksaGeofence(); periksaKunci(); gambarShift(); muatRonde();
+      PC.ZonaJadwal.muat().then(saranZona);
+      if (antrean && antrean.segarkan) antrean.segarkan();
+      PC.toast("Data diperbarui.", "ok");
+    }).catch(function () { PC.toast("Gagal memuat. Periksa sinyal.", "bad"); })
+      .then(function () { b.disabled = false; b.textContent = "Muat ulang"; });
   }
 
   function gambarRonde() {
@@ -448,11 +469,12 @@
   function muatRonde() {
     if (!kunci) return;
     var nama = kunci.nama;
-    PC.api("statusRonde", { nama: nama, shift: kunci.shift }, 20000).then(function (r) {
+    PC.api("statusRonde", { nama: nama, shift: kunci.shift, lantai: kunci.lantai }, 20000).then(function (r) {
       if (r.status !== "SUCCESS" || !kunci || kunci.nama !== nama) return;
+      if (r.bukaKunci && r.bukaKunci > (kunci.t || 0)) { bukaKunci(true); PC.toast("Kunci dibuka admin. Pilih lagi.", ""); return; }
       if (r.shiftAktif && r.akhirMs && r.akhirMs !== kunci.sampai) { kunci.sampai = r.akhirMs; simpanKunci(); tampilKunci(); }
       ronde = r.ada ? r : null;
-      gambarRonde(); saranZona(); ubah();
+      gambarRonde(); ubah();
     }).catch(function () {});
   }
 
@@ -493,10 +515,7 @@
       } });
     gambarShift();
     pulihKunci();
-    $("btn-buka-kunci").addEventListener("click", function () {
-      PC.tanya("Ganti petugas atau shift?", "Kunci nama dan shift di HP ini dibuka. Lakukan hanya bila HP dipakai petugas lain atau Anda pindah shift.", "Buka kunci", "Batal")
-        .then(function (ya) { if (ya) bukaKunci(); });
-    });
+    $("btn-segar").addEventListener("click", segarkan);
     setInterval(function () { periksaKunci(); if (kunci && !document.hidden) muatRonde(); }, 60000);
     document.addEventListener("visibilitychange", function () { if (!document.hidden) { periksaKunci(); muatRonde(); } });
     foto = PC.FotoGrid($("foto-grid"), { maks: 3, onUbah: ubah });
@@ -571,6 +590,7 @@
     var c = cl.nilai(), s = [];
     s.push({ ok: !!zona, label: "lokasi" });
     if (perluShift()) s.push({ ok: !!shiftDipilih, label: "shift" });
+    if (perluShift() && daftarLantaiForm().length) s.push({ ok: !!lantaiDipilih, label: "lantai" });
     s.push({ ok: !!cbNama.nilai(), label: "nama" });
     s.push({ ok: !!c.lengkap, label: "checklist (" + c.terisi + "/" + c.total + ")" });
     if (c.adaTemuan) {
