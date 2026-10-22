@@ -370,6 +370,10 @@
     // Draft: checklist, tingkat, catatan. Lokasi TIDAK dipulihkan dari draft: hanya sah dari pindai QR.
     var draft = bacaDraft();
     cl.set(master.checklist.PATROLI, draft && draft.cl);
+    // Semua item patroli dimatikan admin: bagian checklist hilang (kolom catatan tetap ada).
+    var adaItem = (master.checklist.PATROLI || []).length > 0;
+    $("cl-kepala").hidden = !adaItem;
+    $("checklist").hidden = !adaItem;
     if (draft) {
       $("catatan").value = draft.catatan || "";
       if (draft.tingkat) {

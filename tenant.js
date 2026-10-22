@@ -176,6 +176,10 @@
     $("judul-cl").textContent = "Checklist " + (k === "BUKA" ? "buka" : "tutup");
     $("petunjuk-foto").textContent = PETUNJUK_FOTO[k] + " Tanggal, jam, tenant, petugas, dan GPS tercetak otomatis.";
     cl.set(master.checklist[k], awal);
+    // Semua item kategori ini dimatikan admin: bagian checklist hilang (catatan dan foto tetap ada).
+    var adaItem = (master.checklist[k] || []).length > 0;
+    Array.prototype.forEach.call(document.querySelectorAll("#bagian-cl > h2, #bagian-cl > .petunjuk, #btn-semua, #checklist"),
+      function (el) { el.hidden = !adaItem; });
   }
 
   function gantiKategori(k) {

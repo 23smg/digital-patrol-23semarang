@@ -1046,7 +1046,7 @@
           if (st.s === "TEMUAN") adaTemuan = true;
           daftar.push({ i: n, s: st.s, c: "" });
         });
-        return { daftar: daftar, terisi: terisi, total: items.length, lengkap: items.length > 0 && terisi === items.length,
+        return { daftar: daftar, terisi: terisi, total: items.length, lengkap: items.length === 0 || terisi === items.length,   // tanpa item = tidak ada yang perlu diisi
           adaTemuan: adaTemuan, catatanKurang: catKurang };
       },
       ekspor: function () { return JSON.parse(JSON.stringify(state)); },

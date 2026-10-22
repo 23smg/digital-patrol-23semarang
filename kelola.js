@@ -436,7 +436,7 @@
     denganData(wadah, function () {
       PC.kosongkan(wadah);
       wadah.appendChild(h("div", { class: "pengantar" }, h("b", { text: "Ini daftar pertanyaan di form petugas. " }),
-        "Setiap item dijawab petugas dengan Sesuai, Temuan, atau N/A. Patroli tampil di form Patroli; Buka toko dan Tutup toko tampil di form Tenant. Tambah, ubah, atau matikan item di sini, perubahan langsung muncul di HP petugas saat form dibuka lagi. Setiap kategori harus punya minimal satu item aktif."));
+        "Setiap item dijawab petugas dengan Sesuai, Temuan, atau N/A. Patroli tampil di form Patroli; Buka toko dan Tutup toko tampil di form Tenant. Tambah, ubah, atau matikan item di sini. Kalau semua item satu kategori dimatikan, bagian checklist kategori itu hilang dari form petugas. Perubahan langsung muncul di HP petugas saat form dibuka lagi."));
       var grid = h("div", { class: "kartu-item" });
       wadah.appendChild(grid);
 
