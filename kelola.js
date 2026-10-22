@@ -743,11 +743,183 @@
     });
   }
 
+  /* ---------------------------------------------------------- SHIFT dan PENUGASAN LANTAI */
+  function paketShift() { return (K.data && K.data.shift) || { shift: [], tugas: [], rondeJam: 3, lantai: [], status: {} }; }
+
+  function kirimShift(badan) {
+    return DB.panggil("shiftSimpan", badan, 60000).then(function (r) {
+      if (r.status === "SUCCESS") { K.data.shift = r.shift; if (r.riwayat) K.data.riwayat = r.riwayat; }
+      return r;
+    });
+  }
+
+  function menitJam(t) {
+    var m = /^(\d{1,2}):(\d{2})$/.exec(String(t || ""));
+    return m ? Number(m[1]) * 60 + Number(m[2]) : -1;
+  }
+  function jamMenit(m) { m = ((m % 1440) + 1440) % 1440; return ("0" + Math.floor(m / 60)).slice(-2) + "." + ("0" + (m % 60)).slice(-2); }
+
+  // Pratinjau jam ronde: dihitung dari jam mulai shift, ronde terakhir dipotong di jam selesai.
+  function jadwalRonde(mulai, selesai, jam) {
+    var m = menitJam(mulai), e = menitJam(selesai), R = Math.round(Number(jam) * 60);
+    if (m < 0 || e < 0 || m === e || !(R > 0)) return "";
+    var total = e > m ? e - m : e + 1440 - m, out = [];
+    for (var t = 0; t < total; t += R) out.push(jamMenit(m + t) + "-" + jamMenit(m + Math.min(t + R, total)));
+    return "Ronde: " + out.join("  \u00b7  ");
+  }
+
+  function peringkatLantaiAdmin(f) {
+    if (f === "LG") return 0;
+    var m = /^L(\d+)$/.exec(f);
+    return m ? 1 + Number(m[1]) : 100;
+  }
+
+  function panelShiftJam() {
+    var p = paketShift();
+    var baris = p.shift.map(function (x) { return { lama: x.nama, nama: x.nama, mulai: x.mulai, selesai: x.selesai, aktif: x.aktif }; });
+    var inRonde = h("input", { id: "sh-ronde", class: "input", type: "number", min: "1", max: "12", step: "0.5", inputmode: "decimal" });
+    inRonde.value = p.rondeJam;
+    var daftar = h("div");
+    var galat = h("p", { class: "galat", role: "alert", hidden: true });
+
+    function gambar() {
+      PC.kosongkan(daftar);
+      baris.forEach(function (x, i) {
+        var nama = h("input", { class: "input", type: "text", maxlength: "30", "aria-label": "Nama shift" });
+        var mulai = h("input", { class: "input", type: "time", "aria-label": "Jam mulai" });
+        var selesai = h("input", { class: "input", type: "time", "aria-label": "Jam selesai" });
+        var aktif = h("select", { class: "input", "aria-label": "Status" },
+          h("option", { value: "ya", text: "Aktif", selected: x.aktif }), h("option", { value: "tidak", text: "Nonaktif", selected: !x.aktif }));
+        nama.value = x.nama; mulai.value = x.mulai; selesai.value = x.selesai;
+        var jadwal = h("p", { class: "jadwal" });
+        function segar() {
+          x.nama = nama.value; x.mulai = mulai.value; x.selesai = selesai.value; x.aktif = aktif.value === "ya";
+          jadwal.textContent = jadwalRonde(x.mulai, x.selesai, inRonde.value) + (menitJam(x.selesai) >= 0 && menitJam(x.mulai) > menitJam(x.selesai) ? "  (melewati tengah malam)" : "");
+        }
+        [nama, mulai, selesai].forEach(function (el) { el.addEventListener("input", segar); });
+        aktif.addEventListener("change", segar);
+        inRonde.addEventListener("input", segar);
+        segar();
+        daftar.appendChild(h("div", { class: "shift-baris" },
+          h("div", { class: "medan", style: { margin: "0" } }, h("label", { text: i === 0 ? "Nama shift" : "\u00a0" }), nama),
+          h("div", { class: "medan", style: { margin: "0" } }, h("label", { text: i === 0 ? "Mulai" : "\u00a0" }), mulai),
+          h("div", { class: "medan", style: { margin: "0" } }, h("label", { text: i === 0 ? "Selesai" : "\u00a0" }), selesai),
+          h("div", { class: "medan", style: { margin: "0" } }, h("label", { text: i === 0 ? "Status" : "\u00a0" }), aktif),
+          jadwal));
+      });
+    }
+    gambar();
+
+    function simpan() {
+      galat.hidden = true;
+      kirimShift({ op: "shift", rondeJam: Number(inRonde.value), shift: baris.map(function (x) {
+        return { lama: x.lama, nama: x.nama, mulai: x.mulai, selesai: x.selesai, aktif: x.aktif };
+      }) }).then(function (r) {
+        if (r.status === "SUCCESS") { PC.toast("Shift disimpan.", "ok"); DB.buka("shift"); }
+        else if (r.kode !== "SESI") { galat.textContent = r.message || "Gagal menyimpan."; galat.hidden = false; }
+      });
+    }
+
+    return h("div", { class: "panel" },
+      h("div", { class: "panel-kepala" }, h("h2", { text: "Shift dan durasi ronde" })),
+      h("div", { class: "panel-isi" },
+        h("div", { class: "pengantar" }, h("b", { text: "Ronde dihitung dari jam mulai shift. " }),
+          "Dalam satu ronde, petugas wajib mengecek semua tenant di lantai tugasnya. Saat ronde berganti, progres kembali ke nol. Shift yang selesai lebih pagi dari jam mulainya dianggap melewati tengah malam."),
+        h("div", { class: "medan", style: { maxWidth: "220px" } }, h("label", { for: "sh-ronde", text: "Durasi ronde (jam)" }), inRonde,
+          h("p", { class: "bantuan", text: "1 sampai 12, kelipatan 0,5." })),
+        daftar,
+        h("div", { class: "grup", style: { marginBottom: "10px" } },
+          h("button", { type: "button", class: "btn btn-kecil btn-garis", text: "Tambah shift", disabled: baris.length >= 8, onclick: function () {
+            baris.push({ lama: "", nama: "", mulai: "08:00", selesai: "16:00", aktif: true }); gambar();
+          } })),
+        galat,
+        h("button", { type: "button", class: "btn btn-utama", text: "Simpan shift", onclick: simpan })));
+  }
+
+  function panelTugas() {
+    var p = paketShift();
+    var wadah = h("div", { class: "panel" });
+    var petugas = aktifSaja(K.data.petugas);
+    var shiftAktif = p.shift.filter(function (x) { return x.aktif; });
+    var lantai = p.lantai.slice().sort(function (a, b) { return peringkatLantaiAdmin(a) - peringkatLantaiAdmin(b) || a.localeCompare(b); });
+    var tugas = {};
+    p.tugas.forEach(function (t) { if (t.aktif) tugas[t.n.toLowerCase()] = t; });
+
+    wadah.appendChild(h("div", { class: "panel-kepala" }, h("h2", { text: "Penugasan lantai" }),
+      h("button", { type: "button", class: "btn btn-kecil btn-garis", text: "Muat ulang status", onclick: function () {
+        muatKelola(true).then(function (r) { if (r.status === "SUCCESS") DB.buka("shift"); else PC.toast(r.message, "bad"); });
+      } })));
+    var isi = h("div", { class: "panel-isi" });
+    wadah.appendChild(isi);
+    isi.appendChild(h("div", { class: "pengantar" }, h("b", { text: "Satu petugas, satu lantai, satu shift. " }),
+      "Petugas yang ditugaskan hanya melihat lantainya di form Tenant, lengkap dengan progres ronde. Petugas tanpa penugasan tetap memakai form seperti biasa."));
+
+    if (!petugas.length) { isi.appendChild(h("div", { class: "kosong-tabel", text: "Belum ada petugas aktif. Tambahkan di menu Petugas." })); return wadah; }
+    if (!shiftAktif.length) { isi.appendChild(h("div", { class: "kosong-tabel", text: "Belum ada shift aktif. Aktifkan minimal satu shift di atas." })); return wadah; }
+
+    var tbody = h("tbody");
+    petugas.forEach(function (o) {
+      var ada = tugas[o.n.toLowerCase()];
+      var pilihShift = ada && shiftAktif.some(function (x) { return x.nama === ada.shift; }) ? ada.shift : shiftAktif[0].nama;
+      var dipilih = (ada ? ada.lantai : []).slice();
+      var sel = h("select", { class: "input", "aria-label": "Shift " + o.n });
+      shiftAktif.forEach(function (x) { sel.appendChild(h("option", { value: x.nama, text: x.nama + " (" + x.mulai.replace(":", ".") + "-" + x.selesai.replace(":", ".") + ")", selected: x.nama === pilihShift })); });
+      var chipWadah = h("div", { class: "tugas-lantai" });
+      lantai.forEach(function (f) {
+        var chip = h("button", { type: "button", class: "chip", "aria-pressed": dipilih.indexOf(f) >= 0 ? "true" : "false", text: f, onclick: function () {
+          var i = dipilih.indexOf(f);
+          if (i >= 0) dipilih.splice(i, 1); else dipilih.push(f);
+          chip.setAttribute("aria-pressed", i >= 0 ? "false" : "true");
+        } });
+        chipWadah.appendChild(chip);
+      });
+      var st = ada && p.status[o.n];
+      var ketStatus;
+      if (!ada) ketStatus = lencana("Belum ditugaskan", "l-abu");
+      else if (!st || !st.aktif) ketStatus = h("span", { class: "tugas-prog", text: st && st.alasan ? st.alasan : "-" });
+      else ketStatus = h("span", null, lencana(st.lengkap ? "Selesai" : "Berjalan", st.lengkap ? "l-ok" : "l-warn"),
+        h("div", { class: "tugas-prog", text: "Ronde " + st.ronde + "/" + st.totalRonde + " \u00b7 " + st.selesaiJml + "/" + st.total + " tenant" }));
+      var btnSimpan = h("button", { type: "button", class: "btn btn-kecil btn-utama", text: "Simpan", onclick: function () {
+        if (!dipilih.length) { PC.toast("Pilih minimal satu lantai untuk " + o.n + ".", "bad"); return; }
+        btnSimpan.disabled = true;
+        kirimShift({ op: "tugas", petugas: o.n, shift: sel.value, lantai: dipilih }).then(function (r) {
+          btnSimpan.disabled = false;
+          if (r.status === "SUCCESS") { PC.toast("Penugasan " + o.n + " disimpan.", "ok"); DB.buka("shift"); }
+          else if (r.kode !== "SESI") PC.toast(r.message || "Gagal menyimpan.", "bad");
+        });
+      } });
+      var aksi = [btnSimpan];
+      if (ada) aksi.push(btnIkon("SAMPAH", "Hapus penugasan", "bahaya", function () {
+        PC.tanya("Hapus penugasan?", o.n + " tidak lagi dibatasi ke lantai tertentu.", "Hapus", "Batal").then(function (ya) {
+          if (!ya) return;
+          kirimShift({ op: "tugasHapus", petugas: o.n }).then(function (r) {
+            if (r.status === "SUCCESS") { PC.toast("Penugasan dihapus.", "ok"); DB.buka("shift"); }
+            else if (r.kode !== "SESI") PC.toast(r.message || "Gagal menghapus.", "bad");
+          });
+        });
+      }));
+      tbody.appendChild(h("tr", null, h("td", { class: "nama", text: o.n }), h("td", null, sel), h("td", null, chipWadah), h("td", null, ketStatus),
+        h("td", null, h("div", { class: "grup", style: { alignItems: "center" } }, aksi))));
+    });
+    isi.appendChild(h("div", { class: "tabel-wrap penuh", style: { border: "0" } },
+      h("table", { class: "tugas-tabel" }, h("thead", null, h("tr", null, ["Petugas", "Shift", "Lantai", "Ronde sekarang", ""].map(function (k) { return h("th", { text: k }); }))), tbody)));
+    return wadah;
+  }
+
+  function tampilShift(wadah) {
+    denganData(wadah, function () {
+      PC.kosongkan(wadah);
+      wadah.appendChild(panelShiftJam());
+      wadah.appendChild(panelTugas());
+    });
+  }
+
   /* ---------------------------------------------------------- daftar halaman */
   DB.daftar({ id: "tenant", judul: "Tenant", grup: "data", izin: "editor", tampil: tampilTenant });
   DB.daftar({ id: "petugas", judul: "Petugas", grup: "data", izin: "editor", tampil: tampilPetugas });
   DB.daftar({ id: "zona", judul: "Zona", grup: "data", izin: "editor", tampil: tampilZona });
   DB.daftar({ id: "item", judul: "Checklist", grup: "data", izin: "editor", tampil: tampilItem });
+  DB.daftar({ id: "shift", judul: "Shift & Tugas", grup: "data", izin: "editor", tampil: tampilShift });
   DB.daftar({ id: "akun", judul: "Pengguna", grup: "sistem", izin: "penuh", tampil: tampilAkun });
   DB.daftar({ id: "pengaturan", judul: "Pengaturan", grup: "sistem", izin: "penuh", tampil: tampilPengaturan });
   DB.daftar({ id: "riwayat", judul: "Riwayat perubahan", grup: "sistem", izin: "editor", tampil: tampilRiwayat });

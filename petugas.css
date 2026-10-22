@@ -331,3 +331,25 @@ body.lembar-buka { overflow: hidden; }
 .antrean-tolak { margin-top: 8px; color: var(--merah); flex-wrap: wrap; }
 .antrean-aksi { display: flex; gap: 6px; }
 .bagian button.btn-tautan:not(.btn):not(.foto-hapus) { display: block; width: auto; min-height: 0; margin: 6px auto 0; padding: 6px 8px; border: 0; border-radius: 0; background: none; color: var(--aksen); font-size: 13px; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+
+/* Plakat tenant terpilih: unit dan nama dipisah jelas (sebelumnya menyatu: "LG 01,02SANFU") */
+.plakat { display: flex; flex-direction: column; gap: 2px; margin-top: 4px; padding: 12px 14px; background: var(--hijau-bg); border: 1px solid var(--hijau); border-radius: 12px; }
+.plakat[hidden] { display: none; }
+.plakat b { font-size: 13px; font-weight: 600; color: var(--teks-2); letter-spacing: .02em; }
+.plakat span { font-size: 20px; font-weight: 700; color: var(--teks); line-height: 1.25; overflow-wrap: anywhere; }
+
+/* Kartu tugas dan ronde (lantai tugas, shift, progres 3 jam) */
+.ronde { margin: 0 0 14px; padding: 14px 16px; background: var(--kartu); border: 1px solid var(--garis); border-left: 5px solid var(--aksen); border-radius: 14px; }
+.ronde[hidden] { display: none; }
+.ronde-lengkap { border-left-color: var(--hijau); background: var(--hijau-bg); }
+.ronde-diam { border-left-color: var(--input-garis); }
+.ronde-judul { font-size: 16px; font-weight: 700; color: var(--teks); }
+.ronde-baris { display: flex; justify-content: space-between; gap: 10px; margin-top: 6px; font-size: 13.5px; color: var(--teks-2); }
+.ronde-baris b { color: var(--teks); white-space: nowrap; }
+.ronde progress { width: 100%; height: 10px; margin-top: 8px; border: 0; border-radius: 999px; overflow: hidden; accent-color: var(--aksen); }
+.ronde-lengkap progress { accent-color: var(--hijau); }
+.ronde-ket { margin: 8px 0 0; font-size: 13px; color: var(--teks-2); }
+.ronde-belum { margin-top: 8px; font-size: 13px; }
+.ronde-belum summary { cursor: pointer; font-weight: 600; color: var(--aksen); min-height: 32px; display: flex; align-items: center; }
+.ronde-belum ul { margin: 6px 0 0; padding-left: 18px; max-height: 180px; overflow-y: auto; color: var(--teks); }
+.lantai-lain { margin-left: 8px; font-size: 13px; color: var(--teks-2); }
