@@ -445,3 +445,8 @@ body.lembar-buka { overflow: hidden; }
 .atas-status .strip { margin-bottom: 0; }
 .atas-status > #antrean-wadah .antrean { margin-top: 8px; margin-bottom: 0; }
 .btn-segar { margin: 0; }
+
+/* ---- Form dinonaktifkan admin ---- */
+.muat.form-off { margin: 24px 0; padding: 32px 20px; border-radius: 16px; background: var(--kartu); border: 1px solid var(--garis); color: var(--teks); }
+.muat.form-off h2 { margin: 0 0 10px; font-size: 18px; }
+.muat.form-off p { margin: 0 0 16px; color: var(--teks-2); line-height: 1.5; overflow-wrap: anywhere; }

@@ -611,3 +611,17 @@ dialog.dialog, dialog.dialog-lebar { border-radius: 22px; background: #FAFBFC; }
 .jam24 { display: flex; align-items: center; gap: 4px; }
 .jam24 .input { min-width: 0; flex: 1 1 0; padding-left: 8px; padding-right: 4px; }
 .jam24-t { font-weight: 700; color: var(--abu); }
+
+/* ---------- Saklar (on/off) ---------- */
+.saklar { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--garis); cursor: pointer; }
+.saklar input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.saklar-geser { position: relative; flex: none; width: 44px; height: 26px; border-radius: 999px; background: #C3CBD6; transition: background 0.2s; }
+.saklar-geser::after { content: ""; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3); transition: transform 0.2s; }
+.saklar input:checked + .saklar-geser { background: #3AC47D; }
+.saklar input:checked + .saklar-geser::after { transform: translateX(18px); }
+.saklar input:focus-visible + .saklar-geser { outline: 2px solid var(--emas); outline-offset: 2px; }
+.saklar-teks { display: grid; gap: 1px; min-width: 0; }
+.saklar-teks b { font-size: 14px; }
+.saklar-teks span { font-size: 12.5px; color: var(--abu); }
+.saklar + .medan, .saklar:last-of-type + .medan { margin-top: 16px; }
+@media (prefers-reduced-motion: reduce) { .saklar-geser, .saklar-geser::after { transition: none; } }

@@ -600,6 +600,22 @@
     return { muat: muat, daftar: daftar, ada: function () { return !!data; } };
   })();
 
+  /* ------------------------------------------------- Form dinonaktifkan admin */
+  function formTutup(jenisTeks, pesan) {
+    var f = document.getElementById("form"), bar = document.getElementById("bar-kirim"), m = document.getElementById("muat");
+    w.PC.formOffAktif = true;
+    if (f) f.hidden = true;
+    if (bar) bar.hidden = true;
+    if (!m) return;
+    kosongkan(m);
+    m.hidden = false;
+    m.className = "muat form-off";
+    m.appendChild(h("h2", { text: "Form " + jenisTeks + " dinonaktifkan" }));
+    m.appendChild(h("p", { text: pesan || "Admin sedang menutup form ini sementara. Silakan coba lagi nanti." }));
+    m.appendChild(h("button", { type: "button", class: "btn btn-utama", text: "Periksa lagi", onclick: function () { w.location.reload(); } }));
+    w.scrollTo(0, 0);
+  }
+
   /* ------------------------------------------------- Lembar (panel dari bawah) */
   function Lembar(o) {
     if (document.querySelector(".lembar")) return null;
@@ -1182,7 +1198,7 @@
     h: h, kosongkan: kosongkan, buatId: buatId, api: api, Jam: Jam, sinkronJam: sinkronJam, fmtWIB: fmtWIB,
     namaHari: namaHari, toast: toast, tanya: tanya, Lokasi: Lokasi, teksGps: teksGps, pasangStempel: pasangStempel,
     Kamera: Kamera, FotoGrid: FotoGrid, Antrean: Antrean, pasangAntrean: pasangAntrean, Combobox: Combobox,
-    Riwayat: Riwayat, ZonaJadwal: ZonaJadwal, Lembar: Lembar, Jaringan: Jaringan,
+    formTutup: formTutup, Riwayat: Riwayat, ZonaJadwal: ZonaJadwal, Lembar: Lembar, Jaringan: Jaringan,
     Checklist: Checklist, pasangPWA: pasangPWA, CFG: CFG, ikon: ikon, pasangLogo: pasangLogo, pasangTema: pasangTema
   };
 })(window);

@@ -412,6 +412,7 @@
       PC.Jam.sinkron(r.waktuServer + (Date.now() - t0) / 2);
       master = r;
       try { localStorage.setItem(KUNCI_MASTER, JSON.stringify(r)); } catch (e) {}
+      if (statusFormBerubah(r)) return;
       periksaGeofence(); periksaKunci(); gambarShift(); muatRonde();
       PC.ZonaJadwal.muat().then(saranZona);
       if (antrean && antrean.segarkan) antrean.segarkan();
@@ -474,6 +475,7 @@
       PC.Jam.sinkron(r.waktuServer + (Date.now() - t0) / 2);
       master = r;
       try { localStorage.setItem(KUNCI_MASTER, JSON.stringify(r)); } catch (e) {}
+      if (statusFormBerubah(r)) { sudahMulai = true; return; }
       if (!sudahMulai) { sudahMulai = true; mulai(); } else { periksaGeofence(); periksaKunci(); gambarShift(); }
     }).catch(function () {
       if (sudahMulai) { if (!PC.Jam.terpercaya()) PC.sinkronJam(); return; }
@@ -484,7 +486,15 @@
     });
   }
 
+  // Admin bisa menonaktifkan form dari dashboard. true = halaman sudah ditangani (ditutup / dimuat ulang).
+  function statusFormBerubah(r) {
+    if (r && r.form && r.form["patroli"] === false) { PC.formTutup("patroli", r.form.pesan); return true; }
+    if (PC.formOffAktif) { location.reload(); return true; }
+    return false;
+  }
+
   function mulai() {
+    if (statusFormBerubah(master)) return;
     $("muat").hidden = true;
     $("form").hidden = false;
     $("bar-kirim").hidden = false;
@@ -693,6 +703,7 @@
         return;
       }
       PC.toast(r.message || "Ditolak.", "bad");
+      if (r.kode === "FORM_OFF") PC.formTutup("patroli", r.message);
       if (r.kode === "NAMA") {
         var g = $("g-nama");
         g.textContent = r.message; g.hidden = false;

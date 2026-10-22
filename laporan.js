@@ -182,22 +182,43 @@
     var hari = tglWIB();
     var dari = S.dari < hari ? S.dari : hari;
     var sampai = S.sampai > hari ? S.sampai : hari;
+    // Muat pertama: tampilkan data terakhir dari tab ini dulu (instan), lalu perbarui dari server.
+    if (!S.hariIni) {
+      var kc = bacaCacheData();
+      if (kc && kc.dari === dari && kc.sampai === sampai) { terapkan(kc.r, true); if (S.tampil) render(); if (st) st.textContent = "Memperbarui..."; }
+    }
     DB.panggil("ambilData", { dari: dari, sampai: sampai }, 60000).then(function (r) {
       var st2 = $("status-muat");
       if (r.status !== "SUCCESS") { if (st2 && r.kode !== "SESI") st2.textContent = r.message || "Gagal memuat."; return; }
+      simpanCacheData(dari, sampai, r);
+      terapkan(r, false);
+      if (S.tampil) render();
+    }).then(function () { S.memuat = false; if (S.tampil && $("status-muat")) $("status-muat").textContent = ""; });
+  }
+
+  var KUNCI_CACHE = "dp_data_cache";
+  function bacaCacheData() { try { return JSON.parse(sessionStorage.getItem(KUNCI_CACHE)); } catch (e) { return null; } }
+  function simpanCacheData(dari, sampai, r) {
+    try {
+      var teks = JSON.stringify({ dari: dari, sampai: sampai, r: r });
+      if (teks.length < 2500000) sessionStorage.setItem(KUNCI_CACHE, teks); else sessionStorage.removeItem(KUNCI_CACHE);
+    } catch (e) { /* abaikan */ }
+  }
+
+  function terapkan(r, daricache) {
+    {
       S.hariIni = r.hariIni; S.patroli = r.patroli; S.tenant = r.tenant; S.master = r.master;
       S.tindak = r.tindak || {}; S.terbuka = r.terbuka || { patroli: [], tenant: [] };
       S.tren = r.tren || [];
       DB.data = { hariIni: r.hariIni, cakupan: r.cakupan, tren: r.tren || [], pengaturan: r.pengaturan, terbuka: S.terbuka,
         tindak: S.tindak, patroli: r.patroli, tenant: r.tenant, master: r.master, waktu: Date.now() };
       if (r.user) { DB.S.user = r.user; DB.simpanSesi(); }
-      deteksiBaru(r.patroli.concat(r.tenant));
-      DB.info("Diperbarui " + PC.fmtWIB(new Date()).jam + " WIB");
+      if (!daricache) deteksiBaru(r.patroli.concat(r.tenant));
+      if (!daricache) DB.info("Diperbarui " + PC.fmtWIB(new Date()).jam + " WIB");
       var buka = semuaTerbuka();
       DB.badge("laporan", buka.length || null, buka.length > 0);
       DB.umumkanData();
-      if (S.tampil) render();
-    }).then(function () { S.memuat = false; if (S.tampil && $("status-muat")) $("status-muat").textContent = ""; });
+    }
   }
 
   function atur() {
@@ -595,11 +616,19 @@
     var dl = h("dl", { class: "meta" });
     meta.forEach(function (m) { dl.appendChild(h("dt", { text: m[0] })); dl.appendChild(h("dd", { text: m[1] })); });
 
-    var cl = h("ul", { class: "cl-hasil" });
-    detail.forEach(function (d) {
-      var st = d.s === "OK" ? ["Sesuai", "l-ok"] : (d.s === "TEMUAN" ? ["Temuan", "l-bad"] : ["N/A", "l-abu"]);
-      cl.appendChild(h("li", null, h("span", { text: d.i }), lencana(st[0], st[1]), d.c ? h("div", { class: "cat", text: d.c }) : null));
-    });
+    function buatCl(daftarDetail) {
+      var ul = h("ul", { class: "cl-hasil" });
+      daftarDetail.forEach(function (d) {
+        var st = d.s === "OK" ? ["Sesuai", "l-ok"] : (d.s === "TEMUAN" ? ["Temuan", "l-bad"] : ["N/A", "l-abu"]);
+        ul.appendChild(h("li", null, h("span", { text: d.i }), lencana(st[0], st[1]), d.c ? h("div", { class: "cat", text: d.c }) : null));
+      });
+      return ul;
+    }
+    var wadahCl = h("div");
+    function isiCl(daftarDetail) {
+      PC.kosongkan(wadahCl);
+      if (daftarDetail.length) { wadahCl.appendChild(h("h3", { text: "Checklist" })); wadahCl.appendChild(buatCl(daftarDetail)); }
+    }
 
     var isi = h("div", { class: "rincian-isi" });
     isi.appendChild(h("h3", { text: "Ringkasan" }));
@@ -617,7 +646,19 @@
       }
     }
     if (x.catatan) { isi.appendChild(h("h3", { text: jenis === "patroli" ? "Temuan dan catatan" : "Catatan petugas" })); isi.appendChild(h("div", { text: x.catatan })); }
-    if (detail.length) { isi.appendChild(h("h3", { text: "Checklist" })); isi.appendChild(cl); }
+    isi.appendChild(wadahCl);
+    if (x.detail !== undefined) isiCl(detail);
+    else if (x.id) {
+      // Checklist tidak ikut dimuat bersama daftar (supaya dashboard cepat); diambil saat rincian dibuka.
+      wadahCl.appendChild(h("h3", { text: "Checklist" }));
+      wadahCl.appendChild(h("p", { class: "oleh", text: "Memuat checklist..." }));
+      DB.panggil("ambilDetail", { jenis: jenis === "patroli" ? "PATROLI" : "TENANT", id: x.id }, 30000).then(function (r) {
+        if (r.status !== "SUCCESS") { PC.kosongkan(wadahCl); wadahCl.appendChild(h("h3", { text: "Checklist" })); wadahCl.appendChild(h("p", { class: "oleh", text: "Checklist gagal dimuat. Tutup lalu buka lagi rincian ini." })); return; }
+        x.detail = r.detail || "[]";
+        var dd = []; try { dd = JSON.parse(x.detail); } catch (e) { dd = []; }
+        isiCl(dd);
+      });
+    }
     if (fl.length) {
       isi.appendChild(h("h3", { text: "Catatan sistem" }));
       isi.appendChild(h("div", { class: "flags" }, fl.map(function (f) { return lencana(LABEL_FLAG[f] || f, FLAG_PENTING[f] ? "l-warn" : "l-abu"); })));

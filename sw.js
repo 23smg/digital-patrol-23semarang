@@ -3,7 +3,7 @@
      jatuh ke salinan tersimpan saat sinyal lemah atau offline.
    - Permintaan ke API Google dan foto TIDAK pernah di-cache.
    - dashboard.html sengaja tidak ditangani (data admin tidak disimpan di perangkat). */
-const VERSI = "dp-v21";
+const VERSI = "dp-v22";
 const FONT = "dp-font-v1";
 const SHELL = ["./", "index.html", "tenant.html", "core.js", "index.js", "tenant.js", "tema.js", "petugas.css", "config.js", "manifest.webmanifest",
   "icons/icon-192.png", "icons/icon-512.png", "icons/apple-touch-icon.png"];

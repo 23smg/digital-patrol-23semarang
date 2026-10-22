@@ -620,6 +620,57 @@
   }
 
   /* ---------------------------------------------------------- PENGATURAN: target patroli, area, pemeriksaan sistem */
+  function panelFormPetugas() {
+    var f = K.data.form || { patroli: true, tenant: true, pesan: "" };
+    function saklar(id, judul, ket, nyala) {
+      var cb = h("input", { type: "checkbox", id: id, role: "switch" });
+      cb.checked = nyala;
+      var wadahS = h("label", { class: "saklar", for: id },
+        cb, h("span", { class: "saklar-geser", "aria-hidden": "true" }),
+        h("span", { class: "saklar-teks" }, h("b", { text: judul }), h("span", { text: ket })));
+      return { el: wadahS, cb: cb };
+    }
+    var sP = saklar("fs-patroli", "Form Patroli", "Halaman utama patroli zona (index).", f.patroli !== false);
+    var sT = saklar("fs-tenant", "Form Checklist Tenant", "Halaman buka dan tutup tenant.", f.tenant !== false);
+    var pesan = h("input", { id: "fs-pesan", class: "input", type: "text", maxlength: "200", placeholder: "Contoh: Sedang pemeliharaan sistem, kembali pukul 14.00" });
+    pesan.value = f.pesan || "";
+    var galat = h("p", { class: "galat", role: "alert", hidden: true });
+    var status = h("span", { class: "lencana" });
+    function segarStatus() {
+      var mati = [];
+      if (!sP.cb.checked) mati.push("Patroli");
+      if (!sT.cb.checked) mati.push("Tenant");
+      status.textContent = mati.length ? "Nonaktif: " + mati.join(", ") : "Semua form aktif";
+      status.className = "lencana " + (mati.length ? "l-warn" : "l-ok");
+    }
+    segarStatus();
+    sP.cb.addEventListener("change", segarStatus); sT.cb.addEventListener("change", segarStatus);
+    function kirim() {
+      galat.hidden = true;
+      DB.panggil("formStatusSimpan", { form: { patroli: sP.cb.checked, tenant: sT.cb.checked, pesan: pesan.value } }, 40000).then(function (r) {
+        if (r.status === "SUCCESS") {
+          K.data.form = r.form; if (r.riwayat) K.data.riwayat = r.riwayat;
+          PC.toast("Status form disimpan.", "ok");
+        } else if (r.kode !== "SESI") { galat.textContent = r.message || "Gagal menyimpan."; galat.hidden = false; }
+      });
+    }
+    function simpan() {
+      var mati = (!sP.cb.checked ? 1 : 0) + (!sT.cb.checked ? 1 : 0);
+      if (!mati) { kirim(); return; }
+      PC.tanya("Nonaktifkan form petugas?", "Petugas tidak bisa mengirim laporan di form yang dinonaktifkan. Laporan yang sedang antre di HP mereka juga akan ditolak sampai form diaktifkan lagi.", "Nonaktifkan", "Batal")
+        .then(function (ya) { if (ya) kirim(); });
+    }
+    return h("div", { class: "panel" },
+      h("div", { class: "panel-kepala" }, h("h2", { text: "Status form petugas" }), status),
+      h("div", { class: "panel-isi" },
+        h("p", { class: "oleh", style: { marginTop: "0" }, text: "Matikan form saat pemeliharaan, pergantian sistem, atau di luar jam operasional. Perubahan berlaku segera: HP petugas yang sedang terbuka menampilkan pemberitahuan saat memuat ulang atau mengirim laporan." }),
+        sP.el, sT.el,
+        h("div", { class: "medan" }, h("label", { for: "fs-pesan", text: "Pesan untuk petugas (opsional)" }), pesan,
+          h("p", { class: "bantuan", text: "Tampil di halaman form saat dinonaktifkan. Maksimal 200 karakter." })),
+        galat,
+        h("button", { type: "button", class: "btn btn-utama", text: "Simpan status form", onclick: simpan })));
+  }
+
   function panelPatroli() {
     var p = K.data.pengaturan || { interval: 60, jamMulai: 7, jamSelesai: 22, fotoTenant: "temuan" };
     var inInterval = h("input", { id: "p-int", class: "input", type: "number", min: "15", max: "480", inputmode: "numeric" });
@@ -705,6 +756,7 @@
   function tampilPengaturan(wadah) {
     denganData(wadah, function () {
       PC.kosongkan(wadah);
+      wadah.appendChild(panelFormPetugas());
       wadah.appendChild(panelPatroli());
       var area = h("div");
       wadah.appendChild(area);

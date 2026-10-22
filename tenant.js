@@ -161,6 +161,7 @@
       PC.Jam.sinkron(r.waktuServer + (Date.now() - t0) / 2);
       master = r;
       try { localStorage.setItem(KUNCI_MASTER, JSON.stringify(r)); } catch (e) {}
+      if (statusFormBerubah(r)) return;
       petaTenant = {};
       master.daftarTenant.forEach(function (t) { petaTenant[t.n] = t; });
       bangunLantai(); gambarShift(); periksaKunci();
@@ -183,6 +184,7 @@
       PC.Jam.sinkron(r.waktuServer + (Date.now() - t0) / 2);
       master = r;
       try { localStorage.setItem(KUNCI_MASTER, JSON.stringify(r)); } catch (e) { /* abaikan */ }
+      if (statusFormBerubah(r)) { sudahMulai = true; return; }
       if (!sudahMulai) { sudahMulai = true; mulai(); return; }
       // Daftar sudah tampil dari cache: perbarui peta tenant dan tombol lantai tanpa mengganggu isian.
       petaTenant = {};
@@ -197,7 +199,15 @@
     });
   }
 
+  // Admin bisa menonaktifkan form dari dashboard. true = halaman sudah ditangani (ditutup / dimuat ulang).
+  function statusFormBerubah(r) {
+    if (r && r.form && r.form["tenant"] === false) { PC.formTutup("checklist tenant", r.form.pesan); return true; }
+    if (PC.formOffAktif) { location.reload(); return true; }
+    return false;
+  }
+
   function mulai() {
+    if (statusFormBerubah(master)) return;
     $("muat").hidden = true;
     $("form").hidden = false;
     $("bar-kirim").hidden = false;
@@ -433,6 +443,7 @@
         return PC.tanya("Laporan sudah ada", r.message, "Kirim lagi", "Batal").then(function (ya) { ulangi = !!ya; });
       }
       PC.toast(r.message || "Laporan ditolak.", "bad");
+      if (r.kode === "FORM_OFF") PC.formTutup("checklist tenant", r.message);
       if (r.kode === "NAMA") {
         var g = $("g-nama");
         g.textContent = r.message; g.hidden = false;

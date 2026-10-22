@@ -44,7 +44,7 @@
 
   /* ------------------------------------------------------------ sesi */
   function simpanSesi() { try { sessionStorage.setItem(KUNCI_SESI, JSON.stringify({ token: DB.S.token, user: DB.S.user })); } catch (e) { /* abaikan */ } }
-  function hapusSesi() { try { sessionStorage.removeItem(KUNCI_SESI); } catch (e) { /* abaikan */ } }
+  function hapusSesi() { try { sessionStorage.removeItem(KUNCI_SESI); sessionStorage.removeItem("dp_data_cache"); } catch (e) { /* abaikan */ } }
 
   DB.keluar = function (pesan, panggilServer) {
     var t = DB.S.token;
