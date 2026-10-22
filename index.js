@@ -405,7 +405,7 @@
 
   // Muat ulang data tanpa menutup halaman (isian dan foto tetap aman).
   function segarkan() {
-    var b = $("btn-segar"); b.disabled = true; b.textContent = "Memuat...";
+    var b = $("btn-segar"); b.disabled = true; b.classList.add("memuat");
     var t0 = Date.now();
     PC.api("ambilDropdown", {}, 25000).then(function (r) {
       if (r.status !== "SUCCESS") throw new Error(r.message);
@@ -417,7 +417,7 @@
       if (antrean && antrean.segarkan) antrean.segarkan();
       PC.toast("Data diperbarui.", "ok");
     }).catch(function () { PC.toast("Gagal memuat. Periksa sinyal.", "bad"); })
-      .then(function () { b.disabled = false; b.textContent = "Muat ulang"; });
+      .then(function () { b.disabled = false; b.classList.remove("memuat"); });
   }
 
   function gambarRonde() {
