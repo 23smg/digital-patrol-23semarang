@@ -158,26 +158,6 @@
 
   function saranZona() { var el = $("zona-saran"); if (el) el.hidden = true; }
 
-  function bukaDaftarZona() {
-    if (!master) return;
-    var isi = h("ul", { class: "zona-daftar" });
-    var lb = PC.Lembar({ judul: "Pilih zona patroli",
-      sub: "Zona yang perlu didatangi ada di atas. Scan QR di lokasi tetap dianjurkan.", isi: isi });
-    if (!lb) return;
-    function gambar() {
-      PC.kosongkan(isi);
-      var d = PC.ZonaJadwal.daftar(zonaTampil());
-      if (!d.length) { isi.appendChild(h("li", { class: "zona-kosong", text: "Belum ada zona." })); return; }
-      d.forEach(function (x) {
-        isi.appendChild(h("li", null, h("button", { type: "button", class: "zona-item s-" + x.s + (x.z === zona ? " dipilih" : ""),
-          onclick: function () { lb.tutup(); setZona(x.z, true); PC.toast("Lokasi: " + x.z + " (manual)", "ok"); } },
-          h("span", { class: "zona-nama", text: x.z }), h("span", { class: "zona-status", text: x.teks }))));
-      });
-    }
-    gambar();
-    PC.ZonaJadwal.muat().then(function () { if (lb.el.isConnected) gambar(); });
-  }
-
   /* ---------- Scan QR lokasi (langsung dari form) ---------- */
   var scanStream = null, scanTimer = null;
 
@@ -445,7 +425,10 @@
     PC.kosongkan(el);
     if (!ronde || !ronde.ada) { el.hidden = true; return; }
     el.hidden = false; el.className = "ronde";
-    el.appendChild(h("div", { class: "ronde-judul", text: (ronde.lantai || []).join(", ") + "  \u00b7  Shift " + ronde.shift }));
+    var kepala = h("div", { class: "ronde-kepala" },
+      h("div", { class: "ronde-judul", text: (ronde.lantai || []).join(", ") + "  \u00b7  Shift " + ronde.shift }));
+    if (ronde.aktif) kepala.appendChild(h("span", { class: "ronde-badge", text: "Sesi " + ronde.ronde + "/" + ronde.totalRonde }));
+    el.appendChild(kepala);
     if (!ronde.aktif) {
       el.classList.add("ronde-diam");
       el.appendChild(h("p", { class: "ronde-ket", text: (ronde.alasan || "Di luar jam shift") + "." }));
@@ -453,16 +436,16 @@
     }
     var persen = ronde.total ? Math.round(ronde.selesaiJml * 100 / ronde.total) : 0;
     el.classList.toggle("ronde-lengkap", !!ronde.lengkap);
-    el.appendChild(h("div", { class: "ronde-baris" },
-      h("span", { text: "Ronde " + ronde.ronde + " dari " + ronde.totalRonde + "  \u00b7  " + jamTeks(ronde.mulaiRonde) + "-" + jamTeks(ronde.selesaiRonde) }),
-      h("b", { text: ronde.selesaiJml + " dari " + ronde.total + " zona" })));
-    el.appendChild(h("progress", { max: "100", value: String(persen), "aria-label": "Progres ronde" }));
+    el.appendChild(h("div", { class: "ronde-angka" },
+      h("span", null, h("b", { text: String(ronde.selesaiJml) }), " dari " + ronde.total + " zona"),
+      h("span", { class: "ronde-sisa", text: ronde.lengkap ? "Selesai" : "Sisa " + sisaTeks(ronde.sisaMenit) })));
+    el.appendChild(h("progress", { max: "100", value: String(persen), "aria-label": "Progres sesi patroli" }));
     el.appendChild(h("p", { class: "ronde-ket", text: ronde.lengkap
-      ? "Ronde ini selesai." + (ronde.rondeBerikut ? " Ronde berikut mulai " + jamTeks(ronde.rondeBerikut) + "." : "")
-      : "Sisa waktu " + sisaTeks(ronde.sisaMenit) + ". Datangi semua zona sebelum " + jamTeks(ronde.selesaiRonde) + "." }));
+      ? "Semua zona sesi ini sudah dipatroli." + (ronde.rondeBerikut ? " Sesi berikut mulai " + jamTeks(ronde.rondeBerikut) + "." : "")
+      : "Sesi " + jamTeks(ronde.mulaiRonde) + "\u2013" + jamTeks(ronde.selesaiRonde) + ". Datangi semua zona sebelum " + jamTeks(ronde.selesaiRonde) + "." }));
     if (!ronde.lengkap && ronde.belum && ronde.belum.length) {
-      el.appendChild(h("details", { class: "ronde-belum" }, h("summary", { text: "Belum dipatroli (" + ronde.belum.length + ")" }),
-        h("ul", null, ronde.belum.map(function (n) { return h("li", { text: n }); }))));
+      el.appendChild(h("details", { class: "ronde-belum" }, h("summary", { text: "Zona belum dipatroli (" + ronde.belum.length + ")" }),
+        h("div", { class: "ronde-chip-wadah" }, ronde.belum.map(function (n) { return h("span", { class: "ronde-chip", text: n }); }))));
     }
   }
 
@@ -544,7 +527,6 @@
       if (zq && master.daftarZona.indexOf(zq) >= 0) { zona = zq; zonaQR = zq; }
     } catch (e) {}
     tampilLokasi();
-    $("btn-zona").addEventListener("click", bukaDaftarZona);
     PC.ZonaJadwal.muat().then(saranZona);
     setInterval(saranZona, 60000);
 

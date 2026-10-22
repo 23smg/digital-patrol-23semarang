@@ -2,6 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="utf-8">
+<meta name="color-scheme" content="light dark">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#2563eb">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src https://script.google.com https://script.googleusercontent.com; media-src blob:; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'">
@@ -15,7 +16,7 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" type="image/png" href="icons/icon-192.png">
 <title>Patroli - Mall 23Semarang</title>
-<link rel="stylesheet" href="petugas.css?v=34">
+<link rel="stylesheet" href="petugas.css?v=35">
 </head>
 <body>
 
@@ -36,10 +37,9 @@
 </div>
 
 <main class="app">
-  <div id="antrean-wadah"></div>
+  <div class="atas-status"><div id="antrean-wadah"></div><button type="button" id="btn-segar" class="btn-segar" aria-label="Muat ulang data" title="Muat ulang">&#8635;</button></div>
   <div id="hasil" class="hasil" role="status" hidden></div>
-  <div class="segar-baris"><button type="button" id="btn-segar" class="btn-segar">Muat ulang</button></div>
-  <section id="ronde" class="ronde" aria-label="Tugas dan progres ronde" hidden></section>
+  <section id="ronde" class="ronde" aria-label="Tugas dan progres sesi patroli" hidden></section>
   <div id="muat" class="muat" role="status">Memuat...</div>
 
   <form id="form" hidden novalidate>
@@ -47,7 +47,6 @@
       <div class="bagian-kepala"><h2>Lokasi</h2><button type="button" id="btn-izin" class="btn-izin" hidden>Izinkan akses</button></div>
       <div class="lokasi-nama" id="lokasi-nama" hidden></div>
       <button type="button" id="btn-scan" class="btn btn-foto">Scan QR</button>
-      <button type="button" id="btn-zona" class="btn-tautan">Pilih dari daftar zona</button>
       <div class="geo" id="geo-status" data-state="cari" role="status" aria-live="polite" hidden>
         <span class="dot" aria-hidden="true"></span><span id="geo-teks"></span>
       </div>
@@ -113,9 +112,9 @@
   </div>
 </div>
 
-<script src="config.js?v=34"></script>
-<script src="core.js?v=34"></script>
-<script src="jsqr.js?v=34"></script>
-<script src="index.js?v=34"></script>
+<script src="config.js?v=35"></script>
+<script src="core.js?v=35"></script>
+<script src="jsqr.js?v=35"></script>
+<script src="index.js?v=35"></script>
 </body>
 </html>

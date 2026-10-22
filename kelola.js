@@ -765,7 +765,7 @@
     if (m < 0 || e < 0 || m === e || !(R > 0)) return "";
     var total = e > m ? e - m : e + 1440 - m, out = [];
     for (var t = 0; t < total; t += R) out.push(jamMenit(m + t) + "-" + jamMenit(m + Math.min(t + R, total)));
-    return "Ronde: " + out.join("  \u00b7  ");
+    return "Sesi: " + out.join("  \u00b7  ");
   }
 
   function peringkatLantaiAdmin(f) {
@@ -821,11 +821,11 @@
     }
 
     return h("div", { class: "panel" },
-      h("div", { class: "panel-kepala" }, h("h2", { text: "Shift dan durasi ronde" })),
+      h("div", { class: "panel-kepala" }, h("h2", { text: "Shift dan durasi sesi" })),
       h("div", { class: "panel-isi" },
-        h("div", { class: "pengantar" }, h("b", { text: "Ronde dihitung dari jam mulai shift. " }),
-          "Dalam satu ronde, petugas wajib mendatangi semua zona di lantai tugasnya (zona berpola \"LG - 85\" milik lantai LG). Saat ronde berganti, progres kembali ke nol. Shift yang selesai lebih pagi dari jam mulainya dianggap melewati tengah malam. Petugas memilih shift dan lantai sendiri di form Patroli; HP mengunci pilihan itu sampai shift berakhir."),
-        h("div", { class: "medan", style: { maxWidth: "220px" } }, h("label", { for: "sh-ronde", text: "Durasi ronde (jam)" }), inRonde,
+        h("div", { class: "pengantar" }, h("b", { text: "Sesi dihitung dari jam mulai shift. " }),
+          "Dalam satu sesi, petugas wajib mendatangi semua zona di lantai tugasnya (zona berpola \"LG - 85\" milik lantai LG). Saat sesi berganti, progres kembali ke nol. Shift yang selesai lebih pagi dari jam mulainya dianggap melewati tengah malam. Petugas memilih shift dan lantai sendiri di form Patroli; HP mengunci pilihan itu sampai shift berakhir."),
+        h("div", { class: "medan", style: { maxWidth: "220px" } }, h("label", { for: "sh-ronde", text: "Durasi sesi (jam)" }), inRonde,
           h("p", { class: "bantuan", text: "1 sampai 12, kelipatan 0,5." })),
         daftar,
         h("div", { class: "grup", style: { marginBottom: "10px" } },
@@ -866,7 +866,7 @@
       var ket;
       if (!st || !st.aktif) ket = h("span", { class: "tugas-prog", text: st && st.alasan ? st.alasan : "-" });
       else ket = h("span", null, lencana(st.lengkap ? "Selesai" : "Berjalan", st.lengkap ? "l-ok" : "l-warn"),
-        h("div", { class: "tugas-prog", text: "Ronde " + st.ronde + "/" + st.totalRonde + " \u00b7 " + st.selesaiJml + "/" + st.total + " zona" }));
+        h("div", { class: "tugas-prog", text: "Sesi " + st.ronde + "/" + st.totalRonde + " \u00b7 " + st.selesaiJml + "/" + st.total + " zona" }));
       tbody.appendChild(h("tr", null, h("td", { class: "nama", text: t.n }), h("td", { text: t.shift }),
         h("td", { text: (t.lantai || []).join(", ") }), h("td", null, ket),
         h("td", null, h("div", { class: "grup", style: { alignItems: "center" } },
@@ -886,7 +886,7 @@
           })))));
     });
     isi.appendChild(h("div", { class: "tabel-wrap penuh", style: { border: "0" } },
-      h("table", { class: "tugas-tabel" }, h("thead", null, h("tr", null, ["Petugas", "Shift", "Lantai", "Ronde sekarang", ""].map(function (k) { return h("th", { text: k }); }))), tbody)));
+      h("table", { class: "tugas-tabel" }, h("thead", null, h("tr", null, ["Petugas", "Shift", "Lantai", "Sesi sekarang", ""].map(function (k) { return h("th", { text: k }); }))), tbody)));
     return wadah;
   }
 
