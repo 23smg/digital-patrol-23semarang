@@ -363,13 +363,13 @@ body.lembar-buka { overflow: hidden; }
 #nama:disabled { background: var(--bg); color: var(--teks); opacity: 1; -webkit-text-fill-color: var(--teks); }
 
 .segar-baris { display: flex; justify-content: flex-end; margin: 0 0 10px; }
-.btn-segar { min-height: 38px; padding: 0 16px; border: 1px solid var(--input-garis); border-radius: 999px; background: var(--kartu); color: var(--teks); font: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer; }
 .btn-segar:disabled { opacity: .6; }
 
 /* ===== Tata letak: baris status + tombol muat ulang ===== */
-.atas-status { display: flex; align-items: flex-start; gap: 8px; }
+.atas-status { display: flex; align-items: flex-start; gap: 6px; }
+.atas-status > #antrean-wadah .antrean-baris:first-child, .atas-status > #antrean-wadah > :first-child { margin-bottom: 0; }
 .atas-status > #antrean-wadah { flex: 1; min-width: 0; }
-.btn-segar { flex: none; width: 42px; height: 42px; margin-top: 2px; display: inline-grid; place-items: center; padding: 0; border: 1px solid var(--garis); border-radius: 50%; background: var(--kartu); color: var(--aksen); font: inherit; font-size: 22px; line-height: 1; cursor: pointer; }
+.btn-segar { flex: none; width: 34px; height: 34px; margin: 2px 0 0; display: inline-grid; place-items: center; padding: 0; border: 1px solid var(--garis); border-radius: 50%; background: var(--kartu); color: var(--aksen); font: inherit; font-size: 17px; line-height: 1; cursor: pointer; }
 .btn-segar:active { transform: scale(.94); }
 .btn-segar:disabled { opacity: .6; }
 .btn-segar.memuat { animation: putar .8s linear infinite; }
@@ -401,7 +401,7 @@ body.lembar-buka { overflow: hidden; }
 /* ===== Mode gelap yang lebih rapi ===== */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) body { background: radial-gradient(900px 420px at 50% -80px, rgba(59,130,246,.10), transparent 70%), var(--bg); background-attachment: fixed; }
-  :root:not([data-theme="light"]) .kepala, .stempel { background: rgba(20,26,35,.88); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); border-color: var(--garis); }
+  :root:not([data-theme="light"]) .kepala, :root:not([data-theme="light"]) .stempel { background: rgba(20,26,35,.88); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); border-color: var(--garis); }
   :root:not([data-theme="light"]) .bar-kirim { background: rgba(20,26,35,.94); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
   :root:not([data-theme="light"]) .bagian { background: linear-gradient(180deg, rgba(255,255,255,.025), rgba(255,255,255,0)) , var(--kartu); box-shadow: 0 6px 18px rgba(0,0,0,.28); }
   :root:not([data-theme="light"]) .bagian.selesai { border-color: rgba(52,211,153,.55); }
@@ -421,7 +421,7 @@ body.lembar-buka { overflow: hidden; }
   :root:not([data-theme="light"]) .kunci { background: var(--hijau-bg); }
 }
 :root[data-theme="dark"] body { background: radial-gradient(900px 420px at 50% -80px, rgba(59,130,246,.10), transparent 70%), var(--bg); background-attachment: fixed; }
-:root[data-theme="dark"] .kepala, .stempel { background: rgba(20,26,35,.88); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); border-color: var(--garis); }
+:root[data-theme="dark"] .kepala, :root[data-theme="dark"] .stempel { background: rgba(20,26,35,.88); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); border-color: var(--garis); }
 :root[data-theme="dark"] .bar-kirim { background: rgba(20,26,35,.94); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
 :root[data-theme="dark"] .bagian { background: linear-gradient(180deg, rgba(255,255,255,.025), rgba(255,255,255,0)) , var(--kartu); box-shadow: 0 6px 18px rgba(0,0,0,.28); }
 :root[data-theme="dark"] .bagian.selesai { border-color: rgba(52,211,153,.55); }
@@ -439,3 +439,9 @@ body.lembar-buka { overflow: hidden; }
 :root[data-theme="dark"] .daftar { box-shadow: 0 12px 30px rgba(0,0,0,.5); }
 :root[data-theme="dark"] #bar-progres::-webkit-progress-value { background: linear-gradient(90deg, #3b82f6, #38bdf8); }
 :root[data-theme="dark"] .kunci { background: var(--hijau-bg); }
+
+/* Baris status: tombol muat ulang sejajar dengan "Online" dan "Riwayat saya" */
+.atas-status { align-items: center; margin-bottom: 10px; }
+.atas-status .strip { margin-bottom: 0; }
+.atas-status > #antrean-wadah .antrean { margin-top: 8px; margin-bottom: 0; }
+.btn-segar { margin: 0; }
