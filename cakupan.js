@@ -58,8 +58,7 @@
     daftar.forEach(function (x) { n[x.s]++; });
 
     w.appendChild(h("div", { class: "pengantar" }, h("b", { text: "Cara membaca: " }),
-      "tiap lantai yang punya petugas bertugas wajib dipatroli semua zonanya dalam satu sesi (" + jamRonde + " jam, diatur di Shift & Tugas). " +
-      "Saat sesi berganti, status kembali ke \"Belum\". \"Segera\" berarti sisa waktu sesi tinggal sedikit. Lantai tanpa petugas bertugas tidak dihitung."));
+      "tiap zona di lantai yang ada petugasnya wajib dipatroli sekali per sesi (" + jamRonde + " jam). Hijau = sudah, kuning = belum, merah = segera. Arahkan kursor ke zona untuk rincian."));
 
     var sel = function (angka, ket, kls) {
       return h("div", { class: kls || "" }, h("div", { class: "angka" }, angka), h("div", { class: "ket", text: ket }));
@@ -100,14 +99,12 @@
         h("span", { text: "Sisa " + teksSisa(sisaKini(L)) }),
         h("span", { text: "Petugas: " + L.petugas.join(", ") }));
       var bar = h("div", { class: "bar-lantai" }, h("i", { style: { width: persen + "%" } }));
-      var grid = h("div", { class: "zona-grid" });
+      var grid = h("div", { class: "zona-grid zona-ringkas" });
       if (!tampil.length) grid.appendChild(h("div", { class: "kosong-info", text: "Semua zona di lantai ini sudah dipatroli pada sesi ini." }));
       tampil.forEach(function (x) {
-        grid.appendChild(h("div", { class: "zona-kartu s-" + x.s },
-          h("div", { class: "zona-nama", title: x.z.zona, text: x.z.zona }),
-          h("div", null, h("span", { class: "lencana " + KLS[x.s], text: LABEL[x.s] })),
-          h("div", { class: "oleh", text: teksTerakhir(x.z) }),
-          h("div", { class: "oleh", text: "Hari ini: " + x.z.hariIni + " kali" })));
+        // Ringkas: hanya nama zona berwarna; rincian (status, terakhir, jumlah hari ini) ada di tooltip.
+        grid.appendChild(h("div", { class: "zona-chip s-" + x.s, tabindex: "0",
+          title: x.z.zona + " - " + LABEL[x.s] + "\n" + teksTerakhir(x.z) + "\nHari ini: " + x.z.hariIni + " kali", text: x.z.zona }));
       });
       w.appendChild(h("div", { class: "panel" }, kepala, h("div", { class: "panel-isi" }, info, bar, grid)));
     });

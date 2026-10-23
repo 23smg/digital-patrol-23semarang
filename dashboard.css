@@ -646,3 +646,11 @@ dialog.dialog, dialog.dialog-lebar { border-radius: 22px; background: #FAFBFC; }
 #ringkas > div:nth-child(3)::after { background: #FEF5DC; }
 #ringkas > div:nth-child(3)::before { background: #F7B924; }
 @media (max-width: 860px) { #ringkas { grid-template-columns: repeat(2, minmax(0, 1fr)); } #ringkas > div:nth-child(3) { grid-column: 1 / -1; } }
+
+/* Cakupan zona ringkas: satu chip per zona */
+.zona-ringkas { grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; }
+.zona-chip { padding: 7px 8px; border: 1px solid var(--garis); border-left-width: 4px; border-radius: 10px; background: #fff; font-size: 12.5px; font-weight: 600; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: default; }
+.zona-chip.s-ok { border-left-color: #3AC47D; background: #F2FBF6; }
+.zona-chip.s-belum { border-left-color: #F7B924; background: #FFFCF2; }
+.zona-chip.s-mepet { border-left-color: var(--merah); background: #FFF8F9; }
+.zona-chip.s-tanpa { border-left-color: var(--garis-2); color: #8A94A6; }
