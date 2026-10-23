@@ -636,3 +636,13 @@ dialog.dialog, dialog.dialog-lebar { border-radius: 22px; background: #FAFBFC; }
 .bar-lantai i { display: block; height: 100%; border-radius: 999px; background: #3AC47D; transition: width 0.4s; }
 .tools-lepas { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin: 4px 0 12px; }
 .chip-wadah { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* Halaman Laporan: tiga kartu ringkasan (Total patroli, Tenant buka, Tenant tutup) */
+#ringkas { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+#ringkas > div:nth-child(2) .angka { color: var(--hijau); }
+#ringkas > div:nth-child(2)::after { background: var(--hijau-bg); }
+#ringkas > div:nth-child(2)::before { background: #3AC47D; }
+#ringkas > div:nth-child(3) .angka { color: var(--ambar); }
+#ringkas > div:nth-child(3)::after { background: #FEF5DC; }
+#ringkas > div:nth-child(3)::before { background: #F7B924; }
+@media (max-width: 860px) { #ringkas { grid-template-columns: repeat(2, minmax(0, 1fr)); } #ringkas > div:nth-child(3) { grid-column: 1 / -1; } }

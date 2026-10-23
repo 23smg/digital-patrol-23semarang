@@ -1,4 +1,4 @@
-/* laporan.js - halaman Laporan: ringkasan, tindak lanjut temuan, log patroli, log tenant, rekap tenant hari ini. */
+/* laporan.js - halaman Laporan: ringkasan, log patroli, log tenant, rekap tenant hari ini. */
 (function () {
   "use strict";
   var DB = window.DB, PC = window.PC, h = PC.h, $ = DB.$;
@@ -215,8 +215,6 @@
       if (r.user) { DB.S.user = r.user; DB.simpanSesi(); }
       if (!daricache) deteksiBaru(r.patroli.concat(r.tenant));
       if (!daricache) DB.info("Diperbarui " + PC.fmtWIB(new Date()).jam + " WIB");
-      var buka = semuaTerbuka();
-      DB.badge("laporan", buka.length || null, buka.length > 0);
       DB.umumkanData();
     }
   }
@@ -271,7 +269,6 @@
         h("button", { type: "button", class: "btn btn-utama btn-pilih", id: "btn-segarkan", text: "Muat ulang", onclick: function () { muatData(false); } })),
       h("span", { class: "status-muat", id: "status-muat" })));
     wadah.appendChild(h("div", { class: "ringkas", id: "ringkas" }));
-    wadah.appendChild(h("section", { class: "panel tl", id: "tl", "aria-labelledby": "tl-judul" }));
     wadah.appendChild(h("section", { class: "panel" }, h("h2", { text: "Tren 14 hari terakhir" }), h("div", { class: "panel-isi", id: "tren" })));
     wadah.appendChild(h("div", { class: "dua-kolom" },
       h("div", { class: "panel" }, h("h2", { text: "Sesuai dan temuan" }), h("div", { class: "panel-isi", id: "donat" })),
@@ -308,7 +305,6 @@
   function render() {
     if (!$("ringkas")) return;
     renderRingkas();
-    renderTL();
     renderTren();
     renderGrafik();
     renderPanel();
@@ -333,9 +329,6 @@
     var w = $("ringkas");
     PC.kosongkan(w);
     w.appendChild(sel(String(p.length), "Total laporan patroli"));
-    var terbuka = semuaTerbuka();
-    var tinggi = terbuka.filter(function (o) { return o.x.tingkat === "Tinggi"; }).length;
-    w.appendChild(sel(String(terbuka.length), "Temuan belum selesai" + (tinggi ? " (" + tinggi + " tinggi)" : ""), terbuka.length ? "bad" : ""));
     w.appendChild(sel([String(buka), h("small", { text: " / " + total })], "Tenant buka hari ini", "buka", total ? Math.round(buka * 100 / total) : 0));
     w.appendChild(sel([String(tutup), h("small", { text: " / " + total })], "Tenant tutup hari ini", "", total ? Math.round(tutup * 100 / total) : 0));
     var np = $("n-patroli"), nt = $("n-tenant");
@@ -353,41 +346,6 @@
     if (st === "BARU") return [tombol("Proses", "DITANGANI"), tombol("Selesai", "SELESAI", "btn-utama")];
     if (st === "DITANGANI") return [tombol("Selesai", "SELESAI", "btn-utama")];
     return [tombol("Buka kembali", "BARU")];
-  }
-
-  function barisTL(o) {
-    var x = o.x, jenis = o.jenis, st = statusTL(x);
-    var lokasi = jenis === "patroli" ? x.zona : x.tenant;
-    var judul = jenis === "patroli" ? "Patroli" : "Tenant " + String(x.kategori || "").toLowerCase();
-    var oleh = jenis === "patroli" ? x.nama : x.petugas;
-    var ringkas = jenis === "patroli" ? x.catatan : x.ringkasan;
-    return h("div", { class: "tl-baris", tabindex: "0", onclick: function () { rincian(x, jenis); },
-        onkeydown: function (e) { if (e.key === "Enter" && e.target === e.currentTarget) rincian(x, jenis); } },
-      h("div", null, lencanaTingkat(x.tingkat)),
-      h("div", null, h("div", { class: "tl-lokasi", text: lokasi }), h("div", { class: "oleh", text: judul + ", " + oleh })),
-      h("div", { class: "tl-ringkas", title: ringkas, text: ringkas }),
-      h("div", { class: "oleh", text: umur(x.ts) }),
-      h("div", null, lencanaStatus(st)),
-      h("div", { class: "tl-aksi" }, kontrolStatus(x, jenis)));
-  }
-
-  function renderTL() {
-    var w = $("tl");
-    PC.kosongkan(w);
-    var daftar = semuaTerbuka();
-    var tinggi = daftar.filter(function (o) { return o.x.tingkat === "Tinggi"; }).length;
-    w.appendChild(h("div", { class: "tl-kepala" },
-      h("h2", { id: "tl-judul", text: "Temuan belum selesai" }),
-      h("span", { class: "tl-hitung" + (daftar.length ? " bad" : ""),
-        text: daftar.length ? daftar.length + " terbuka" + (tinggi ? ", " + tinggi + " tingkat tinggi" : "") : "Semua selesai" }),
-      h("span", { class: "oleh", text: "Temuan 30 hari terakhir yang belum ditandai selesai, apa pun filter tanggalnya" })));
-    if (!daftar.length) { w.appendChild(h("div", { class: "kosong-info", text: "Tidak ada temuan terbuka." })); return; }
-    (S.tlSemua ? daftar : daftar.slice(0, 6)).forEach(function (o) { w.appendChild(barisTL(o)); });
-    if (daftar.length > 6) {
-      w.appendChild(h("button", { type: "button", class: "btn btn-garis btn-kecil",
-        text: S.tlSemua ? "Tampilkan lebih sedikit" : "Lihat semua (" + daftar.length + ")",
-        onclick: function () { S.tlSemua = !S.tlSemua; renderTL(); } }));
-    }
   }
 
   /* ---------------------------------------------------------- ubah status temuan */
@@ -416,8 +374,6 @@
         S.tindak[r.tindak.id] = r.tindak;
         dlgS.close();
         PC.toast("Status diperbarui: " + STATUS_LABEL[r.tindak.status] + ".", "ok");
-        var buka = semuaTerbuka();
-        DB.badge("laporan", buka.length || null, buka.length > 0);
         render();
         if (S.rincianAktif) rincian(S.rincianAktif.x, S.rincianAktif.jenis);
         muatData(true);
