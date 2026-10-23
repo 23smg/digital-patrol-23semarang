@@ -22,16 +22,13 @@
       });
     });
     var c = d.cakupan;
-    if (c && c.jamAktif && DB.hitungPerhatian) {
-      var belum = 0, telat = 0;
-      c.zona.forEach(function (z) { if (z.status === "belum") belum++; });
+    if (c && DB.hitungPerhatian) {
       var perlu = DB.hitungPerhatian();
-      telat = Math.max(0, perlu - belum);
       if (perlu) {
         var jam = PC.fmtWIB(new Date()).jam.slice(0, 2);
         out.push({ key: "z|" + d.hariIni + "|" + jam, jenis: "warn", tautan: "cakupan",
-          judul: perlu + " zona perlu dipatroli",
-          rincian: (belum ? belum + " belum dipatroli" : "") + (belum && telat ? ", " : "") + (telat ? telat + " terlambat" : "") + " (target tiap " + c.interval + " menit)" });
+          judul: perlu + " zona belum dipatroli, sesi hampir berakhir",
+          rincian: "Sisa waktu sesi tinggal sedikit. Buka Cakupan zona untuk melihat lantai dan zonanya." });
       }
     }
     var luar = (d.patroli || []).concat(d.tenant || []).filter(function (x) {

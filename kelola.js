@@ -619,7 +619,7 @@
     }
   }
 
-  /* ---------------------------------------------------------- PENGATURAN: target patroli, area, pemeriksaan sistem */
+  /* ---------------------------------------------------------- PENGATURAN: foto tenant, area, pemeriksaan sistem */
   function panelFormPetugas() {
     var f = K.data.form || { patroli: true, tenant: true, pesan: "" };
     function saklar(id, judul, ket, nyala) {
@@ -671,39 +671,28 @@
         h("button", { type: "button", class: "btn btn-utama", text: "Simpan status form", onclick: simpan })));
   }
 
-  function panelPatroli() {
-    var p = K.data.pengaturan || { interval: 60, jamMulai: 7, jamSelesai: 22, fotoTenant: "temuan" };
-    var inInterval = h("input", { id: "p-int", class: "input", type: "number", min: "15", max: "480", inputmode: "numeric" });
-    var inMulai = h("input", { id: "p-mulai", class: "input", type: "number", min: "0", max: "23", inputmode: "numeric" });
-    var inSelesai = h("input", { id: "p-selesai", class: "input", type: "number", min: "1", max: "24", inputmode: "numeric" });
+  function panelFotoTenant() {
+    var p = K.data.pengaturan || { fotoTenant: "temuan" };
     var foto = h("select", { id: "p-foto", class: "input" },
       h("option", { value: "temuan", text: "Wajib hanya bila ada temuan", selected: p.fotoTenant !== "selalu" }),
       h("option", { value: "selalu", text: "Selalu wajib", selected: p.fotoTenant === "selalu" }));
-    inInterval.value = p.interval; inMulai.value = p.jamMulai; inSelesai.value = p.jamSelesai;
     var galat = h("p", { class: "galat", role: "alert", hidden: true });
     function simpan() {
       galat.hidden = true;
-      DB.panggil("pengaturanPatroli", { patroli: { interval: Number(inInterval.value), jamMulai: Number(inMulai.value),
-        jamSelesai: Number(inSelesai.value), fotoTenant: foto.value } }, 40000).then(function (r) {
+      DB.panggil("fotoTenantSimpan", { fotoTenant: foto.value }, 40000).then(function (r) {
         if (r.status === "SUCCESS") {
           K.data.pengaturan = r.pengaturan; if (r.riwayat) K.data.riwayat = r.riwayat;
-          PC.toast("Pengaturan patroli disimpan.", "ok");
-          if (DB.muatUlang) DB.muatUlang();
+          PC.toast("Pengaturan foto tenant disimpan.", "ok");
         } else if (r.kode !== "SESI") { galat.textContent = r.message || "Gagal menyimpan."; galat.hidden = false; }
       });
     }
     return h("div", { class: "panel" },
-      h("div", { class: "panel-kepala" }, h("h2", { text: "Target patroli" })),
+      h("div", { class: "panel-kepala" }, h("h2", { text: "Foto checklist tenant" })),
       h("div", { class: "panel-isi" },
-        h("p", { class: "oleh", style: { marginTop: "0" }, text: "Dipakai halaman Cakupan zona dan notifikasi. Zona dianggap terlambat bila belum dipatroli lebih lama dari target pada jam operasional." }),
-        h("div", { class: "peta-isian" },
-          h("div", { class: "medan" }, h("label", { for: "p-int", text: "Target interval (menit)" }), inInterval, h("p", { class: "bantuan", text: "15 sampai 480." })),
-          h("div", { class: "medan" }, h("label", { for: "p-mulai", text: "Jam mulai" }), inMulai, h("p", { class: "bantuan", text: "0 sampai 23, WIB." })),
-          h("div", { class: "medan" }, h("label", { for: "p-selesai", text: "Jam selesai" }), inSelesai, h("p", { class: "bantuan", text: "1 sampai 24, WIB." }))),
-        h("div", { class: "medan" }, h("label", { for: "p-foto", text: "Foto pada checklist tenant" }), foto,
+        h("div", { class: "medan" }, h("label", { for: "p-foto", text: "Aturan foto" }), foto,
           h("p", { class: "bantuan", text: "Foto patroli tetap wajib. Untuk tenant, foto bisa dilewati bila semua item sesuai." })),
         galat,
-        h("button", { type: "button", class: "btn btn-utama", text: "Simpan target patroli", onclick: simpan })));
+        h("button", { type: "button", class: "btn btn-utama", text: "Simpan", onclick: simpan })));
   }
 
   function panelSistem() {
@@ -757,7 +746,7 @@
     denganData(wadah, function () {
       PC.kosongkan(wadah);
       wadah.appendChild(panelFormPetugas());
-      wadah.appendChild(panelPatroli());
+      wadah.appendChild(panelFotoTenant());
       var area = h("div");
       wadah.appendChild(area);
       isiArea(area);
