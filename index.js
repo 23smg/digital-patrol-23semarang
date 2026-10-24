@@ -149,11 +149,14 @@
   function lantaiZonaJs(z) { var m = String(z || "").trim().match(/^([A-Za-z0-9]{1,4})\s*[-\u2013]/); return m ? m[1].toUpperCase() : ""; }
   function zonaTampil() {
     var semua = master ? master.daftarZona : [];
-    if (!kunci || !kunci.lantai) return semua;
-    var f = semua.filter(function (z) { return lantaiZonaJs(z) === kunci.lantai; });
+    var lt = lantaiDipilih || (kunci && kunci.lantai) || "";
+    if (!lt) return semua;
+    var f = semua.filter(function (z) { return lantaiZonaJs(z) === lt; });
     if (!f.length) return semua;
     var sudah = ronde && ronde.sudah ? ronde.sudah : [];
-    return f.filter(function (z) { return sudah.indexOf(z) < 0; }).concat(f.filter(function (z) { return sudah.indexOf(z) >= 0; }));
+    var lain = semua.filter(function (z) { return lantaiZonaJs(z) !== lt; });
+    // Zona lantai ini dulu (yang belum dipatroli di atas), lalu lantai lain; tidak ada yang disembunyikan.
+    return f.filter(function (z) { return sudah.indexOf(z) < 0; }).concat(f.filter(function (z) { return sudah.indexOf(z) >= 0; }), lain);
   }
 
   function saranZona() { var el = $("zona-saran"); if (el) el.hidden = true; }
@@ -182,8 +185,61 @@
     }
     zona = z; zonaQR = manual ? "" : z;
     tampilLokasi();
+    lantaiDariZona(z);
+    petaLokasi();
     ubah();
   }
+
+  // Lantai tidak dipilih manual: mengikuti zona yang dipindai/dipilih.
+  function lantaiDariZona(z) {
+    var f = lantaiZonaJs(z);
+    if (!f || f === lantaiDipilih) { if (!kunci) cobaKunci(); return; }
+    lantaiDipilih = f;
+    if (kunci) { kunci.lantai = f; simpanKunci(); muatRonde(true); }
+    else cobaKunci();
+  }
+
+  /* ---------- Denah: posisi zona yang dipindai ---------- */
+  var petaCache = {}, petaZoom = true, petaAtur = null;
+  function petaLokasi() {
+    var el = $("peta-lok"), z = zona;
+    if (!el) return;
+    PC.kosongkan(el); petaAtur = null;
+    if (!z) { el.hidden = true; return; }
+    var p = petaCache[z];
+    if (p === undefined) {
+      el.hidden = true;
+      PC.api("petaZona", { zona: z }, 15000).then(function (r) {
+        petaCache[z] = (r && r.status === "SUCCESS" && r.denah) ? r : null;
+        if (zona === z) petaLokasi();
+      }).catch(function () { petaCache[z] = null; });
+      return;
+    }
+    if (!p) { el.hidden = true; return; }
+    var kotak = h("div", { class: "peta-kotak" }), plat = h("div", { class: "peta-plat" });
+    var img = h("img", { src: "denah/" + String(p.denah).toLowerCase() + ".jpg", alt: "Denah letak " + z, draggable: "false" });
+    plat.appendChild(img);
+    plat.appendChild(h("div", { class: "peta-pin", style: { left: (p.x * 100) + "%", top: (p.y * 100) + "%" } }));
+    kotak.appendChild(plat);
+    var tombol = h("button", { type: "button", class: "peta-zoom", text: petaZoom ? "Lihat denah penuh" : "Perbesar ke lokasi",
+      onclick: function () { petaZoom = !petaZoom; tombol.textContent = petaZoom ? "Lihat denah penuh" : "Perbesar ke lokasi"; atur(); } });
+    function atur() {
+      var C = kotak.clientWidth, Hc = kotak.clientHeight;
+      if (!C || !img.naturalWidth) return;
+      var W = C * (petaZoom ? 2.6 : 1), H = W * img.naturalHeight / img.naturalWidth, l, t;
+      if (petaZoom) { l = Math.min(0, Math.max(C - W, C / 2 - p.x * W)); t = Math.min(0, Math.max(Hc - H, Hc / 2 - p.y * H)); }
+      else { l = 0; t = (Hc - H) / 2; }
+      plat.style.width = W + "px"; plat.style.height = H + "px"; plat.style.left = l + "px"; plat.style.top = t + "px";
+    }
+    petaAtur = atur;
+    img.addEventListener("load", atur);
+    img.addEventListener("error", function () { el.hidden = true; });
+    el.appendChild(h("div", { class: "peta-judul" }, h("b", { text: "Posisi " + z + " di denah" }), tombol));
+    el.appendChild(kotak);
+    el.hidden = false;
+    atur();
+  }
+  window.addEventListener("resize", function () { if (petaAtur) petaAtur(); });
 
   function mulaiDeteksi() {
     var v = $("scan-video"), det = null, cv = null, ctx = null, sibuk = false;
@@ -341,12 +397,7 @@
         disabled: !!kunci, onclick: function () { if (kunci) return; shiftDipilih = x.nama; gambarShift(); cobaKunci(); ubah(); } },
         x.nama, h("small", { class: "shift-jam", text: jamTeks(x.mulai) + "-" + jamTeks(x.selesai) })));
     });
-    var lt = perluShift() ? daftarLantaiForm() : [];
-    $("lantai-wadah").hidden = !lt.length;
-    lt.forEach(function (f) {
-      lw.appendChild(h("button", { type: "button", class: "lantai-btn", "aria-pressed": lantaiDipilih === f ? "true" : "false",
-        disabled: !!kunci, onclick: function () { if (kunci) return; lantaiDipilih = f; gambarShift(); cobaKunci(); ubah(); } }, f));
-    });
+    $("lantai-wadah").hidden = true;   // lantai otomatis dari zona yang dipindai
   }
 
   function tampilKunci() {
@@ -361,14 +412,13 @@
     try { localStorage.removeItem(KUNCI_PETUGAS); } catch (e) {}
     $("nama").value = "";
     tampilKunci(); gambarRonde(); saranZona(); ubah();
-    if (!diam) PC.toast("Pilih shift, lantai, dan nama lagi.", "ok");
+    if (!diam) PC.toast("Pilih shift dan nama lagi.", "ok");
   }
 
   // Kunci terpasang setelah shift dan nama dipilih, dan hanya bila shift itu memang sedang berjalan.
   function cobaKunci() {
     var nama = cbNama && cbNama.nilai();
-    var lantaiAda = !daftarLantaiForm().length;   // zona tanpa pola lantai: lantai tidak diminta
-    if (kunci || mengunciProses || !nama || !shiftDipilih || !(lantaiDipilih || lantaiAda) || !perluShift()) return;
+    if (kunci || mengunciProses || !nama || !shiftDipilih || !perluShift()) return;
     mengunciProses = true;
     PC.api("statusRonde", { nama: nama, shift: shiftDipilih, lantai: lantaiDipilih, simpan: true }, 20000).then(function (r) {
       if (r.status !== "SUCCESS") { PC.toast(r.message || "Gagal memeriksa shift.", "bad"); return; }
@@ -399,7 +449,7 @@
 
   function periksaKunci() {
     if (!kunci) return;
-    if (kunci.sampai <= sekarangMs()) { bukaKunci(true); PC.toast("Shift selesai. Pilih shift, lantai, dan nama lagi.", ""); return; }
+    if (kunci.sampai <= sekarangMs()) { bukaKunci(true); PC.toast("Shift selesai. Pilih shift dan nama lagi.", ""); return; }
     if (master && String(kunci.v || "0") !== String(master.kunciVersi || "0")) { bukaKunci(true); PC.toast("Kunci dibuka admin. Pilih lagi.", ""); }
   }
 
@@ -450,10 +500,10 @@
     }
   }
 
-  function muatRonde() {
+  function muatRonde(simpan) {
     if (!kunci) return;
     var nama = kunci.nama;
-    PC.api("statusRonde", { nama: nama, shift: kunci.shift, lantai: kunci.lantai }, 20000).then(function (r) {
+    PC.api("statusRonde", { nama: nama, shift: kunci.shift, lantai: kunci.lantai, simpan: simpan === true }, 20000).then(function (r) {
       if (r.status !== "SUCCESS" || !kunci || kunci.nama !== nama) return;
       if (r.bukaKunci && r.bukaKunci > (kunci.t || 0)) { bukaKunci(true); PC.toast("Kunci dibuka admin. Pilih lagi.", ""); return; }
       if (r.shiftAktif && r.akhirMs && r.akhirMs !== kunci.sampai) { kunci.sampai = r.akhirMs; simpanKunci(); tampilKunci(); }
@@ -537,6 +587,7 @@
       if (zq && master.daftarZona.indexOf(zq) >= 0) { zona = zq; zonaQR = zq; }
     } catch (e) {}
     tampilLokasi();
+    if (zona) { lantaiDariZona(zona); petaLokasi(); }
     PC.ZonaJadwal.muat().then(saranZona);
     setInterval(saranZona, 60000);
 
@@ -582,7 +633,6 @@
     var c = cl.nilai(), s = [];
     s.push({ ok: !!zona, label: "lokasi" });
     if (perluShift()) s.push({ ok: !!shiftDipilih, label: "shift" });
-    if (perluShift() && daftarLantaiForm().length) s.push({ ok: !!lantaiDipilih, label: "lantai" });
     s.push({ ok: !!cbNama.nilai(), label: "nama" });
     s.push({ ok: !!c.lengkap, label: "checklist (" + c.terisi + "/" + c.total + ")" });
     if (c.adaTemuan) {
@@ -662,7 +712,7 @@
   function reset() {
     cl.set(master.checklist.PATROLI);
     zona = ""; zonaQR = "";
-    tampilLokasi();
+    tampilLokasi(); petaLokasi();
     $("catatan").value = "";
     tingkat = "";
     foto.kosongkan();
