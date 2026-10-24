@@ -1,4 +1,4 @@
-/* core.js - modul bersama Digital Patrol (form petugas + dashboard).
+/* core.js - modul bersama SmartPatrol (form petugas + dashboard).
    Tanpa dependensi eksternal. Semua DOM dibuat lewat h() (tanpa innerHTML)
    sehingga teks dari server tidak pernah dieksekusi sebagai HTML. */
 (function (w) {
@@ -793,10 +793,11 @@
   }
 
   function pasangAntrean(wadah) {
-    var status = h("span", { class: "strip-status", "data-s": "ok", text: "Online" });
-    var btnRiwayat = h("button", { type: "button", class: "strip-riwayat", text: "Riwayat saya",
+    var status = h("span", { class: "strip-status", "data-s": "ok", text: "" });
+    var btnRiwayat = h("button", { type: "button", class: "strip-riwayat", text: "Riwayat", title: "Riwayat saya", "aria-label": "Riwayat saya",
       onclick: function () { bukaRiwayat(kirimLagi); } });
-    var strip = h("div", { class: "strip" }, h("span", { class: "strip-dot", "aria-hidden": "true" }), status, btnRiwayat);
+    var titik = h("span", { class: "strip-dot", role: "img", title: "Online", "aria-label": "Online" });
+    var strip = h("div", { class: "strip" }, titik, status, btnRiwayat);
     var panel = h("div", { class: "antrean", hidden: true });
     wadah.appendChild(strip);
     wadah.appendChild(panel);
@@ -804,9 +805,10 @@
     function segarStrip() {
       var off = !Jaringan.ok();
       strip.setAttribute("data-s", off ? "offline" : "ok");
-      status.textContent = off ? "Offline · laporan disimpan di HP" : "Online";
+      status.textContent = off ? "Offline · tersimpan di HP" : "";
+      titik.title = off ? "Offline" : "Online"; titik.setAttribute("aria-label", titik.title);
       var n = Riwayat.hariIni().length;
-      btnRiwayat.textContent = "Riwayat saya" + (n ? " (" + n + ")" : "");
+      btnRiwayat.textContent = "Riwayat" + (n ? " \u00b7 " + n : "");
     }
 
     function segarkan() {
@@ -1087,7 +1089,7 @@
   // Mendaftarkan service worker dan menampilkan ajakan pasang ke layar utama (Android: tombol, iOS: petunjuk).
   function pasangPWA(wadah) {
     if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {
-      navigator.serviceWorker.register("sw.js").catch(function () { /* abaikan */ });
+      navigator.serviceWorker.register("sw.js", { updateViaCache: "none" }).catch(function () { /* abaikan */ });
     }
     var mandiri = (w.matchMedia && w.matchMedia("(display-mode: standalone)").matches) || navigator.standalone === true;
     if (mandiri) return;

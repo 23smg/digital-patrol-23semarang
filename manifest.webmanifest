@@ -1,6 +1,6 @@
 {
-  "name": "Digital Patrol Mall 23Semarang",
-  "short_name": "Patrol 23",
+  "name": "SmartPatrol Mall 23Semarang",
+  "short_name": "SmartPatrol",
   "description": "Patroli petugas dan checklist buka/tutup tenant",
   "lang": "id",
   "start_url": "./index.html",

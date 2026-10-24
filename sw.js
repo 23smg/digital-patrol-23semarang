@@ -1,11 +1,13 @@
-/* Service worker Digital Patrol.
+/* Service worker SmartPatrol.
+   Versi aplikasi ada di versi.js (satu-satunya tempat); nama cache mengikutinya, jadi tiap versi baru otomatis memuat ulang berkas.
    - Aplikasi (index, tenant, core, css) memakai strategi "jaringan dulu": selalu terbaru saat ada sinyal,
      jatuh ke salinan tersimpan saat sinyal lemah atau offline.
    - Permintaan ke API Google dan foto TIDAK pernah di-cache.
    - dashboard.html sengaja tidak ditangani (data admin tidak disimpan di perangkat). */
-const VERSI = "dp-v24";
+importScripts("versi.js");
+const VERSI = "dp-v" + self.APP_VERSI;
 const FONT = "dp-font-v1";
-const SHELL = ["./", "index.html", "tenant.html", "core.js", "index.js", "tenant.js", "tema.js", "petugas.css", "config.js", "manifest.webmanifest",
+const SHELL = ["./", "index.html", "tenant.html", "core.js", "index.js", "tenant.js", "tema.js", "versi.js", "petugas.css", "config.js", "manifest.webmanifest",
   "icons/icon-192.png", "icons/icon-512.png", "icons/apple-touch-icon.png"];
 
 self.addEventListener("install", function (e) {

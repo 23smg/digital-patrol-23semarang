@@ -48,13 +48,12 @@
     var wadah = $("lantai-grup");
     PC.kosongkan(wadah);
     var daftar = daftarLantai();
-    if (kunci && kunci.lantai) daftar = daftar.filter(function (x) { return x.f === kunci.lantai; });
     wadah.parentNode.hidden = !daftar.length;
-    $("lbl-lantai").textContent = kunci && kunci.lantai ? "Lantai tugas Anda" : "Lantai";
+    $("lbl-lantai").textContent = "Lantai";
     daftar.forEach(function (x) {
       wadah.appendChild(h("button", { type: "button", class: "lantai-btn", "data-lantai": x.f,
         "aria-pressed": lantai === x.f ? "true" : "false",
-        onclick: function () { if (kunci && kunci.lantai) return; pilihLantai(lantai === x.f ? "" : x.f); } },
+        onclick: function () { pilihLantai(lantai === x.f ? "" : x.f); } },
         x.f));
     });
   }
@@ -111,24 +110,23 @@
     tampilKunci(); ubah();
     if ($("tenant").value && cbTenant && !cbTenant.nilai()) $("tenant").value = "";
     if (cbTenant) cbTenant.tutup();
-    if (!diam) PC.toast("Pilih shift, lantai, dan nama lagi.", "ok");
+    if (!diam) PC.toast("Pilih shift dan nama lagi.", "ok");
   }
 
   function cobaKunci() {
     var nama = cbNama && cbNama.nilai();
-    var perluLantai = daftarLantai().length > 0;
-    if (kunci || mengunciProses || !perluShift() || !nama || !shiftDipilih || (perluLantai && !lantai)) return;
+    if (kunci || mengunciProses || !perluShift() || !nama || !shiftDipilih) return;
     mengunciProses = true;
-    PC.api("statusRonde", { nama: nama, shift: shiftDipilih, lantai: lantai, simpan: true }, 20000).then(function (r) {
+    PC.api("statusRonde", { nama: nama, shift: shiftDipilih, lantai: "", simpan: true }, 20000).then(function (r) {
       if (r.status !== "SUCCESS") { PC.toast(r.message || "Gagal memeriksa shift.", "bad"); return; }
       if (!r.shiftAktif) {
         PC.toast("Shift " + shiftDipilih + (r.mulai ? " (" + jamTeks(r.mulai) + "-" + jamTeks(r.selesai) + ")" : "") + " sedang tidak berjalan.", "bad");
         shiftDipilih = ""; gambarShift(); ubah(); return;
       }
-      kunci = { nama: nama, shift: shiftDipilih, lantai: lantai, sampai: r.akhirMs, t: r.waktuServer || sekarangMs(), v: String(master.kunciVersi || "0") };
+      kunci = { nama: nama, shift: shiftDipilih, lantai: "", sampai: r.akhirMs, t: r.waktuServer || sekarangMs(), v: String(master.kunciVersi || "0") };
       simpanKunci(); tampilKunci(); ubah();
     }).catch(function () {
-      kunci = { nama: nama, shift: shiftDipilih, lantai: lantai, sampai: sekarangMs() + 12 * 3600000, t: sekarangMs(), v: String(master.kunciVersi || "0") };
+      kunci = { nama: nama, shift: shiftDipilih, lantai: "", sampai: sekarangMs() + 12 * 3600000, t: sekarangMs(), v: String(master.kunciVersi || "0") };
       simpanKunci(); tampilKunci(); ubah();
     }).then(function () { mengunciProses = false; });
   }
@@ -139,14 +137,13 @@
     var valid = k.sampai > sekarangMs() && String(k.v || "0") === String(master.kunciVersi || "0") && master.daftarNama.indexOf(k.nama) >= 0;
     if (!valid) { try { localStorage.removeItem(KUNCI_PETUGAS); } catch (e) {} return; }
     kunci = k; shiftDipilih = k.shift;
-    if (k.lantai && daftarLantai().some(function (x) { return x.f === k.lantai; })) lantai = k.lantai;
     $("nama").value = k.nama;
     tampilKunci();
   }
 
   function periksaKunci() {
     if (!kunci) return;
-    if (kunci.sampai <= sekarangMs()) { bukaKunci(true); PC.toast("Shift selesai. Pilih shift, lantai, dan nama lagi.", ""); return; }
+    if (kunci.sampai <= sekarangMs()) { bukaKunci(true); PC.toast("Shift selesai. Pilih shift dan nama lagi.", ""); return; }
     if (master && String(kunci.v || "0") !== String(master.kunciVersi || "0")) { bukaKunci(true); PC.toast("Kunci dibuka admin. Pilih lagi.", ""); return; }
     PC.api("statusRonde", { nama: kunci.nama, shift: kunci.shift, lantai: kunci.lantai }, 20000).then(function (r) {
       if (r.status === "SUCCESS" && kunci && r.bukaKunci && r.bukaKunci > (kunci.t || 0)) { bukaKunci(true); PC.toast("Kunci dibuka admin. Pilih lagi.", ""); }
@@ -338,7 +335,6 @@
     if (!cbTenant.nilai()) k.push("tenant");
     if (perluShift()) {
       if (!shiftDipilih) k.push("shift");
-      if (daftarLantai().length && !lantai) k.push("lantai");
     }
     if (!cbNama.nilai()) k.push("nama petugas");
     if (!c.lengkap) k.push("checklist (" + c.terisi + "/" + c.total + ")");

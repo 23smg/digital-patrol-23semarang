@@ -462,3 +462,11 @@ body.lembar-buka { overflow: hidden; }
 @keyframes peta-denyut { 0% { box-shadow: 0 0 0 0 rgba(229, 72, 77, .7), 0 1px 5px rgba(0, 0, 0, .5); } 100% { box-shadow: 0 0 0 18px rgba(229, 72, 77, 0), 0 1px 5px rgba(0, 0, 0, .5); } }
 @media (prefers-reduced-motion: reduce) { .peta-pin { animation: none; } }
 .peta-petunjuk { font-size: 12px; color: #7A8496; }
+
+/* Strip status ringkas: titik warna, tombol Riwayat dan muat ulang kecil */
+.strip { gap: 6px; }
+.strip-dot { width: 9px; height: 9px; }
+.strip-riwayat { padding: 3px 10px; font-size: 12px; font-weight: 600; }
+.btn-segar { width: 26px; height: 26px; font-size: 14px; }
+.atas-status { gap: 6px; margin-bottom: 8px; }
+.kaki-app { display: flex; flex-wrap: wrap; justify-content: center; gap: 2px 10px; margin: 18px 0 6px; font-size: 11px; color: var(--teks-2, #7A8496); text-align: center; }
