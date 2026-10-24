@@ -46,6 +46,15 @@
   }
   DB.hitungPerhatian = hitungPerhatian;
 
+  // Dipakai halaman Denah: status tiap zona memakai hitungan yang sama dengan halaman ini.
+  DB.statusZonaPeta = function () {
+    var cc = DB.data && DB.data.cakupan;
+    if (!cc || !cc.zona) return null;
+    var pl = peta(cc), batas = Math.max(20, (cc.rondeJam || 3) * 60 * 0.2), hasil = {};
+    cc.zona.forEach(function (z) { hasil[z.zona] = { s: statusKini(z, pl, batas), z: z, info: teksTerakhir(z) }; });
+    return hasil;
+  };
+
   function render() {
     var w = $("cakupan-isi");
     if (!w) return;

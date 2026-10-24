@@ -654,3 +654,21 @@ dialog.dialog, dialog.dialog-lebar { border-radius: 22px; background: #FAFBFC; }
 .zona-chip.s-belum { border-left-color: #F7B924; background: #FFFCF2; }
 .zona-chip.s-mepet { border-left-color: var(--merah); background: #FFF8F9; }
 .zona-chip.s-tanpa { border-left-color: var(--garis-2); color: #8A94A6; }
+
+/* Denah zona */
+.peta-legenda { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 12px; }
+.peta-bidang { position: relative; max-width: 1200px; border: 1px solid var(--garis); border-radius: 18px; overflow: hidden; background: #F4F5F2; user-select: none; -webkit-user-select: none; }
+.peta-bidang.menaruh { cursor: crosshair; }
+.peta-gambar { display: block; width: 100%; height: auto; pointer-events: none; }
+.peta-titik { position: absolute; transform: translate(-50%, -50%); min-width: 22px; height: 22px; padding: 0 5px; border-radius: 11px; border: 2px solid #fff; box-shadow: 0 1px 4px rgba(20, 30, 50, .45); display: grid; place-items: center; font-size: 10px; font-weight: 700; line-height: 1; color: #fff; cursor: pointer; touch-action: none; z-index: 2; }
+.peta-titik.s-ok { background: #2FAE6B; }
+.peta-titik.s-belum { background: #F2A900; color: #3A2C00; }
+.peta-titik.s-mepet { background: #E5484D; }
+.peta-titik.s-tanpa { background: #8A94A6; }
+.peta-titik.dipilih { outline: 3px solid #3F6AD8; outline-offset: 2px; z-index: 3; }
+.peta-titik.baru { animation: peta-denyut 1.6s ease-out 3; }
+@keyframes peta-denyut { 0% { box-shadow: 0 0 0 0 rgba(47, 174, 107, .75); } 100% { box-shadow: 0 0 0 16px rgba(47, 174, 107, 0); } }
+.peta-sisa { margin: 10px 0 14px; }
+.peta-sisa .dipilih { background: #3F6AD8; color: #fff; border-color: #3F6AD8; }
+.peta-info { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 12px; padding: 12px 16px; border: 1px solid var(--garis); border-radius: 14px; background: #FAFBFC; }
+@media (prefers-reduced-motion: reduce) { .peta-titik.baru { animation: none; } }
