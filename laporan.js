@@ -504,7 +504,8 @@
     var tbody = h("tbody");
     potong.forEach(function (x) {
       var f = fotoList(x.foto), fl = flags(x.flag);
-      var thumb = f.length ? pasangFoto(h("img", { class: "thumb", alt: "Foto " + (x.zona || x.tenant) }), f[0].id, "thumb")
+      // Tabel tidak memuat gambar sama sekali (ringan). Foto baru diambil saat laporan diklik dan rincian dibuka.
+      var thumb = f.length ? h("span", { class: "foto-jml", title: "Klik baris untuk melihat foto", text: f.length + " foto" })
         : h("span", { class: "oleh", text: "-" });
       var sel;
       if (S.tab === "patroli") {

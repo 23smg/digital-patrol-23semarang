@@ -742,3 +742,5 @@ dialog.dialog, dialog.dialog-lebar { border-radius: 22px; background: #FAFBFC; }
   .tren-kolom { gap: 2px; height: 170px; }
   .tren-tgl { font-size: 10px; }
 }
+
+.foto-jml { display: inline-block; padding: 2px 9px; border-radius: 999px; background: #E8F0EE; color: #0E6B5C; font-size: 12px; font-weight: 600; white-space: nowrap; }
