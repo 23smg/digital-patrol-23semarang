@@ -153,6 +153,7 @@
   function render() {
     var w = $("peta-isi");
     if (!w) return;
+    if (S.hapusMesin) { S.hapusMesin(); S.hapusMesin = null; }
     PC.kosongkan(w);
     if (S.galat) { w.appendChild(h("div", { class: "panel" }, h("div", { class: "kosong-info", text: S.galat }), h("div", { class: "panel-isi" }, h("button", { type: "button", class: "btn btn-kecil", text: "Coba lagi", onclick: function () { S.galat = ""; S.denah = null; render(); muat(); } })))); return; }
     var data = DB.data, cc = S.cak || (data && data.cakupan);
@@ -190,28 +191,20 @@
         h("button", { type: "button", class: "btn btn-kecil", text: "Simpan sekarang", disabled: S.menyimpan, onclick: function () { simpan(d.id); } })));
     }
 
-    // Gambar denah + titik, bisa di-zoom (roda mouse / cubit / tombol) dan digeser
+    // Gambar denah + titik. Mesin Denah3D: geser, zoom halus, putar, dan miring (3D).
+    // Mode atur titik selalu datar supaya penempatan titik akurat.
     var bidang = h("div", { class: "peta-bidang" + (editAktif && S.pilih ? " menaruh" : "") });
     var plat = h("div", { class: "peta-plat" });
     bidang.appendChild(plat);
-    var v = S.tampilan[d.id] || (S.tampilan[d.id] = { s: 1, tx: 0, ty: 0 });
-    function terapkan() {
-      var W = bidang.clientWidth, H = bidang.clientHeight;
-      if (W && H) { v.tx = Math.min(0, Math.max(W - W * v.s, v.tx)); v.ty = Math.min(0, Math.max(H - H * v.s, v.ty)); }
-      plat.style.transform = "translate(" + v.tx + "px," + v.ty + "px) scale(" + v.s + ")";
-      plat.style.setProperty("--inv", String(1 / v.s));
-    }
-    function zoomDi(px, py, ns) {
-      ns = Math.min(8, Math.max(1, ns));
-      var px0 = (px - v.tx) / v.s, py0 = (py - v.ty) / v.s;
-      v.s = ns; v.tx = px - px0 * ns; v.ty = py - py0 * ns; terapkan();
-    }
+    var v = S.tampilan[d.id] || (S.tampilan[d.id] = { s: 1, tx: 0, ty: 0, rot: 0, tilt: 0, tiga: false });
+    if (editAktif) { v.tiga = false; v.rot = 0; v.tilt = 0; }
+    var eng = null, btn3 = null;
     if (d.berkas) {
       var gbr = h("img", { class: "peta-gambar", src: "denah/" + encodeURIComponent(d.berkas), alt: "Denah " + (d.nama || S.aktif + 1), draggable: "false" });
       if (S.rasio[d.berkas]) bidang.style.aspectRatio = S.rasio[d.berkas];
       gbr.addEventListener("load", function () {
         S.rasio[d.berkas] = gbr.naturalWidth + " / " + gbr.naturalHeight;
-        bidang.style.aspectRatio = S.rasio[d.berkas]; terapkan();
+        bidang.style.aspectRatio = S.rasio[d.berkas]; if (eng) eng.terapkan();
       });
       gbr.addEventListener("error", function () {
         gbr.hidden = true;
@@ -223,59 +216,41 @@
     }
     pasangTitik(d, plat, zona, status);
 
-    // Gestur: seret = geser, cubit / roda = zoom, ketuk (tanpa geser) = taruh titik di mode atur
-    var ptr = {}, awal = null, bergeser = false, mulai = null;
-    function pt(ev) { var r = bidang.getBoundingClientRect(); return { x: ev.clientX - r.left, y: ev.clientY - r.top }; }
-    function ukur() { var k = Object.keys(ptr); return { d: Math.hypot(ptr[k[0]].x - ptr[k[1]].x, ptr[k[0]].y - ptr[k[1]].y), x: (ptr[k[0]].x + ptr[k[1]].x) / 2, y: (ptr[k[0]].y + ptr[k[1]].y) / 2 }; }
-    bidang.addEventListener("pointerdown", function (ev) {
-      if (ev.button > 0) return;
-      ptr[ev.pointerId] = pt(ev); mulai = { x: ev.clientX, y: ev.clientY }; bergeser = false; S.gestur = true;
-      try { bidang.setPointerCapture(ev.pointerId); } catch (x) { /* abaikan */ }
-      if (Object.keys(ptr).length === 2) { var m = ukur(); awal = { d: m.d, s: v.s, ax: (m.x - v.tx) / v.s, ay: (m.y - v.ty) / v.s }; bergeser = true; }
-    });
-    bidang.addEventListener("pointermove", function (ev) {
-      if (!ptr[ev.pointerId]) return;
-      var q = pt(ev), n = Object.keys(ptr).length, lama = ptr[ev.pointerId];
-      if (n >= 2 && awal) {
-        ptr[ev.pointerId] = q; var m = ukur();
-        if (!m.d || !awal.d) return;
-        v.s = Math.min(8, Math.max(1, awal.s * m.d / awal.d)); v.tx = m.x - awal.ax * v.s; v.ty = m.y - awal.ay * v.s; terapkan();
-      } else {
-        if (!bergeser && mulai && Math.abs(ev.clientX - mulai.x) + Math.abs(ev.clientY - mulai.y) > 5) bergeser = true;
-        if (bergeser) { v.tx += q.x - lama.x; v.ty += q.y - lama.y; terapkan(); }
-        ptr[ev.pointerId] = q;
-      }
-    });
-    function lepas(ev, batal) {
-      var tadiSatu = Object.keys(ptr).length === 1;
-      delete ptr[ev.pointerId]; awal = null; if (!Object.keys(ptr).length) S.gestur = false;
-      if (!batal && tadiSatu && !bergeser && editAktif && S.pilih && d.id) {
-        var q = posisi(ev, plat);
-        d.pin[S.pilih] = [Math.round(q[0] * 10000) / 10000, Math.round(q[1] * 10000) / 10000];
-        S.sel = S.pilih; tandaiKotor(d);
-        var sisa = belumBertitik(d, zona);
-        S.pilih = sisa.length ? sisa[0].zona : "";
-        render();
-      }
+    function taruhTitik(ev) {
+      if (!(editAktif && S.pilih && d.id)) return;
+      var q = posisi(ev, plat);
+      d.pin[S.pilih] = [Math.round(q[0] * 10000) / 10000, Math.round(q[1] * 10000) / 10000];
+      S.sel = S.pilih; tandaiKotor(d);
+      var sisa = belumBertitik(d, zona);
+      S.pilih = sisa.length ? sisa[0].zona : "";
+      render();
     }
-    bidang.addEventListener("pointerup", function (ev) { lepas(ev, false); });
-    bidang.addEventListener("pointercancel", function (ev) { lepas(ev, true); });
-    bidang.addEventListener("wheel", function (ev) {
-      ev.preventDefault();
-      var q = pt(ev); zoomDi(q.x, q.y, v.s * Math.exp(-ev.deltaY * 0.0015));
-    }, { passive: false });
-    bidang.addEventListener("dblclick", function (ev) {
-      if (ev.target.classList.contains("peta-titik")) return;
-      var q = pt(ev); if (v.s > 1.5) { v.s = 1; v.tx = 0; v.ty = 0; terapkan(); } else zoomDi(q.x, q.y, 3);
+    eng = window.Denah3D.buat({
+      bidang: bidang, plat: plat, v: v, maks: 8, min: 1, tilt: 58,
+      datar: function () { return editAktif; },
+      gestur: function (b) { S.gestur = b; },
+      ketuk: taruhTitik,
+      tahanKlikGanda: function (ev) { return !!(ev.target.closest && ev.target.closest(".peta-titik")); },
+      ubahMode: function (t) { if (btn3) btn3.setAttribute("aria-pressed", t ? "true" : "false"); }
     });
+    var tengahX = function () { return bidang.clientWidth / 2; }, tengahY = function () { return bidang.clientHeight / 2; };
     var kontrol = h("div", { class: "peta-zoomkontrol" },
-      h("button", { type: "button", "aria-label": "Perbesar", title: "Perbesar", text: "+", onclick: function (ev) { ev.stopPropagation(); zoomDi(bidang.clientWidth / 2, bidang.clientHeight / 2, v.s * 1.5); } }),
-      h("button", { type: "button", "aria-label": "Perkecil", title: "Perkecil", text: "\u2212", onclick: function (ev) { ev.stopPropagation(); zoomDi(bidang.clientWidth / 2, bidang.clientHeight / 2, v.s / 1.5); } }),
-      h("button", { type: "button", "aria-label": "Ukuran awal", title: "Ukuran awal", text: "1:1", onclick: function (ev) { ev.stopPropagation(); v.s = 1; v.tx = 0; v.ty = 0; terapkan(); } }));
-    ["pointerdown", "dblclick"].forEach(function (nm) { kontrol.addEventListener(nm, function (ev) { ev.stopPropagation(); }); });
+      h("button", { type: "button", "aria-label": "Perbesar", title: "Perbesar", text: "+", onclick: function () { eng.zoomDi(tengahX(), tengahY(), v.s * 1.6, true); } }),
+      h("button", { type: "button", "aria-label": "Perkecil", title: "Perkecil", text: "\u2212", onclick: function () { eng.zoomDi(tengahX(), tengahY(), v.s / 1.6, true); } }));
+    if (!editAktif) {
+      btn3 = h("button", { type: "button", class: "tombol-3d", title: "Tampilan 3D: putar dan miringkan denah", "aria-label": "Tampilan 3D", "aria-pressed": v.tiga ? "true" : "false", text: "3D",
+        onclick: function () { eng.tiga(!v.tiga); } });
+      kontrol.appendChild(btn3);
+    }
+    kontrol.appendChild(h("button", { type: "button", "aria-label": "Ukuran awal", title: "Kembali ke tampilan awal", text: "\u21BA", onclick: function () { eng.reset(); } }));
+    ["pointerdown", "dblclick", "wheel"].forEach(function (nm) { kontrol.addEventListener(nm, function (ev) { ev.stopPropagation(); }); });
     bidang.appendChild(kontrol);
     w.appendChild(bidang);
-    terapkan();
+    w.appendChild(h("div", { class: "peta-bantu", text: editAktif
+      ? "Mode atur titik: tampilan datar. Seret untuk menggeser, cubit atau roda mouse untuk zoom."
+      : "Seret untuk menggeser \u00B7 cubit atau roda mouse untuk zoom \u00B7 tombol 3D untuk memutar dan memiringkan denah (Shift + roda = putar)." }));
+    eng.terapkan();
+    S.hapusMesin = eng.hapus;
 
     // Rincian zona yang diketuk (mode lihat)
     if (!editAktif && S.info && status && status[S.info]) {

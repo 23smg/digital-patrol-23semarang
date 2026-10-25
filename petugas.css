@@ -645,3 +645,16 @@ input:checked + .ubin { background: linear-gradient(135deg, var(--aksen-tua), va
 .peta-pin-label { position: absolute; left: 0; top: -52px; transform: translateX(-50%); padding: 2px 8px; border-radius: 999px; background: #fff; color: #01413C; font-size: 11px; font-weight: 700; white-space: nowrap; box-shadow: 0 1px 4px rgba(0,0,0,.35); }
 @media (prefers-reduced-motion: reduce) { .peta-pin::before { animation: none; } }
 .peta-judul { flex-wrap: nowrap; white-space: nowrap; font-size: 13px; }
+
+/* Tombol shift: hanya nama shift */
+#shift-grup .lantai-btn { flex-direction: row; min-width: 0; padding: 7px 18px; }
+
+/* Denah 3D di form petugas */
+.peta-kotak { perspective: 1100px; perspective-origin: 50% 40%; }
+.peta-plat { inset: 0; transform-origin: 50% 50%; transform-style: preserve-3d; }
+.peta-kotak.miring { background: radial-gradient(ellipse at 50% 30%, #1B5A52 0%, #01413C 70%); }
+.peta-kotak.miring .peta-plat img { box-shadow: 0 20px 40px rgba(0,0,0,.45); border-radius: 3px; }
+.peta-kotak.memutar { cursor: move; }
+.peta-pin { transform-origin: 0 0; transform: scale(var(--inv, 1)) rotateZ(var(--rz, 0deg)) rotateX(var(--rx, 0deg)) translateZ(var(--angkat, 0px)); }
+.peta-zoom { padding: 2px 10px; font-size: 11px; font-weight: 800; }
+.peta-zoom[aria-pressed="true"] { background: #0E6B5C; color: #fff; border-color: #0E6B5C; }

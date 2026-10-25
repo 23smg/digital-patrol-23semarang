@@ -269,7 +269,7 @@
         h("button", { type: "button", class: "btn btn-utama btn-pilih", id: "btn-segarkan", text: "Muat ulang", onclick: function () { muatData(false); } })),
       h("span", { class: "status-muat", id: "status-muat" })));
     wadah.appendChild(h("div", { class: "ringkas", id: "ringkas" }));
-    wadah.appendChild(h("section", { class: "panel" }, h("h2", { text: "Tren 14 hari terakhir" }), h("div", { class: "panel-isi", id: "tren" })));
+    wadah.appendChild(h("section", { class: "panel" }, h("h2", { text: "Perkembangan 14 hari terakhir" }), h("div", { class: "panel-isi", id: "tren" })));
     wadah.appendChild(h("div", { class: "dua-kolom" },
       h("div", { class: "panel" }, h("h2", { text: "Sesuai dan temuan" }), h("div", { class: "panel-isi", id: "donat" })),
       h("div", { class: "panel" }, h("h2", { text: "Lokasi dengan temuan terbanyak" }), h("div", { class: "panel-isi", id: "top" }))));
@@ -383,57 +383,66 @@
     }).then(function () { btn.disabled = false; });
   });
 
-  /* ---------------------------------------------------------- tren harian (SVG polos)
-     Batang = jumlah laporan (patroli + tenant), garis = jumlah temuan. Satu sumbu, label seperlunya. */
-  var NS = "http://www.w3.org/2000/svg";
-  function se(tag, a) {
-    var e = document.createElementNS(NS, tag);
-    Object.keys(a || {}).forEach(function (k) { e.setAttribute(k, a[k]); });
-    for (var i = 2; i < arguments.length; i++) if (arguments[i]) e.appendChild(arguments[i]);
-    return e;
+  /* ---------------------------------------------------------- tren 14 hari
+     Dibuat mudah dibaca: tiga angka ringkas (7 hari terakhir dibanding 7 hari sebelumnya),
+     lalu satu grafik batang per hari. Tinggi batang = jumlah laporan; hijau = sesuai, merah = temuan. */
+  var HARI = ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"];
+  function namaHari(tgl) { var p = tgl.split("-"); return HARI[new Date(Date.UTC(+p[0], +p[1] - 1, +p[2])).getUTCDay()]; }
+  function jumlahLap(x) { return (x.patroli || 0) + (x.tenant || 0); }
+  function jumlah(arr, f) { return arr.reduce(function (a, x) { return a + f(x); }, 0); }
+  function perubahan(skr, lalu, naikBaik) {
+    if (!lalu && !skr) return { teks: "sama seperti minggu lalu", kelas: "" };
+    if (!lalu) return { teks: "minggu lalu belum ada", kelas: "" };
+    var pct = Math.round((skr - lalu) * 100 / lalu);
+    if (!pct) return { teks: "sama seperti minggu lalu", kelas: "" };
+    var naik = pct > 0, baik = naik === naikBaik;
+    return { teks: (naik ? "naik " : "turun ") + Math.abs(pct) + "% dari minggu lalu (" + lalu + ")", kelas: baik ? "baik" : "buruk" };
   }
   function renderTren() {
     var w = $("tren");
     if (!w) return;
     PC.kosongkan(w);
     var d = S.tren || [];
-    var total = d.reduce(function (a, x) { return a + x.patroli + x.tenant; }, 0);
+    var total = jumlah(d, jumlahLap);
     if (!d.length || !total) { w.appendChild(h("div", { class: "kosong-info", text: "Belum ada laporan dalam 14 hari terakhir." })); return; }
-    var W = 700, H = 210, L = 34, R = 10, T = 12, B = 28, pw = W - L - R, ph = H - T - B;
-    var maks = Math.max.apply(null, d.map(function (x) { return x.patroli + x.tenant; }).concat(d.map(function (x) { return x.temuan; })));
-    var langkah = maks <= 5 ? 1 : (maks <= 12 ? 2 : (maks <= 30 ? 5 : (maks <= 80 ? 10 : (maks <= 200 ? 25 : 50))));
-    var atas = Math.ceil(maks / langkah) * langkah || 1;
-    function y(v) { return T + ph - (v / atas) * ph; }
-    var bw = pw / d.length, g = se("g");
-    for (var v = 0; v <= atas; v += langkah) {
-      g.appendChild(se("line", { x1: L, x2: W - R, y1: y(v), y2: y(v), stroke: "#E3E8ED", "stroke-width": 1 }));
-      var t = se("text", { x: L - 6, y: y(v) + 4, "text-anchor": "end", "font-size": 11, fill: "#6C757D" }); t.textContent = String(v);
-      g.appendChild(t);
+    var lalu = d.slice(0, Math.max(0, d.length - 7)), skr = d.slice(-7);
+    var lapS = jumlah(skr, jumlahLap), lapL = jumlah(lalu, jumlahLap);
+    var temS = jumlah(skr, function (x) { return x.temuan || 0; }), temL = jumlah(lalu, function (x) { return x.temuan || 0; });
+    var sesuaiPct = lapS ? Math.round((lapS - temS) * 100 / lapS) : 0;
+    function kartu(judul, nilai, ket) {
+      return h("div", { class: "tren-kartu" }, h("div", { class: "tk-judul", text: judul }), h("div", { class: "tk-nilai", text: nilai }),
+        h("div", { class: "tk-ket " + (ket.kelas || ""), text: ket.teks }));
     }
-    var pts = [];
-    d.forEach(function (x, i) {
-      var n = x.patroli + x.tenant, cx = L + bw * i + bw / 2, tinggi = (n / atas) * ph;
-      var bar = se("rect", { x: L + bw * i + bw * 0.2, y: T + ph - tinggi, width: bw * 0.6, height: Math.max(tinggi, 0), rx: 3, fill: "#3F6AD8", opacity: 0.85 });
-      var tip = se("title"); tip.textContent = x.tgl.split("-").reverse().join("/") + ": " + n + " laporan (" + x.patroli + " patroli, " + x.tenant + " tenant), " + x.temuan + " temuan";
-      var kolom = se("g", {}, se("rect", { x: L + bw * i, y: T, width: bw, height: ph, fill: "transparent" }), bar, tip);
-      g.appendChild(kolom);
-      pts.push([cx, y(x.temuan)]);
-      if (i % 2 === (d.length - 1) % 2) {
-        var lb = se("text", { x: cx, y: H - 9, "text-anchor": "middle", "font-size": 11, fill: "#6C757D" });
-        lb.textContent = x.tgl.slice(8, 10) + "/" + x.tgl.slice(5, 7);
-        g.appendChild(lb);
-      }
+    w.appendChild(h("div", { class: "tren-kartu-baris" },
+      kartu("Laporan masuk, 7 hari terakhir", String(lapS), perubahan(lapS, lapL, true)),
+      kartu("Temuan, 7 hari terakhir", String(temS), perubahan(temS, temL, false)),
+      kartu("Laporan sesuai", sesuaiPct + "%", { teks: lapS ? (lapS - temS) + " dari " + lapS + " laporan tanpa temuan" : "belum ada laporan", kelas: sesuaiPct >= 90 ? "baik" : (sesuaiPct >= 75 ? "" : "buruk") })));
+
+    var maks = Math.max.apply(null, d.map(jumlahLap).concat([1]));
+    var kolom = h("div", { class: "tren-kolom" });
+    var hariIni = d[d.length - 1].tgl, terburuk = null;
+    d.forEach(function (x) { if ((x.temuan || 0) > 0 && (!terburuk || x.temuan > terburuk.temuan)) terburuk = x; });
+    d.forEach(function (x) {
+      var n = jumlahLap(x), tem = Math.min(x.temuan || 0, n), ok = n - tem;
+      var tgl = x.tgl.slice(8, 10) + "/" + x.tgl.slice(5, 7);
+      var batang = h("div", { class: "tren-batang" });
+      if (n) {
+        batang.style.height = Math.max(6, Math.round(n * 100 / maks)) + "%";
+        if (ok) { var a1 = h("div", { class: "tb-ok" }); a1.style.flexGrow = String(ok); batang.appendChild(a1); }
+        if (tem) { var a2 = h("div", { class: "tb-temuan" }); a2.style.flexGrow = String(tem); batang.appendChild(a2); }
+      } else batang.classList.add("kosong");
+      kolom.appendChild(h("div", { class: "tren-hari" + (x.tgl === hariIni ? " ini" : "") + (namaHari(x.tgl) === "Min" ? " libur" : ""),
+        title: namaHari(x.tgl) + " " + tgl + ": " + n + " laporan (" + x.patroli + " patroli, " + x.tenant + " tenant), " + tem + " temuan" },
+        h("div", { class: "tren-angka", text: n ? String(n) : "\u2013" }),
+        h("div", { class: "tren-area" }, batang),
+        h("div", { class: "tren-tgl" }, h("b", { text: namaHari(x.tgl) }), h("span", { text: x.tgl.slice(8, 10) }))));
     });
-    g.appendChild(se("polyline", { points: pts.map(function (p) { return p.join(","); }).join(" "), fill: "none", stroke: "#D92550", "stroke-width": 2, "stroke-linejoin": "round" }));
-    pts.forEach(function (p, i) {
-      if (d[i].temuan) g.appendChild(se("circle", { cx: p[0], cy: p[1], r: 4, fill: "#D92550", stroke: "#fff", "stroke-width": 2 }));
-    });
-    var totalTemuan = d.reduce(function (a, x) { return a + x.temuan; }, 0);
+    w.appendChild(kolom);
     w.appendChild(h("div", { class: "legenda tren-legenda" },
-      h("div", null, h("i", { style: { background: "#3F6AD8", borderRadius: "2px" } }), "Laporan per hari: " + total + " selama 14 hari"),
-      h("div", null, h("i", { style: { background: "#D92550", height: "3px", borderRadius: "2px", verticalAlign: "3px" } }), "Temuan per hari: " + totalTemuan)));
-    w.appendChild(se("svg", { viewBox: "0 0 " + W + " " + H, class: "tren-svg", role: "img",
-      "aria-label": "Grafik tren 14 hari: " + total + " laporan, " + totalTemuan + " temuan. Arahkan kursor ke batang untuk rincian harian." }, g));
+      h("div", null, h("i", { style: { background: "#3AC47D" } }), "Laporan sesuai"),
+      h("div", null, h("i", { style: { background: "#D92550" } }), "Laporan dengan temuan"),
+      terburuk ? h("div", { class: "tren-catatan", text: "Temuan terbanyak: " + namaHari(terburuk.tgl) + " " + terburuk.tgl.slice(8, 10) + "/" + terburuk.tgl.slice(5, 7) + " (" + terburuk.temuan + ")" })
+        : h("div", { class: "tren-catatan", text: "Tidak ada temuan dalam 14 hari terakhir" })));
   }
 
   /* ---------------------------------------------------------- grafik */

@@ -7,7 +7,7 @@
 importScripts("versi.js");
 const VERSI = "dp-v" + self.APP_VERSI;
 const FONT = "dp-font-v1";
-const SHELL = ["./", "index.html", "tenant.html", "core.js", "index.js", "tenant.js", "tema.js", "versi.js", "petugas.css", "logo-23.png", "config.js", "manifest.webmanifest",
+const SHELL = ["./", "index.html", "tenant.html", "core.js", "index.js", "denah3d.js", "tenant.js", "tema.js", "versi.js", "petugas.css", "logo-23.png", "config.js", "manifest.webmanifest",
   "icons/icon-192.png", "icons/icon-512.png", "icons/apple-touch-icon.png"];
 
 self.addEventListener("install", function (e) {

@@ -91,9 +91,9 @@
     PC.kosongkan(wadah);
     $("shift-wadah").hidden = !perluShift();
     (master.shift || []).forEach(function (x) {
-      wadah.appendChild(h("button", { type: "button", class: "lantai-btn", "aria-pressed": shiftDipilih === x.nama ? "true" : "false",
+      wadah.appendChild(h("button", { type: "button", class: "lantai-btn", title: x.nama + " (" + jamTeks(x.mulai) + "-" + jamTeks(x.selesai) + ")", "aria-pressed": shiftDipilih === x.nama ? "true" : "false",
         disabled: !!kunci, onclick: function () { if (kunci) return; shiftDipilih = x.nama; gambarShift(); cobaKunci(); ubah(); } },
-        h("small", { class: "shift-jam sj-a", text: jamTeks(x.mulai) }), h("b", { class: "shift-nama", text: x.nama }), h("small", { class: "shift-jam sj-b", text: jamTeks(x.selesai) })));
+        h("b", { class: "shift-nama", text: x.nama })));
     });
   }
 

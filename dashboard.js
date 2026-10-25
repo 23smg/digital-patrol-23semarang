@@ -33,13 +33,59 @@
 
   // Semua panggilan admin lewat sini: token ditambahkan, sesi habis ditangani sekali di satu tempat,
   // galat jaringan dikembalikan sebagai objek biasa supaya halaman cukup memeriksa r.status.
+  /* Penanda loading: garis tipis di atas layar untuk semua panggilan, dan pil kecil
+     "Memuat" / "Menyimpan" supaya admin tahu ada proses berjalan. Panggilan latar (penyegaran otomatis)
+     hanya menampilkan garis tipis, tanpa pil. */
+  var Sibuk = (function () {
+    var n = 0, tulis = 0, baca = 0, tmrTampil = null, tmrSelesai = null, bar = null, pil = null;
+    function siap() {
+      if (bar) return;
+      bar = document.createElement("div"); bar.id = "bar-muat"; bar.setAttribute("aria-hidden", "true");
+      pil = document.createElement("div"); pil.id = "pil-muat"; pil.setAttribute("role", "status"); pil.setAttribute("aria-live", "polite"); pil.hidden = true;
+      document.body.appendChild(bar); document.body.appendChild(pil);
+    }
+    function pesan(teks, jenis) {
+      siap(); clearTimeout(tmrSelesai);
+      pil.hidden = !teks; pil.textContent = teks || ""; pil.className = jenis || "";
+    }
+    function segar() {
+      siap();
+      bar.classList.toggle("jalan", n > 0);
+      clearTimeout(tmrTampil);
+      if (tulis > 0) pesan("Menyimpan perubahan\u2026", "tulis");
+      else if (baca > 0) tmrTampil = setTimeout(function () { if (baca > 0 && !tulis) pesan("Memuat data\u2026", "baca"); }, 350);
+      else if (!n && pil.className !== "ok" && pil.className !== "gagal") pesan("");
+    }
+    return {
+      mulai: function (jenis) { n++; if (jenis === "tulis") tulis++; else if (jenis === "baca") baca++; segar(); },
+      selesai: function (jenis, ok) {
+        n = Math.max(0, n - 1);
+        if (jenis === "tulis") tulis = Math.max(0, tulis - 1); else if (jenis === "baca") baca = Math.max(0, baca - 1);
+        segar();
+        if (jenis === "tulis" && !tulis) {
+          pesan(ok ? "Tersimpan \u2713" : "Gagal menyimpan", ok ? "ok" : "gagal");
+          tmrSelesai = setTimeout(function () { pesan(""); segar(); }, ok ? 1600 : 3500);
+        } else if (!n && !tulis && pil && pil.className === "baca") pesan("");
+      }
+    };
+  })();
+  function jenisAksi(aksi) {
+    if (/Simpan$|^gantiPassword$|^ubahStatus$|^sistemJalankan$|^petaDenahDaftar$/.test(aksi)) return "tulis";
+    if (/^(petaStatus)$/.test(aksi)) return "latar";
+    return "baca";
+  }
+
+  // Semua panggilan admin lewat sini: token ditambahkan, sesi habis ditangani sekali di satu tempat.
   DB.panggil = function (aksi, data, ms) {
+    var jenis = jenisAksi(aksi), hasil = false;
+    Sibuk.mulai(jenis);
     return PC.api(aksi, Object.assign({ token: DB.S.token }, data || {}), ms || 40000).then(function (r) {
       if (r && r.status !== "SUCCESS" && r.kode === "SESI") { DB.keluar(r.message); }
+      hasil = !!(r && r.status === "SUCCESS");
       return r;
     }, function () {
       return { status: "ERROR", message: "Tidak dapat terhubung ke server. Periksa sinyal lalu coba lagi.", jaringan: true };
-    });
+    }).then(function (r) { Sibuk.selesai(jenis, hasil); return r; });
   };
 
   /* ------------------------------------------------------------ sesi */
