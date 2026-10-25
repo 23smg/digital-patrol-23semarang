@@ -200,27 +200,20 @@
   }
 
   /* ---------- Denah: posisi zona yang dipindai ---------- */
-  var petaCache = {}, petaAtur = null;
+  var petaAtur = null;
   function petaLokasi() {
     var el = $("peta-lok"), z = zona;
     if (!el) return;
     PC.kosongkan(el); petaAtur = null;
-    if (!z) { el.hidden = true; return; }
-    var p = petaCache[z];
-    if (p === undefined) {
-      el.hidden = true;
-      PC.api("petaZona", { zona: z }, 15000).then(function (r) {
-        if (!r || r.status !== "SUCCESS") return;   // galat sementara: tidak disimpan, dicoba lagi saat scan berikutnya
-        petaCache[z] = r.denah ? r : null;
-        if (zona === z) petaLokasi();
-      }).catch(function () { /* coba lagi saat scan berikutnya */ });
-      return;
-    }
-    if (!p) { el.hidden = true; return; }
+    // Titik zona datang bersama data dropdown (master.peta), jadi tidak butuh permintaan tambahan dan tetap ada saat offline.
+    var a = z && master && master.peta ? master.peta[z] : null;
+    if (!a) { el.hidden = true; return; }
+    var p = { berkas: a[0], x: a[1], y: a[2] };
     var kotak = h("div", { class: "peta-kotak" }), plat = h("div", { class: "peta-plat" });
     var img = h("img", { src: "denah/" + encodeURIComponent(p.berkas || (String(p.denah).toLowerCase() + ".jpg")), alt: "Denah letak " + z, draggable: "false" });
     plat.appendChild(img);
-    plat.appendChild(h("div", { class: "peta-pin", style: { left: (p.x * 100) + "%", top: (p.y * 100) + "%" } }));
+    plat.appendChild(h("div", { class: "peta-pin", style: { left: (p.x * 100) + "%", top: (p.y * 100) + "%" } },
+      h("span", { class: "peta-pin-ikon" }), h("span", { class: "peta-pin-label", text: z })));
     kotak.appendChild(plat);
 
     // Zoom dan geser dengan sentuhan (cubit / seret) atau roda mouse; tanpa tombol.
@@ -285,7 +278,7 @@
     petaAtur = atur;
     img.addEventListener("load", atur);
     img.addEventListener("error", function () { el.hidden = true; });
-    el.appendChild(h("div", { class: "peta-judul" }, h("b", { text: "Posisi " + z + " di denah" }), h("span", { class: "peta-petunjuk", text: "Cubit atau geser untuk zoom" })));
+    el.appendChild(h("div", { class: "peta-judul" }, h("b", { text: "Lokasi tetap QR" }), h("span", { class: "peta-petunjuk", text: "Cubit untuk zoom" })));
     el.appendChild(kotak);
     el.hidden = false;
     atur();
@@ -446,7 +439,7 @@
     (master.shift || []).forEach(function (x) {
       wadah.appendChild(h("button", { type: "button", class: "lantai-btn", "aria-pressed": shiftDipilih === x.nama ? "true" : "false",
         disabled: !!kunci, onclick: function () { if (kunci) return; shiftDipilih = x.nama; gambarShift(); cobaKunci(); ubah(); } },
-        x.nama, h("small", { class: "shift-jam", text: jamTeks(x.mulai) + "-" + jamTeks(x.selesai) })));
+        h("small", { class: "shift-jam sj-a", text: jamTeks(x.mulai) }), h("b", { class: "shift-nama", text: x.nama }), h("small", { class: "shift-jam sj-b", text: jamTeks(x.selesai) })));
     });
     $("lantai-wadah").hidden = true;   // lantai otomatis dari zona yang dipindai
   }
@@ -513,6 +506,7 @@
       PC.Jam.sinkron(r.waktuServer + (Date.now() - t0) / 2);
       master = r;
       try { localStorage.setItem(KUNCI_MASTER, JSON.stringify(r)); } catch (e) {}
+      petaLokasi();
       if (statusFormBerubah(r)) return;
       periksaGeofence(); periksaKunci(); gambarShift(); muatRonde();
       PC.ZonaJadwal.muat().then(saranZona);
@@ -576,6 +570,7 @@
       PC.Jam.sinkron(r.waktuServer + (Date.now() - t0) / 2);
       master = r;
       try { localStorage.setItem(KUNCI_MASTER, JSON.stringify(r)); } catch (e) {}
+      petaLokasi();
       if (statusFormBerubah(r)) { sudahMulai = true; return; }
       if (!sudahMulai) { sudahMulai = true; mulai(); } else { periksaGeofence(); periksaKunci(); gambarShift(); }
     }).catch(function () {

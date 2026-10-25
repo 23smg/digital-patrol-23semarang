@@ -24,18 +24,18 @@
   }
 
   // Sisa waktu sesi disegarkan memakai jam lokal sejak data dimuat.
-  function berlalu() { return DB.data && DB.data.waktu ? Math.floor((Date.now() - DB.data.waktu) / 60000) : 0; }
-  function sisaKini(L) { return Math.max(0, L.sisaMenit - berlalu()); }
+  function berlalu(w) { w = w || (DB.data && DB.data.waktu); return w ? Math.floor((Date.now() - w) / 60000) : 0; }
+  function sisaKini(L, w) { return Math.max(0, L.sisaMenit - berlalu(w)); }
 
   function peta(c) {
     var p = {};
     (c.lantai || []).forEach(function (L) { p[L.f] = L; });
     return p;
   }
-  function statusKini(z, pl, batas) {
+  function statusKini(z, pl, batas, w) {
     if (z.status !== "belum" && z.status !== "mepet") return z.status;
     var L = pl[z.lantai];
-    return L && sisaKini(L) <= batas ? "mepet" : "belum";
+    return L && sisaKini(L, w) <= batas ? "mepet" : "belum";
   }
 
   function hitungPerhatian() {
@@ -47,11 +47,11 @@
   DB.hitungPerhatian = hitungPerhatian;
 
   // Dipakai halaman Denah: status tiap zona memakai hitungan yang sama dengan halaman ini.
-  DB.statusZonaPeta = function () {
-    var cc = DB.data && DB.data.cakupan;
+  DB.statusZonaPeta = function (cc, waktu) {
+    cc = cc || (DB.data && DB.data.cakupan);
     if (!cc || !cc.zona) return null;
     var pl = peta(cc), batas = Math.max(20, (cc.rondeJam || 3) * 60 * 0.2), hasil = {};
-    cc.zona.forEach(function (z) { hasil[z.zona] = { s: statusKini(z, pl, batas), z: z, info: teksTerakhir(z) }; });
+    cc.zona.forEach(function (z) { hasil[z.zona] = { s: statusKini(z, pl, batas, waktu), z: z, info: teksTerakhir(z) }; });
     return hasil;
   };
 

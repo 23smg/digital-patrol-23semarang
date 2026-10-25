@@ -5,7 +5,7 @@
 (function () {
   "use strict";
   var DB = window.DB, PC = window.PC, h = PC.h, $ = DB.$;
-  var S = { tampil: false, denah: null, aktif: 0, edit: false, pilih: "", sel: "", info: "", lantai: {}, kotor: {}, kotorDaftar: false, seret: false, menyimpan: false, galat: "", tampilan: {}, rasio: {}, tmr: null };
+  var S = { tampil: false, denah: null, aktif: 0, edit: false, pilih: "", sel: "", info: "", lantai: {}, kotor: {}, kotorDaftar: false, seret: false, menyimpan: false, galat: "", tampilan: {}, rasio: {}, tmr: null, gagal: {}, cak: null, cakWaktu: 0, sibukStatus: false, gestur: false };
   var LABEL = { ok: "Sudah sesi ini", belum: "Belum", mepet: "Segera", tanpa: "Tanpa petugas" };
   var timer = null;
 
@@ -14,13 +14,47 @@
   function berlalu() { return DB.data && DB.data.waktu ? Math.floor((Date.now() - DB.data.waktu) / 60000) : 0; }
   function cur() { return S.denah ? S.denah[S.aktif] : null; }
 
+  // Pesan galat yang jelas; paling sering penyebabnya Code.gs di Apps Script belum diperbarui.
+  function pesanGalat(r) {
+    var m = (r && r.message) || "Gagal memuat denah.";
+    if (/tidak dikenali/i.test(m)) m = "Server belum diperbarui: salin Code.gs terbaru ke Apps Script, lalu buat versi deployment baru. (" + m + ")";
+    return m;
+  }
+  function terapkanDenah(list) {
+    S.denah = list.map(function (d, i) {
+      return { id: d.id, nama: d.nama || "", berkas: d.berkas || ("d" + (i + 1) + ".jpg"), lantai: d.lantai || "", pin: d.pin || {} };
+    });
+    if (S.aktif >= S.denah.length) S.aktif = 0;
+  }
+
+  // Satu panggilan: daftar denah + status zona. Bila server masih versi lama, jatuh ke panggilan lama.
   function muat() {
     S.galat = "";
-    return DB.panggil("petaZonaAmbil", {}, 30000).then(function (r) {
-      S.denah = (r.denah || []).map(function (d) { return { id: d.id, nama: d.nama || "", berkas: d.berkas || "", lantai: d.lantai || "", pin: d.pin || {} }; });
-      if (S.aktif >= S.denah.length) S.aktif = 0;
+    return DB.panggil("petaAmbil", {}, 60000).then(function (r) {
+      if (r && r.status === "SUCCESS") { S.cak = r.cakupan || null; S.cakWaktu = Date.now(); return r; }
+      if (r && /tidak dikenali/i.test(r.message || "")) return DB.panggil("petaZonaAmbil", {}, 30000);
+      return r;
+    }).then(function (r) {
+      if (!r || r.status !== "SUCCESS" || !Array.isArray(r.denah) || !r.denah.length) { S.denah = null; S.galat = pesanGalat(r); render(); return; }
+      terapkanDenah(r.denah);
       render();
-    }).catch(function (e) { S.galat = (e && e.message) || "Gagal memuat denah."; render(); });
+    });
+  }
+
+  // Penyegaran berkala: hanya status zona (ringan, di-cache server 25 detik).
+  function segarStatus(paksa) {
+    if (S.sibukStatus || !S.tampil || !S.denah) return;
+    if (!paksa && (document.hidden || S.edit || S.gestur || S.seret)) return;
+    S.sibukStatus = true;
+    DB.panggil("petaStatus", {}, 30000).then(function (r) {
+      S.sibukStatus = false;
+      if (r && r.status === "SUCCESS" && r.cakupan) {
+        S.cak = r.cakupan; S.cakWaktu = Date.now();
+        if (S.tampil && !S.seret && !S.gestur) render();
+      } else if (paksa && r && !r.jaringan && !/tidak dikenali/i.test(r.message || "")) {
+        PC.toast(pesanGalat(r), "bad");
+      }
+    });
   }
 
   function daftarLantai(zona) {
@@ -39,13 +73,13 @@
     S.menyimpan = true; render();
     DB.panggil("petaZonaSimpan", kirim, 40000).then(function (r) {
       S.menyimpan = false;
+      if (!r || r.status !== "SUCCESS" || !r.denah) {
+        PC.toast(pesanGalat(r) + " Titik BELUM tersimpan; tekan Simpan sekarang untuk mencoba lagi.", "bad");
+        S.gagal[d.id] = true; render(); return;
+      }
       // Bila selama menyimpan ada perubahan baru, biarkan ditandai kotor dan simpan lagi.
       var berubah = JSON.stringify(d.pin) !== JSON.stringify(kirim.pin) || d.lantai !== kirim.lantai;
-      if (berubah) { jadwalSimpan(d); } else { S.kotor[d.id] = false; d.lantai = r.denah.lantai; d.pin = r.denah.pin; S.sel = ""; PC.toast("Titik denah tersimpan.", "ok"); }
-      render();
-    }).catch(function (e) {
-      S.menyimpan = false;
-      PC.toast(((e && e.message) || "Gagal menyimpan titik.") + " Titik belum tersimpan di server; tekan Simpan sekarang untuk mencoba lagi.", "bad");
+      if (berubah) { jadwalSimpan(d); } else { S.gagal[d.id] = false; S.kotor[d.id] = false; d.lantai = r.denah.lantai; d.pin = r.denah.pin; S.sel = ""; PC.toast("Titik denah tersimpan.", "ok"); }
       render();
     });
   }
@@ -54,7 +88,7 @@
     clearTimeout(S.tmr);
     S.tmr = setTimeout(function () { simpan(d.id); }, 1200);
   }
-  function tandaiKotor(d) { S.kotor[d.id] = true; jadwalSimpan(d); }
+  function tandaiKotor(d) { S.kotor[d.id] = true; S.gagal[d.id] = false; jadwalSimpan(d); }
   window.addEventListener("beforeunload", function (ev) {
     var ada = Object.keys(S.kotor).some(function (k) { return S.kotor[k]; });
     if (ada) { ev.preventDefault(); ev.returnValue = ""; }
@@ -64,7 +98,7 @@
     var d = cur();
     if (!d) return;
     S.kotor[d.id] = false; S.sel = ""; S.pilih = "";
-    S.denah = null; render(); muat();
+    S.denah = null; S.tampilan = {}; render(); muat();
   }
 
   function posisi(ev, plat) {
@@ -120,10 +154,10 @@
     var w = $("peta-isi");
     if (!w) return;
     PC.kosongkan(w);
-    if (S.galat) { w.appendChild(h("div", { class: "panel" }, h("div", { class: "kosong-info", text: S.galat }))); return; }
-    var data = DB.data, cc = data && data.cakupan;
+    if (S.galat) { w.appendChild(h("div", { class: "panel" }, h("div", { class: "kosong-info", text: S.galat }), h("div", { class: "panel-isi" }, h("button", { type: "button", class: "btn btn-kecil", text: "Coba lagi", onclick: function () { S.galat = ""; S.denah = null; render(); muat(); } })))); return; }
+    var data = DB.data, cc = S.cak || (data && data.cakupan);
     if (!S.denah) { w.appendChild(h("div", { class: "panel" }, h("div", { class: "kosong-info", text: "Memuat denah..." }))); return; }
-    var zona = (cc && cc.zona) || [], status = DB.statusZonaPeta ? DB.statusZonaPeta() : null;
+    var zona = (cc && cc.zona) || [], status = DB.statusZonaPeta ? (S.cak ? DB.statusZonaPeta(S.cak, S.cakWaktu) : DB.statusZonaPeta()) : null;
     var d = cur(), editAktif = S.edit && boleh();
 
     // Tab denah + tombol atur
@@ -136,7 +170,7 @@
     var kanan = h("div", { class: "rapat" });
     if (boleh()) kanan.appendChild(h("button", { type: "button", class: "btn btn-kecil " + (editAktif ? "" : "btn-garis"), text: editAktif ? "Selesai mengatur" : "Atur titik",
       onclick: function () { if (S.edit && d.id && S.kotor[d.id]) simpan(d.id); S.edit = !S.edit; S.sel = ""; S.pilih = ""; S.info = ""; render(); } }));
-    kanan.appendChild(h("button", { type: "button", class: "btn btn-kecil btn-garis", text: "Muat ulang", onclick: function () { if (DB.muatUlang) DB.muatUlang(); } }));
+    kanan.appendChild(h("button", { type: "button", class: "btn btn-kecil btn-garis", text: "Muat ulang", onclick: function () { segarStatus(true); } }));
     w.appendChild(h("div", { class: "tools tools-lepas" }, tab, kanan));
 
     // Ringkasan status pada denah ini
@@ -147,12 +181,12 @@
       h("span", { class: "lencana l-warn", text: "Belum " + n.belum }),
       h("span", { class: "lencana l-bad", text: "Segera " + n.mepet }),
       h("span", { class: "lencana l-abu", text: "Tanpa petugas " + n.tanpa }),
-      h("span", { class: "oleh", text: Object.keys(d.pin).length + " titik di denah ini" + (data ? " · diperbarui " + PC.fmtWIB(new Date(data.waktu)).jam + " WIB" : "") }));
+      h("span", { class: "oleh", text: Object.keys(d.pin).length + " titik di denah ini" + (S.cakWaktu || data ? " · diperbarui " + PC.fmtWIB(new Date(S.cakWaktu || data.waktu)).jam + " WIB" : "") }));
     w.appendChild(legenda);
 
     // Banner perubahan belum tersimpan (terlihat juga di luar mode atur)
     if (d.id && S.kotor[d.id]) {
-      w.appendChild(h("div", { class: "peta-belum" }, h("span", { text: S.menyimpan ? "Menyimpan titik..." : "Perubahan titik belum disimpan (otomatis tersimpan sebentar lagi)." }),
+      w.appendChild(h("div", { class: "peta-belum" }, h("span", { text: S.menyimpan ? "Menyimpan titik..." : (S.gagal[d.id] ? "Gagal menyimpan. Titik belum tersimpan di server." : "Perubahan titik belum disimpan (otomatis tersimpan sebentar lagi).") }),
         h("button", { type: "button", class: "btn btn-kecil", text: "Simpan sekarang", disabled: S.menyimpan, onclick: function () { simpan(d.id); } })));
     }
 
@@ -195,7 +229,7 @@
     function ukur() { var k = Object.keys(ptr); return { d: Math.hypot(ptr[k[0]].x - ptr[k[1]].x, ptr[k[0]].y - ptr[k[1]].y), x: (ptr[k[0]].x + ptr[k[1]].x) / 2, y: (ptr[k[0]].y + ptr[k[1]].y) / 2 }; }
     bidang.addEventListener("pointerdown", function (ev) {
       if (ev.button > 0) return;
-      ptr[ev.pointerId] = pt(ev); mulai = { x: ev.clientX, y: ev.clientY }; bergeser = false;
+      ptr[ev.pointerId] = pt(ev); mulai = { x: ev.clientX, y: ev.clientY }; bergeser = false; S.gestur = true;
       try { bidang.setPointerCapture(ev.pointerId); } catch (x) { /* abaikan */ }
       if (Object.keys(ptr).length === 2) { var m = ukur(); awal = { d: m.d, s: v.s, ax: (m.x - v.tx) / v.s, ay: (m.y - v.ty) / v.s }; bergeser = true; }
     });
@@ -214,7 +248,7 @@
     });
     function lepas(ev, batal) {
       var tadiSatu = Object.keys(ptr).length === 1;
-      delete ptr[ev.pointerId]; awal = null;
+      delete ptr[ev.pointerId]; awal = null; if (!Object.keys(ptr).length) S.gestur = false;
       if (!batal && tadiSatu && !bergeser && editAktif && S.pilih && d.id) {
         var q = posisi(ev, plat);
         d.pin[S.pilih] = [Math.round(q[0] * 10000) / 10000, Math.round(q[1] * 10000) / 10000];
@@ -266,6 +300,7 @@
     var aktifId = cur() ? cur().id : "", idx = S.aktif;
     S.menyimpan = true; render();
     DB.panggil("petaDenahDaftar", { daftar: S.denah.map(function (x) { return { id: x.id, nama: x.nama, berkas: x.berkas }; }) }, 40000).then(function (r) {
+      if (!r || r.status !== "SUCCESS" || !Array.isArray(r.denah)) { S.menyimpan = false; PC.toast(pesanGalat(r), "bad"); render(); return; }
       S.denah = (r.denah || []).map(function (d) {
         var l = lokal[d.id];
         // Titik yang belum disimpan di denah lain tetap dipertahankan.
@@ -340,14 +375,13 @@
     S.tampil = true; S.info = ""; S.pilih = ""; S.sel = "";
     wadah.appendChild(h("div", { id: "peta-isi" }));
     render();
-    if (DB.muatUlang) DB.muatUlang();
-    if (!S.denah) muat();
-    // Data status disegarkan tiap 30 detik agar titik berubah warna begitu petugas selesai memindai.
+    if (!S.denah) muat(); else segarStatus(true);
+    // Status disegarkan tiap 45 detik lewat panggilan ringan; berhenti saat tab tersembunyi atau sedang mengatur.
     if (timer) clearInterval(timer);
-    timer = setInterval(function () { if (S.tampil && !S.edit && !document.hidden && DB.muatUlang) DB.muatUlang(); }, 30000);
+    timer = setInterval(function () { segarStatus(false); }, 45000);
   }
   function tinggalkan() { S.tampil = false; S.edit = false; if (timer) { clearInterval(timer); timer = null; } }
 
-  DB.saatData(function () { if (S.tampil && !S.seret) render(); });
+  DB.saatData(function () { if (S.tampil && !S.seret && !S.gestur && !S.cak) render(); });
   DB.daftar({ id: "denah", judul: "Denah zona", grup: "pantau", izin: "semua", tampil: tampil, tinggalkan: tinggalkan });
 })();
