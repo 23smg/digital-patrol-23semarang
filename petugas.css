@@ -470,3 +470,163 @@ body.lembar-buka { overflow: hidden; }
 .btn-segar { width: 26px; height: 26px; font-size: 14px; }
 .atas-status { gap: 6px; margin-bottom: 8px; }
 .kaki-app { display: flex; flex-wrap: wrap; justify-content: center; gap: 2px 10px; margin: 18px 0 6px; font-size: 11px; color: var(--teks-2, #7A8496); text-align: center; }
+
+/* ===== Tampilan ringkas bergaya aplikasi (palet selaras dengan dashboard admin) ===== */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) { --bg: #E8EDF4; --kartu: #FFFFFF; --garis: #D9E1EE; --input: #F8FAFD; --input-garis: #CBD5E4; --aksen: #3F6AD8; --hijau-bg: #E7F6EE; }
+}
+:root[data-theme="light"] { --bg: #E8EDF4; --kartu: #FFFFFF; --garis: #D9E1EE; --input: #F8FAFD; --input-garis: #CBD5E4; --aksen: #3F6AD8; --hijau-bg: #E7F6EE; }
+
+/* Header berwarna */
+.kepala { background: linear-gradient(135deg, #3F6AD8 0%, #5A83EC 100%); border-bottom: 0; padding-top: calc(8px + env(safe-area-inset-top, 0px)); padding-bottom: 8px; }
+.kepala .judul { color: #fff; font-size: 16px; letter-spacing: .2px; }
+.nav-app a { padding: 5px 11px; font-size: 12.5px; color: rgba(255, 255, 255, .82); border-radius: 999px; }
+.nav-app a[aria-current="page"] { color: #3F6AD8; background: #fff; }
+.stempel { padding: 8px 16px; border-bottom: 0; }
+.atas-tetap { box-shadow: 0 3px 12px rgba(31, 45, 80, .12); }
+
+/* Kartu dan jarak lebih rapat */
+.app { padding: 8px 10px calc(112px + env(safe-area-inset-bottom, 0px)); }
+.bagian { padding: 10px 12px; margin-bottom: 8px; border-radius: 14px; box-shadow: 0 1px 2px rgba(31, 45, 80, .06); }
+.bagian > h2 { margin: 0 0 8px; font-size: 13px; }
+.langkah { width: 20px; height: 20px; font-size: 10.5px; }
+.medan { margin-bottom: 8px; }
+.label { margin-bottom: 4px; font-size: 11.5px; }
+
+/* Kolom isian dan pilihan lebih kecil */
+.input { min-height: 38px; padding: 6px 10px; font-size: 14px; border-radius: 10px; }
+textarea.input { min-height: 54px; }
+.ubin-grup { gap: 8px; margin-bottom: 8px; }
+.ubin { min-height: 40px; padding: 8px; font-size: 14px; border-radius: 10px; }
+.btn { min-height: 40px; font-size: 14px; border-radius: 10px; }
+.btn-kecil { min-height: 30px; font-size: 12.5px; padding: 0 10px; }
+.bagian button:not(.btn):not(.foto-hapus) { min-height: 36px; margin: 0 6px 6px 0; padding: 0 12px; font-size: 13.5px; border-radius: 10px; }
+.bagian .lantai-btn { min-width: 52px; min-height: 36px; }
+.bagian button:not(.btn):not(.foto-hapus) small, .bagian button:not(.btn):not(.foto-hapus) span { font-size: 11px; }
+.lokasi-nama { font-size: 15px; padding: 9px; }
+.seg { min-height: 36px; font-size: 13px; border-radius: 10px; }
+.seg-grup, .tingkat { gap: 6px; }
+.cl-baris { padding: 8px 0; }
+.cl-nama { font-size: 13.5px; margin-bottom: 6px; }
+.daftar li { padding: 8px 10px; font-size: 14px; }
+.bar-kirim { padding: 8px 12px calc(8px + env(safe-area-inset-bottom, 0px)); box-shadow: 0 -3px 12px rgba(31, 45, 80, .08); }
+#bar-progres { margin-bottom: 6px; }
+.ronde { margin-bottom: 8px; padding: 10px 12px; border-radius: 14px; }
+
+/* Baris status: titik, Riwayat dan muat ulang rapat di kanan */
+.atas-status { gap: 4px; margin-bottom: 6px; }
+.atas-status > #antrean-wadah { flex: 1; }
+.strip { justify-content: flex-end; gap: 6px; margin-bottom: 0; }
+.strip-status { flex: 0 1 auto; font-size: 11px; }
+.strip-dot { width: 8px; height: 8px; }
+.strip-riwayat { padding: 2px 9px; font-size: 11.5px; }
+.btn-segar { width: 22px; height: 22px; font-size: 12px; }
+.kaki-app { margin: 12px 0 4px; font-size: 10.5px; }
+
+/* =====================================================================
+   Tema SmartPatrol: kompak, minimalis, bernuansa aplikasi
+   Palet: latar abu-biru lembut, kartu putih, header biru gradasi, aksen biru yang sama dengan dashboard.
+   ===================================================================== */
+:root { --bg: #E8EDF4; --garis: #DCE3EE; --aksen: #3F6AD8; --aksen-tua: #2B4FB8; --aksen-muda: #E6EDFC; --input-garis: #CBD5E3; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --aksen-muda: rgba(63,106,216,.22); --aksen-tua: #1E3A8A; } }
+:root[data-theme="dark"] { --aksen-muda: rgba(63,106,216,.22); --aksen-tua: #1E3A8A; }
+
+/* Header + jam: satu blok biru gradasi dengan sudut bawah membulat */
+.atas-tetap { background: linear-gradient(135deg, var(--aksen-tua), var(--aksen)); border-radius: 0 0 20px 20px; box-shadow: 0 4px 14px rgba(43,79,184,.28); }
+.kepala { background: transparent; border-bottom: 0; padding: calc(8px + env(safe-area-inset-top, 0px)) 14px 4px; }
+.judul { color: #fff; font-size: 16px; letter-spacing: .2px; }
+.nav-app { gap: 4px; }
+.nav-app a { padding: 5px 12px; font-size: 12.5px; color: rgba(255,255,255,.85); background: rgba(255,255,255,.14); border-radius: 999px; }
+.nav-app a[aria-current="page"] { color: var(--aksen-tua); background: #fff; }
+.stempel { background: transparent; border-bottom: 0; padding: 2px 14px 12px; color: #fff; }
+.st-jam { font-size: 22px; }
+.st-tgl { color: rgba(255,255,255,.8); margin-top: 2px; }
+.st-gps { color: #fff; border-color: rgba(255,255,255,.4); background: rgba(255,255,255,.12); padding: 2px 9px; }
+.st-lokasi-badge { margin-top: 4px; background: rgba(255,255,255,.95); color: #047857; padding: 1px 8px; }
+html { scroll-padding-top: 130px; }
+
+/* Ruang halaman lebih rapat */
+.app { padding: 10px 10px calc(112px + env(safe-area-inset-bottom, 0px)); }
+.atas-status { margin: 0 2px 6px; gap: 4px; }
+.strip { margin: 0; gap: 4px; }
+.strip-dot { width: 8px; height: 8px; margin: 0 2px; }
+.strip-riwayat { padding: 2px 9px; font-size: 11.5px; line-height: 20px; }
+.btn-segar { width: 24px; height: 24px; font-size: 13px; }
+
+/* Kartu */
+.bagian { padding: 10px 12px; margin-bottom: 8px; border-radius: 14px; box-shadow: 0 1px 2px rgba(30,50,90,.06); }
+.bagian > h2, .bagian-kepala h2 { margin-bottom: 8px; font-size: 13px; }
+.bagian-kepala { margin-bottom: 8px; }
+.langkah { width: 20px; height: 20px; font-size: 10.5px; background: var(--aksen-muda); border-color: transparent; color: var(--aksen); }
+.label { font-size: 11.5px; margin-bottom: 4px; }
+.medan { margin-bottom: 8px; }
+
+/* Isian dan pilihan: lebih kecil */
+.input { min-height: 40px; padding: 7px 11px; border-radius: 10px; }
+textarea.input { min-height: 56px; }
+#catatan { min-height: 38px; height: 38px; padding: 7px 11px; }
+.daftar li, .daftar li { min-height: 40px; padding: 6px 10px; font-size: 14.5px; }
+.bagian button:not(.btn):not(.foto-hapus) { min-height: 34px; margin: 0 6px 6px 0; padding: 0 12px; border-radius: 999px; font-size: 13px; }
+.bagian .lantai-btn { min-width: 48px; min-height: 36px; }
+.bagian button.btn-izin:not(.btn):not(.foto-hapus) { min-height: 24px; margin: 0; }
+.ubin-grup { gap: 8px; margin-bottom: 8px; }
+.ubin { min-height: 44px; padding: 8px; border-radius: 12px; font-size: 15px; }
+.seg { min-height: 38px; border-radius: 10px; font-size: 13px; }
+.seg-grup, .tingkat { gap: 6px; }
+.cl-baris { padding: 8px 0; }
+.cl-nama { margin-bottom: 6px; font-size: 13.5px; }
+.lokasi-nama { padding: 8px; font-size: 15px; border-radius: 10px; }
+.lokasi-nama:not([hidden]) + .btn, .peta-lok + .btn { margin-top: 8px; }
+.geo { margin-top: 8px; padding: 6px 10px; font-size: 12.5px; }
+.foto-item { width: 68px; height: 68px; }
+.foto-grid { gap: 8px; margin-bottom: 8px; }
+
+/* Tombol */
+.btn { min-height: 40px; padding: 0 14px; font-size: 14px; border-radius: 12px; }
+.btn-semua { min-height: 36px; }
+.btn-foto { min-height: 40px; }
+
+/* Bar kirim */
+.bar-kirim { padding: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px)); border-top: 0; box-shadow: 0 -4px 14px rgba(30,50,90,.12); border-radius: 18px 18px 0 0; }
+#bar-progres { margin-bottom: 6px; height: 3px; }
+.kurang { margin-bottom: 6px; font-size: 12px; }
+#btn-kirim { min-height: 44px; font-size: 14.5px; border-radius: 14px; background: linear-gradient(135deg, var(--aksen-tua), var(--aksen)); color: #fff; }
+#btn-kirim:disabled { background: var(--garis); color: var(--teks-2); }
+.btn-utama { background: linear-gradient(135deg, var(--aksen-tua), var(--aksen)); }
+
+/* Pilihan terpilih: gradasi aksen */
+input:checked + .ubin { background: linear-gradient(135deg, var(--aksen-tua), var(--aksen)); border-color: transparent; }
+.bagian button[aria-pressed="true"]:not(.btn):not(.foto-hapus), .bagian button.aktif:not(.btn):not(.foto-hapus) { background: var(--aksen); border-color: var(--aksen); box-shadow: 0 2px 6px rgba(63,106,216,.3); }
+.bagian.selesai { border-color: #BFE6D2; }
+.bagian.selesai > h2 .langkah { background: var(--hijau); color: #fff; }
+.peta-judul { margin-bottom: 6px; }
+#shift-grup .lantai-btn { border-radius: 12px; padding: 4px 14px; line-height: 1.2; }
+#shift-grup .shift-jam { display: block; font-size: 11px; }
+
+/* =====================================================================
+   Warna merek 23 Semarang: hijau tua #01413C, angka "23" besar samar #134E4A
+   ===================================================================== */
+:root { --bg: #EDF2F0; --garis: #D5E1DD; --input-garis: #C5D5D0; --aksen: #0E6B5C; --aksen-tua: #01413C; --aksen-muda: #DDEEE9; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --aksen: #2FA58F; --aksen-tua: #01413C; --aksen-muda: rgba(47,165,143,.22); } }
+:root[data-theme="dark"] { --aksen: #2FA58F; --aksen-tua: #01413C; --aksen-muda: rgba(47,165,143,.22); }
+
+.atas-tetap { background: #01413C; overflow: hidden; box-shadow: 0 4px 14px rgba(1,65,60,.35); }
+.atas-tetap::before { content: ""; position: absolute; right: 4px; bottom: -34px; z-index: 0; width: 168px; height: 141px; background: url("logo-23.png") no-repeat center / contain; pointer-events: none; }
+.atas-tetap > * { position: relative; z-index: 1; }
+.nav-app a { background: rgba(255,255,255,.12); }
+.nav-app a[aria-current="page"] { color: #01413C; }
+.st-gps { background: rgba(255,255,255,.1); }
+.st-lokasi-badge { color: #01413C; }
+
+.input:focus { box-shadow: 0 0 0 3px rgba(14,107,92,.2); }
+.bagian button[aria-pressed="true"]:not(.btn):not(.foto-hapus), .bagian button.aktif:not(.btn):not(.foto-hapus) { box-shadow: 0 2px 6px rgba(1,65,60,.3); }
+.bar-kirim { box-shadow: 0 -4px 14px rgba(1,65,60,.14); }
+.btn-foto { color: var(--aksen); border-color: var(--aksen); }
+.strip-riwayat, .btn-segar { color: var(--aksen); }
+.bagian.selesai { border-color: #BFDCD3; }
+.langkah { color: var(--aksen); }
+/* Palet hijau 23 Semarang: samakan kekhususan dengan blok palet terang di atas */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) { --bg: #EDF2F0; --garis: #D5E1DD; --input: #F8FBFA; --input-garis: #C5D5D0; --aksen: #0E6B5C; --aksen-tua: #01413C; --aksen-muda: #DDEEE9; --hijau-bg: #E3F4EC; }
+}
+:root[data-theme="light"] { --bg: #EDF2F0; --garis: #D5E1DD; --input: #F8FBFA; --input-garis: #C5D5D0; --aksen: #0E6B5C; --aksen-tua: #01413C; --aksen-muda: #DDEEE9; --hijau-bg: #E3F4EC; }
