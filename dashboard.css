@@ -677,3 +677,14 @@ dialog.dialog, dialog.dialog-lebar { border-radius: 22px; background: #FAFBFC; }
 .peta-galat { padding: 40px 20px; text-align: center; color: #7A8496; font-size: 14px; }
 .lm-kaki { display: flex; flex-wrap: wrap; gap: 2px 10px; }
 .sisi-versi { margin-top: 10px; font-size: 11px; color: #8A94A6; }
+
+/* Denah: zoom dan geser */
+.peta-bidang { aspect-ratio: 16 / 10; touch-action: none; cursor: grab; }
+.peta-bidang.menaruh { cursor: crosshair; }
+.peta-plat { position: absolute; inset: 0; transform-origin: 0 0; will-change: transform; }
+.peta-gambar { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: fill; }
+.peta-titik { transform: translate(-50%, -50%) scale(var(--inv, 1)); }
+.peta-zoomkontrol { position: absolute; top: 10px; right: 10px; z-index: 5; display: grid; gap: 6px; }
+.peta-zoomkontrol button { width: 34px; height: 34px; padding: 0; border: 1px solid var(--garis); border-radius: 10px; background: #FAFBFC; color: #2B3A55; font: inherit; font-size: 17px; font-weight: 600; line-height: 1; cursor: pointer; box-shadow: 0 1px 4px rgba(20, 30, 50, .18); }
+.peta-zoomkontrol button:hover { background: #fff; }
+.peta-belum { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 0 0 12px; padding: 8px 14px; border-radius: 12px; background: #FFF7E0; border: 1px solid #F2D98A; color: #6B4E00; font-size: 13.5px; }

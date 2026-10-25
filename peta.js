@@ -5,8 +5,7 @@
 (function () {
   "use strict";
   var DB = window.DB, PC = window.PC, h = PC.h, $ = DB.$;
-  var JUMLAH = 4;
-  var S = { tampil: false, denah: null, aktif: 0, edit: false, pilih: "", sel: "", info: "", lantai: {}, kotor: {}, seret: false, menyimpan: false, galat: "" };
+  var S = { tampil: false, denah: null, aktif: 0, edit: false, pilih: "", sel: "", info: "", lantai: {}, kotor: {}, kotorDaftar: false, seret: false, menyimpan: false, galat: "", tampilan: {}, rasio: {}, tmr: null };
   var LABEL = { ok: "Sudah sesi ini", belum: "Belum", mepet: "Segera", tanpa: "Tanpa petugas" };
   var timer = null;
 
@@ -18,7 +17,8 @@
   function muat() {
     S.galat = "";
     return DB.panggil("petaZonaAmbil", {}, 30000).then(function (r) {
-      S.denah = (r.denah || []).map(function (d) { return { id: d.id, lantai: d.lantai || "", pin: d.pin || {} }; });
+      S.denah = (r.denah || []).map(function (d) { return { id: d.id, nama: d.nama || "", berkas: d.berkas || "", lantai: d.lantai || "", pin: d.pin || {} }; });
+      if (S.aktif >= S.denah.length) S.aktif = 0;
       render();
     }).catch(function (e) { S.galat = (e && e.message) || "Gagal memuat denah."; render(); });
   }
@@ -29,18 +29,36 @@
     return Object.keys(u).sort(function (a, b) { return a.localeCompare(b, "id", { numeric: true }); });
   }
 
-  function simpan() {
-    var d = cur();
-    if (!d || S.menyimpan) return;
+  // Simpan titik satu denah. Dipanggil otomatis 1,2 detik setelah perubahan terakhir, atau lewat tombol.
+  function simpan(id) {
+    var d = typeof id === "string" ? S.denah && S.denah.filter(function (x) { return x.id === id; })[0] : cur();
+    if (!d || !d.id) return;
+    if (S.menyimpan) { jadwalSimpan(d); return; }
+    clearTimeout(S.tmr);
+    var kirim = { denah: d.id, lantai: d.lantai, pin: JSON.parse(JSON.stringify(d.pin)) };
     S.menyimpan = true; render();
-    DB.panggil("petaZonaSimpan", { denah: d.id, lantai: d.lantai, pin: d.pin }, 40000).then(function (r) {
-      S.denah[S.aktif] = { id: r.denah.id, lantai: r.denah.lantai, pin: r.denah.pin };
-      S.kotor[d.id] = false; S.menyimpan = false; S.sel = "";
-      PC.toast("Titik denah tersimpan.", "ok"); render();
+    DB.panggil("petaZonaSimpan", kirim, 40000).then(function (r) {
+      S.menyimpan = false;
+      // Bila selama menyimpan ada perubahan baru, biarkan ditandai kotor dan simpan lagi.
+      var berubah = JSON.stringify(d.pin) !== JSON.stringify(kirim.pin) || d.lantai !== kirim.lantai;
+      if (berubah) { jadwalSimpan(d); } else { S.kotor[d.id] = false; d.lantai = r.denah.lantai; d.pin = r.denah.pin; S.sel = ""; PC.toast("Titik denah tersimpan.", "ok"); }
+      render();
     }).catch(function (e) {
-      S.menyimpan = false; PC.toast((e && e.message) || "Gagal menyimpan titik.", "bad"); render();
+      S.menyimpan = false;
+      PC.toast(((e && e.message) || "Gagal menyimpan titik.") + " Titik belum tersimpan di server; tekan Simpan sekarang untuk mencoba lagi.", "bad");
+      render();
     });
   }
+  function jadwalSimpan(d) {
+    if (!d || !d.id) return;
+    clearTimeout(S.tmr);
+    S.tmr = setTimeout(function () { simpan(d.id); }, 1200);
+  }
+  function tandaiKotor(d) { S.kotor[d.id] = true; jadwalSimpan(d); }
+  window.addEventListener("beforeunload", function (ev) {
+    var ada = Object.keys(S.kotor).some(function (k) { return S.kotor[k]; });
+    if (ada) { ev.preventDefault(); ev.returnValue = ""; }
+  });
 
   function batal() {
     var d = cur();
@@ -49,8 +67,8 @@
     S.denah = null; render(); muat();
   }
 
-  function posisi(ev, bidang) {
-    var r = bidang.getBoundingClientRect();
+  function posisi(ev, plat) {
+    var r = plat.getBoundingClientRect();
     return [Math.min(1, Math.max(0, (ev.clientX - r.left) / r.width)), Math.min(1, Math.max(0, (ev.clientY - r.top) / r.height))];
   }
 
@@ -58,7 +76,7 @@
     return zona.filter(function (z) { return !d.pin[z.zona] && (!d.lantai || z.lantai === d.lantai); });
   }
 
-  function pasangTitik(d, bidang, zona, status) {
+  function pasangTitik(d, plat, zona, status) {
     Object.keys(d.pin).forEach(function (nama) {
       var st = status && status[nama];
       var s = st ? st.s : "tanpa";
@@ -79,21 +97,22 @@
           if (!S.seret) return;
           if (Math.abs(ev.clientX - mulaiX) + Math.abs(ev.clientY - mulaiY) > 4) gerak = true;
           if (!gerak) return;
-          var q = posisi(ev, bidang);
+          var q = posisi(ev, plat);
           el.style.left = (q[0] * 100) + "%"; el.style.top = (q[1] * 100) + "%";
           d.pin[nama] = [Math.round(q[0] * 10000) / 10000, Math.round(q[1] * 10000) / 10000];
         });
         el.addEventListener("pointerup", function () {
           if (!S.seret) return;
           S.seret = false;
-          if (gerak) S.kotor[d.id] = true;
+          if (gerak) tandaiKotor(d);
           S.sel = nama; S.pilih = "";
           render();
         });
       } else {
+        el.addEventListener("pointerdown", function (ev) { ev.stopPropagation(); });
         el.addEventListener("click", function (ev) { ev.stopPropagation(); S.info = S.info === nama ? "" : nama; render(); });
       }
-      bidang.appendChild(el);
+      plat.appendChild(el);
     });
   }
 
@@ -111,12 +130,12 @@
     var tab = h("div", { class: "rapat" });
     S.denah.forEach(function (x, i) {
       tab.appendChild(h("button", { type: "button", class: "btn btn-pilih", "aria-pressed": i === S.aktif ? "true" : "false",
-        text: (x.lantai ? "Lantai " + x.lantai : "Denah " + (i + 1)) + (S.kotor[x.id] ? " *" : ""),
+        text: (x.nama || (x.lantai ? "Lantai " + x.lantai : "Denah " + (i + 1))) + (S.kotor[x.id] ? " *" : ""),
         onclick: function () { S.aktif = i; S.sel = ""; S.info = ""; S.pilih = ""; render(); } }));
     });
     var kanan = h("div", { class: "rapat" });
     if (boleh()) kanan.appendChild(h("button", { type: "button", class: "btn btn-kecil " + (editAktif ? "" : "btn-garis"), text: editAktif ? "Selesai mengatur" : "Atur titik",
-      onclick: function () { S.edit = !S.edit; S.sel = ""; S.pilih = ""; S.info = ""; render(); } }));
+      onclick: function () { if (S.edit && d.id && S.kotor[d.id]) simpan(d.id); S.edit = !S.edit; S.sel = ""; S.pilih = ""; S.info = ""; render(); } }));
     kanan.appendChild(h("button", { type: "button", class: "btn btn-kecil btn-garis", text: "Muat ulang", onclick: function () { if (DB.muatUlang) DB.muatUlang(); } }));
     w.appendChild(h("div", { class: "tools tools-lepas" }, tab, kanan));
 
@@ -131,22 +150,98 @@
       h("span", { class: "oleh", text: Object.keys(d.pin).length + " titik di denah ini" + (data ? " · diperbarui " + PC.fmtWIB(new Date(data.waktu)).jam + " WIB" : "") }));
     w.appendChild(legenda);
 
-    // Gambar denah + titik
+    // Banner perubahan belum tersimpan (terlihat juga di luar mode atur)
+    if (d.id && S.kotor[d.id]) {
+      w.appendChild(h("div", { class: "peta-belum" }, h("span", { text: S.menyimpan ? "Menyimpan titik..." : "Perubahan titik belum disimpan (otomatis tersimpan sebentar lagi)." }),
+        h("button", { type: "button", class: "btn btn-kecil", text: "Simpan sekarang", disabled: S.menyimpan, onclick: function () { simpan(d.id); } })));
+    }
+
+    // Gambar denah + titik, bisa di-zoom (roda mouse / cubit / tombol) dan digeser
     var bidang = h("div", { class: "peta-bidang" + (editAktif && S.pilih ? " menaruh" : "") });
-    bidang.appendChild(h("img", { class: "peta-gambar", src: "denah/d" + (S.aktif + 1) + ".jpg", alt: "Denah " + (S.aktif + 1), draggable: "false" }));
-    if (editAktif) {
-      bidang.addEventListener("click", function (ev) {
-        if (!S.pilih || ev.target.classList.contains("peta-titik")) return;
-        var q = posisi(ev, bidang);
+    var plat = h("div", { class: "peta-plat" });
+    bidang.appendChild(plat);
+    var v = S.tampilan[d.id] || (S.tampilan[d.id] = { s: 1, tx: 0, ty: 0 });
+    function terapkan() {
+      var W = bidang.clientWidth, H = bidang.clientHeight;
+      if (W && H) { v.tx = Math.min(0, Math.max(W - W * v.s, v.tx)); v.ty = Math.min(0, Math.max(H - H * v.s, v.ty)); }
+      plat.style.transform = "translate(" + v.tx + "px," + v.ty + "px) scale(" + v.s + ")";
+      plat.style.setProperty("--inv", String(1 / v.s));
+    }
+    function zoomDi(px, py, ns) {
+      ns = Math.min(8, Math.max(1, ns));
+      var px0 = (px - v.tx) / v.s, py0 = (py - v.ty) / v.s;
+      v.s = ns; v.tx = px - px0 * ns; v.ty = py - py0 * ns; terapkan();
+    }
+    if (d.berkas) {
+      var gbr = h("img", { class: "peta-gambar", src: "denah/" + encodeURIComponent(d.berkas), alt: "Denah " + (d.nama || S.aktif + 1), draggable: "false" });
+      if (S.rasio[d.berkas]) bidang.style.aspectRatio = S.rasio[d.berkas];
+      gbr.addEventListener("load", function () {
+        S.rasio[d.berkas] = gbr.naturalWidth + " / " + gbr.naturalHeight;
+        bidang.style.aspectRatio = S.rasio[d.berkas]; terapkan();
+      });
+      gbr.addEventListener("error", function () {
+        gbr.hidden = true;
+        bidang.appendChild(h("div", { class: "peta-galat", text: "Gambar denah tidak ditemukan: denah/" + d.berkas + ". Unggah file itu ke folder denah di GitHub." }));
+      });
+      plat.appendChild(gbr);
+    } else {
+      bidang.appendChild(h("div", { class: "peta-galat", text: "Denah ini belum punya gambar. Isi nama berkas di bawah, lalu Simpan denah." }));
+    }
+    pasangTitik(d, plat, zona, status);
+
+    // Gestur: seret = geser, cubit / roda = zoom, ketuk (tanpa geser) = taruh titik di mode atur
+    var ptr = {}, awal = null, bergeser = false, mulai = null;
+    function pt(ev) { var r = bidang.getBoundingClientRect(); return { x: ev.clientX - r.left, y: ev.clientY - r.top }; }
+    function ukur() { var k = Object.keys(ptr); return { d: Math.hypot(ptr[k[0]].x - ptr[k[1]].x, ptr[k[0]].y - ptr[k[1]].y), x: (ptr[k[0]].x + ptr[k[1]].x) / 2, y: (ptr[k[0]].y + ptr[k[1]].y) / 2 }; }
+    bidang.addEventListener("pointerdown", function (ev) {
+      if (ev.button > 0) return;
+      ptr[ev.pointerId] = pt(ev); mulai = { x: ev.clientX, y: ev.clientY }; bergeser = false;
+      try { bidang.setPointerCapture(ev.pointerId); } catch (x) { /* abaikan */ }
+      if (Object.keys(ptr).length === 2) { var m = ukur(); awal = { d: m.d, s: v.s, ax: (m.x - v.tx) / v.s, ay: (m.y - v.ty) / v.s }; bergeser = true; }
+    });
+    bidang.addEventListener("pointermove", function (ev) {
+      if (!ptr[ev.pointerId]) return;
+      var q = pt(ev), n = Object.keys(ptr).length, lama = ptr[ev.pointerId];
+      if (n >= 2 && awal) {
+        ptr[ev.pointerId] = q; var m = ukur();
+        if (!m.d || !awal.d) return;
+        v.s = Math.min(8, Math.max(1, awal.s * m.d / awal.d)); v.tx = m.x - awal.ax * v.s; v.ty = m.y - awal.ay * v.s; terapkan();
+      } else {
+        if (!bergeser && mulai && Math.abs(ev.clientX - mulai.x) + Math.abs(ev.clientY - mulai.y) > 5) bergeser = true;
+        if (bergeser) { v.tx += q.x - lama.x; v.ty += q.y - lama.y; terapkan(); }
+        ptr[ev.pointerId] = q;
+      }
+    });
+    function lepas(ev, batal) {
+      var tadiSatu = Object.keys(ptr).length === 1;
+      delete ptr[ev.pointerId]; awal = null;
+      if (!batal && tadiSatu && !bergeser && editAktif && S.pilih && d.id) {
+        var q = posisi(ev, plat);
         d.pin[S.pilih] = [Math.round(q[0] * 10000) / 10000, Math.round(q[1] * 10000) / 10000];
-        S.kotor[d.id] = true; S.sel = S.pilih;
+        S.sel = S.pilih; tandaiKotor(d);
         var sisa = belumBertitik(d, zona);
         S.pilih = sisa.length ? sisa[0].zona : "";
         render();
-      });
+      }
     }
-    pasangTitik(d, bidang, zona, status);
+    bidang.addEventListener("pointerup", function (ev) { lepas(ev, false); });
+    bidang.addEventListener("pointercancel", function (ev) { lepas(ev, true); });
+    bidang.addEventListener("wheel", function (ev) {
+      ev.preventDefault();
+      var q = pt(ev); zoomDi(q.x, q.y, v.s * Math.exp(-ev.deltaY * 0.0015));
+    }, { passive: false });
+    bidang.addEventListener("dblclick", function (ev) {
+      if (ev.target.classList.contains("peta-titik")) return;
+      var q = pt(ev); if (v.s > 1.5) { v.s = 1; v.tx = 0; v.ty = 0; terapkan(); } else zoomDi(q.x, q.y, 3);
+    });
+    var kontrol = h("div", { class: "peta-zoomkontrol" },
+      h("button", { type: "button", "aria-label": "Perbesar", title: "Perbesar", text: "+", onclick: function (ev) { ev.stopPropagation(); zoomDi(bidang.clientWidth / 2, bidang.clientHeight / 2, v.s * 1.5); } }),
+      h("button", { type: "button", "aria-label": "Perkecil", title: "Perkecil", text: "\u2212", onclick: function (ev) { ev.stopPropagation(); zoomDi(bidang.clientWidth / 2, bidang.clientHeight / 2, v.s / 1.5); } }),
+      h("button", { type: "button", "aria-label": "Ukuran awal", title: "Ukuran awal", text: "1:1", onclick: function (ev) { ev.stopPropagation(); v.s = 1; v.tx = 0; v.ty = 0; terapkan(); } }));
+    ["pointerdown", "dblclick"].forEach(function (nm) { kontrol.addEventListener(nm, function (ev) { ev.stopPropagation(); }); });
+    bidang.appendChild(kontrol);
     w.appendChild(bidang);
+    terapkan();
 
     // Rincian zona yang diketuk (mode lihat)
     if (!editAktif && S.info && status && status[S.info]) {
@@ -156,7 +251,7 @@
         h("span", { class: "oleh", text: st.info + " · hari ini " + st.z.hariIni + " kali" })));
     }
 
-    if (editAktif) w.appendChild(panelAtur(d, zona));
+    if (editAktif) { w.appendChild(panelBerkas(d)); if (d.id) w.appendChild(panelAtur(d, zona)); }
     else if (!Object.keys(d.pin).length) {
       w.appendChild(h("div", { class: "pengantar", text: boleh()
         ? "Denah ini belum punya titik. Klik \"Atur titik\" untuk menaruh lokasi QR zona di gambar."
@@ -164,9 +259,53 @@
     }
   }
 
+  function simpanDaftar() {
+    if (S.menyimpan) return;
+    var lokal = {};
+    S.denah.forEach(function (x) { if (x.id) lokal[x.id] = x; });
+    var aktifId = cur() ? cur().id : "", idx = S.aktif;
+    S.menyimpan = true; render();
+    DB.panggil("petaDenahDaftar", { daftar: S.denah.map(function (x) { return { id: x.id, nama: x.nama, berkas: x.berkas }; }) }, 40000).then(function (r) {
+      S.denah = (r.denah || []).map(function (d) {
+        var l = lokal[d.id];
+        // Titik yang belum disimpan di denah lain tetap dipertahankan.
+        return { id: d.id, nama: d.nama || "", berkas: d.berkas || "", lantai: l && S.kotor[d.id] ? l.lantai : (d.lantai || ""), pin: l && S.kotor[d.id] ? l.pin : (d.pin || {}) };
+      });
+      S.aktif = Math.min(idx, S.denah.length - 1); if (S.aktif < 0) S.aktif = 0;
+      S.kotorDaftar = false; S.menyimpan = false; S.sel = ""; S.pilih = "";
+      PC.toast("Daftar denah tersimpan.", "ok"); render();
+    }).catch(function (e) {
+      S.menyimpan = false; PC.toast((e && e.message) || "Gagal menyimpan daftar denah.", "bad"); render();
+    });
+  }
+
+  function panelBerkas(d) {
+    var nama = h("input", { type: "text", class: "input", maxlength: "40", value: d.nama, placeholder: "Contoh: Lantai LG", "aria-label": "Nama denah",
+      oninput: function (ev) { d.nama = ev.target.value; S.kotorDaftar = true; } });
+    var berkas = h("input", { type: "text", class: "input", maxlength: "64", value: d.berkas, placeholder: "contoh: denah-lg.jpg", "aria-label": "Nama berkas gambar",
+      oninput: function (ev) { d.berkas = ev.target.value.trim(); S.kotorDaftar = true; } });
+    var aksi = h("div", { class: "rapat" },
+      h("button", { type: "button", class: "btn btn-kecil", text: S.menyimpan ? "Menyimpan..." : "Simpan denah", disabled: S.menyimpan, onclick: simpanDaftar }),
+      h("button", { type: "button", class: "btn btn-kecil btn-garis", text: "Tambah denah", disabled: S.menyimpan || S.denah.length >= 40,
+        onclick: function () { S.denah.push({ id: "", nama: "", berkas: "", lantai: "", pin: {} }); S.aktif = S.denah.length - 1; S.kotorDaftar = true; S.sel = ""; S.pilih = ""; render(); } }),
+      h("button", { type: "button", class: "btn btn-kecil btn-garis", text: "Hapus denah ini", disabled: S.menyimpan || S.denah.length <= 1,
+        onclick: function () {
+          if (!window.confirm("Hapus denah ini beserta semua titiknya?")) return;
+          S.denah.splice(S.aktif, 1); S.aktif = Math.max(0, S.aktif - 1); S.sel = ""; S.pilih = "";
+          if (d.id) simpanDaftar(); else render();
+        } }));
+    return h("div", { class: "panel" },
+      h("div", { class: "panel-kepala" }, h("h2", { text: "Gambar denah" })),
+      h("div", { class: "panel-isi" },
+        h("div", { class: "pengantar", text: "Gambar denah adalah file di folder denah pada GitHub. Unggah filenya dulu (JPG, lebar sekitar 1500 px), lalu tulis nama berkasnya di sini. Denah baru bisa ditambah kapan saja." }),
+        h("div", { class: "peta-isian" }, h("label", null, h("span", { class: "label", text: "Nama denah" }), nama), h("label", null, h("span", { class: "label", text: "Nama berkas" }), berkas)),
+        aksi,
+        d.id ? null : h("div", { class: "oleh", text: "Simpan denah dulu sebelum menaruh titik." })));
+  }
+
   function panelAtur(d, zona) {
     var lantai = daftarLantai(zona);
-    var pilih = h("select", { class: "input", "aria-label": "Lantai denah", onchange: function (ev) { d.lantai = ev.target.value; S.kotor[d.id] = true; S.pilih = ""; render(); } },
+    var pilih = h("select", { class: "input", "aria-label": "Lantai denah", onchange: function (ev) { d.lantai = ev.target.value; tandaiKotor(d); S.pilih = ""; render(); } },
       h("option", { value: "", text: "Semua lantai" }));
     lantai.forEach(function (f) { var o = h("option", { value: f, text: "Lantai " + f }); if (f === d.lantai) o.selected = true; pilih.appendChild(o); });
 
@@ -180,11 +319,11 @@
     });
 
     var aksi = h("div", { class: "rapat" },
-      h("button", { type: "button", class: "btn btn-kecil", text: S.menyimpan ? "Menyimpan..." : "Simpan titik", disabled: !S.kotor[d.id] || S.menyimpan, onclick: simpan }),
+      h("button", { type: "button", class: "btn btn-kecil", text: S.menyimpan ? "Menyimpan..." : "Simpan titik", disabled: !S.kotor[d.id] || S.menyimpan, onclick: function () { simpan(d.id); } }),
       h("button", { type: "button", class: "btn btn-kecil btn-garis", text: "Batalkan perubahan", disabled: !S.kotor[d.id] || S.menyimpan, onclick: batal }));
     if (S.sel && d.pin[S.sel]) {
       aksi.appendChild(h("button", { type: "button", class: "btn btn-kecil btn-garis", text: "Hapus titik " + S.sel,
-        onclick: function () { delete d.pin[S.sel]; S.sel = ""; S.kotor[d.id] = true; render(); } }));
+        onclick: function () { delete d.pin[S.sel]; S.sel = ""; tandaiKotor(d); render(); } }));
     }
     var petunjuk = S.pilih
       ? "Klik di denah untuk menaruh titik " + S.pilih + "."

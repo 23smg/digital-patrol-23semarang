@@ -210,14 +210,15 @@
     if (p === undefined) {
       el.hidden = true;
       PC.api("petaZona", { zona: z }, 15000).then(function (r) {
-        petaCache[z] = (r && r.status === "SUCCESS" && r.denah) ? r : null;
+        if (!r || r.status !== "SUCCESS") return;   // galat sementara: tidak disimpan, dicoba lagi saat scan berikutnya
+        petaCache[z] = r.denah ? r : null;
         if (zona === z) petaLokasi();
-      }).catch(function () { petaCache[z] = null; });
+      }).catch(function () { /* coba lagi saat scan berikutnya */ });
       return;
     }
     if (!p) { el.hidden = true; return; }
     var kotak = h("div", { class: "peta-kotak" }), plat = h("div", { class: "peta-plat" });
-    var img = h("img", { src: "denah/" + String(p.denah).toLowerCase() + ".jpg", alt: "Denah letak " + z, draggable: "false" });
+    var img = h("img", { src: "denah/" + encodeURIComponent(p.berkas || (String(p.denah).toLowerCase() + ".jpg")), alt: "Denah letak " + z, draggable: "false" });
     plat.appendChild(img);
     plat.appendChild(h("div", { class: "peta-pin", style: { left: (p.x * 100) + "%", top: (p.y * 100) + "%" } }));
     kotak.appendChild(plat);
