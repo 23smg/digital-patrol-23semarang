@@ -491,7 +491,7 @@
         var list = h("div", { class: "item-daftar" });
         daftar.forEach(function (o, i) {
           list.appendChild(h("div", { class: "item-baris" + (o.aktif ? "" : " nonaktif") },
-            h("button", { type: "button", class: "saklar", role: "switch", "aria-checked": o.aktif ? "true" : "false",
+            h("button", { type: "button", class: "sakl-item", role: "switch", "aria-checked": o.aktif ? "true" : "false",
               title: o.aktif ? "Aktif: klik untuk menonaktifkan" : "Nonaktif: klik untuk mengaktifkan",
               "aria-label": (o.aktif ? "Nonaktifkan " : "Aktifkan ") + o.i, onclick: function () { alihAktif("ITEM", o, isi); } }),
             h("span", { class: "no", text: String(i + 1) }),
@@ -600,8 +600,7 @@
   function isiArea(wadah) {
     {
       var g = K.data.geo || {};
-      wadah.appendChild(h("div", { class: "pengantar" }, h("b", { text: "Batas area mall. " }),
-        "Laporan yang dikirim dari luar lingkaran ini tetap tersimpan tetapi diberi catatan \"Di luar area mall\" di dashboard. Kosongkan semua isian untuk menonaktifkan pemeriksaan."));
+      wadah.appendChild(h("p", { class: "oleh ket-ringkas", text: "Laporan dari luar lingkaran ini tetap tersimpan, tetapi diberi catatan \"Di luar area mall\". Kosongkan isian untuk menonaktifkan." }));
       var lat = h("input", { id: "g-lat", class: "input", inputmode: "decimal", autocomplete: "off", placeholder: "-6.9932" });
       var lng = h("input", { id: "g-lng", class: "input", inputmode: "decimal", autocomplete: "off", placeholder: "110.4203" });
       var rad = h("input", { id: "g-rad", class: "input", inputmode: "numeric", autocomplete: "off", placeholder: "300" });
@@ -648,7 +647,7 @@
         h("div", { class: "panel-isi" },
           status,
           h("div", { style: { margin: "12px 0" } }, btnLokasi,
-            h("p", { class: "bantuan oleh", style: { marginTop: "6px" }, text: "Berdiri di tengah mall lalu tekan tombol ini, atau salin koordinat dari Google Maps." })),
+            h("p", { class: "bantuan oleh", style: { marginTop: "6px" }, text: "Berdiri di tengah mall lalu tekan tombol ini, atau isi koordinat dari Google Maps." })),
           h("div", { class: "peta-isian" },
             h("div", { class: "medan" }, h("label", { for: "g-lat", text: "Lintang (latitude)" }), lat),
             h("div", { class: "medan" }, h("label", { for: "g-lng", text: "Bujur (longitude)" }), lng),
@@ -671,7 +670,7 @@
         h("span", { class: "saklar-teks" }, h("b", { text: judul }), h("span", { text: ket })));
       return { el: wadahS, cb: cb };
     }
-    var sP = saklar("fs-patroli", "Form Patroli", "Halaman utama patroli zona (index).", f.patroli !== false);
+    var sP = saklar("fs-patroli", "Form Patroli", "Halaman patroli zona.", f.patroli !== false);
     var sT = saklar("fs-tenant", "Form Checklist Tenant", "Halaman buka dan tutup tenant.", f.tenant !== false);
     var pesan = h("input", { id: "fs-pesan", class: "input", type: "text", maxlength: "200", placeholder: "Contoh: Sedang pemeliharaan sistem, kembali pukul 14.00" });
     pesan.value = f.pesan || "";
@@ -704,10 +703,10 @@
     return h("div", { class: "panel" },
       h("div", { class: "panel-kepala" }, h("h2", { text: "Status form petugas" }), status),
       h("div", { class: "panel-isi" },
-        h("p", { class: "oleh", style: { marginTop: "0" }, text: "Matikan form saat pemeliharaan, pergantian sistem, atau di luar jam operasional. Perubahan berlaku segera: HP petugas yang sedang terbuka menampilkan pemberitahuan saat memuat ulang atau mengirim laporan." }),
+        h("p", { class: "oleh ket-ringkas", text: "Matikan form saat pemeliharaan atau di luar jam operasional. Berlaku segera di HP petugas." }),
         sP.el, sT.el,
         h("div", { class: "medan" }, h("label", { for: "fs-pesan", text: "Pesan untuk petugas (opsional)" }), pesan,
-          h("p", { class: "bantuan", text: "Tampil di halaman form saat dinonaktifkan. Maksimal 200 karakter." })),
+          h("p", { class: "bantuan", text: "Tampil di form saat dinonaktifkan." })),
         galat,
         h("button", { type: "button", class: "btn btn-utama", text: "Simpan status form", onclick: simpan })));
   }
@@ -731,7 +730,7 @@
       h("div", { class: "panel-kepala" }, h("h2", { text: "Foto checklist tenant" })),
       h("div", { class: "panel-isi" },
         h("div", { class: "medan" }, h("label", { for: "p-foto", text: "Aturan foto" }), foto,
-          h("p", { class: "bantuan", text: "Foto patroli tetap wajib. Untuk tenant, foto bisa dilewati bila semua item sesuai." })),
+          h("p", { class: "bantuan", text: "Foto patroli tetap wajib." })),
         galat,
         h("button", { type: "button", class: "btn btn-utama", text: "Simpan", onclick: simpan })));
   }
@@ -783,15 +782,26 @@
     return wadah;
   }
 
+  var tabPengaturan = "form";
   function tampilPengaturan(wadah) {
     denganData(wadah, function () {
       PC.kosongkan(wadah);
-      wadah.appendChild(panelFormPetugas());
-      wadah.appendChild(panelFotoTenant());
-      var area = h("div");
-      wadah.appendChild(area);
-      isiArea(area);
-      wadah.appendChild(panelSistem());
+      var isiTab = h("div", { class: "pengaturan-isi" });
+      var bar = h("div", { class: "item-tab pengaturan-tab", role: "tablist" });
+      [["form", "Form petugas"], ["area", "Area patroli"], ["sistem", "Sistem"]].forEach(function (t) {
+        bar.appendChild(h("button", { type: "button", role: "tab", id: "tabp-" + t[0], "aria-selected": tabPengaturan === t[0] ? "true" : "false",
+          onclick: function () { tabPengaturan = t[0]; gambar(); } }, t[1]));
+      });
+      wadah.appendChild(bar);
+      wadah.appendChild(isiTab);
+      function gambar() {
+        Array.prototype.forEach.call(bar.children, function (b) { b.setAttribute("aria-selected", b.id === "tabp-" + tabPengaturan ? "true" : "false"); });
+        PC.kosongkan(isiTab);
+        if (tabPengaturan === "form") { isiTab.appendChild(panelFormPetugas()); isiTab.appendChild(panelFotoTenant()); }
+        else if (tabPengaturan === "area") { var area = h("div"); isiTab.appendChild(area); isiArea(area); }
+        else isiTab.appendChild(panelSistem());
+      }
+      gambar();
     });
   }
 
