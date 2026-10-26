@@ -463,34 +463,44 @@
     });
   }
 
+  var tabItem = "PATROLI";
   function tampilItem(wadah) {
     denganData(wadah, function () {
       PC.kosongkan(wadah);
-      wadah.appendChild(h("div", { class: "pengantar" }, h("b", { text: "Ini daftar pertanyaan di form petugas. " }),
-        "Setiap item dijawab petugas dengan Sesuai, Temuan, atau N/A. Patroli tampil di form Patroli; Buka toko dan Tutup toko tampil di form Tenant. Tambah, ubah, atau matikan item di sini. Kalau semua item satu kategori dimatikan, bagian checklist kategori itu hilang dari form petugas. Perubahan langsung muncul di HP petugas saat form dibuka lagi."));
-      var grid = h("div", { class: "kartu-item" });
-      wadah.appendChild(grid);
+      wadah.appendChild(h("div", { class: "pengantar ringkas" },
+        h("b", { text: "Pertanyaan di form petugas. " }),
+        "Pilih kategori, lalu aktifkan, ubah, atau tambah item. ",
+        h("details", { class: "pengantar-rinci" }, h("summary", { text: "Cara kerja" }),
+          h("p", { text: "Setiap item dijawab petugas dengan Sesuai, Temuan, atau N/A. Patroli tampil di form Patroli; Buka toko dan Tutup toko tampil di form Tenant. Kalau semua item satu kategori dimatikan, bagian checklist kategori itu hilang dari form petugas. Perubahan muncul di HP petugas saat form dibuka lagi." }))));
+      var kotak = h("div", { class: "panel item-panel" });
+      wadah.appendChild(kotak);
 
       function isi() {
-        PC.kosongkan(grid);
+        PC.kosongkan(kotak);
+        var tab = h("div", { class: "item-tab", role: "tablist" });
         URUT_KATEGORI.forEach(function (kat) {
-          var daftar = (K.data.item || []).filter(function (o) { return o.k === kat; });
-          var panel = h("div", { class: "panel" },
-            h("div", { class: "panel-kepala" }, h("h2", { text: NAMA_KATEGORI[kat] }),
-              h("span", { class: "oleh", text: aktifSaja(daftar).length + " aktif" })));
-          if (!daftar.length) panel.appendChild(h("div", { class: "kosong-info", text: "Belum ada item." }));
-          daftar.forEach(function (o) {
-            panel.appendChild(h("div", { class: "item-baris" + (o.aktif ? "" : " nonaktif") },
-              h("div", { class: "teks", text: o.i }),
-              h("div", { class: "item-aksi" },
-                btnIkon("PENSIL", "Ubah", "", function () { formItem(o, kat, isi); }),
-                btnIkon("SAKLAR", o.aktif ? "Nonaktifkan" : "Aktifkan", o.aktif ? "aktif" : "mati", function () { alihAktif("ITEM", o, isi); }),
-                btnIkon("SAMPAH", "Hapus", "bahaya", function () { hapus({ jenis: "ITEM", satu: "item checklist" }, o, isi); }))));
-          });
-          panel.appendChild(h("div", { class: "panel-isi" },
-            h("button", { type: "button", class: "btn btn-kecil btn-utama", text: "Tambah item", onclick: function () { formItem(null, kat, isi); } })));
-          grid.appendChild(panel);
+          var semua = (K.data.item || []).filter(function (o) { return o.k === kat; });
+          tab.appendChild(h("button", { type: "button", role: "tab", "aria-selected": tabItem === kat ? "true" : "false",
+            onclick: function () { tabItem = kat; isi(); } },
+            NAMA_KATEGORI[kat], h("span", { class: "n", text: aktifSaja(semua).length + "/" + semua.length, title: "aktif / total" })));
         });
+        var kat = tabItem, daftar = (K.data.item || []).filter(function (o) { return o.k === kat; });
+        kotak.appendChild(h("div", { class: "item-kepala" }, tab,
+          h("button", { type: "button", class: "btn btn-kecil btn-utama", text: "+ Tambah item", onclick: function () { formItem(null, kat, isi); } })));
+        if (!daftar.length) kotak.appendChild(h("div", { class: "kosong-info", text: "Belum ada item di kategori ini." }));
+        var list = h("div", { class: "item-daftar" });
+        daftar.forEach(function (o, i) {
+          list.appendChild(h("div", { class: "item-baris" + (o.aktif ? "" : " nonaktif") },
+            h("button", { type: "button", class: "saklar", role: "switch", "aria-checked": o.aktif ? "true" : "false",
+              title: o.aktif ? "Aktif: klik untuk menonaktifkan" : "Nonaktif: klik untuk mengaktifkan",
+              "aria-label": (o.aktif ? "Nonaktifkan " : "Aktifkan ") + o.i, onclick: function () { alihAktif("ITEM", o, isi); } }),
+            h("span", { class: "no", text: String(i + 1) }),
+            h("div", { class: "teks", text: o.i }),
+            h("div", { class: "item-aksi" },
+              btnIkon("PENSIL", "Ubah", "", function () { formItem(o, kat, isi); }),
+              btnIkon("SAMPAH", "Hapus", "bahaya", function () { hapus({ jenis: "ITEM", satu: "item checklist" }, o, isi); }))));
+        });
+        kotak.appendChild(list);
       }
       isi();
     });

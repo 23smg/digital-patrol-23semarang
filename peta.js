@@ -5,7 +5,7 @@
 (function () {
   "use strict";
   var DB = window.DB, PC = window.PC, h = PC.h, $ = DB.$;
-  var S = { tampil: false, denah: null, aktif: 0, edit: false, pilih: "", sel: "", info: "", lantai: {}, kotor: {}, kotorDaftar: false, seret: false, menyimpan: false, galat: "", tampilan: {}, rasio: {}, tmr: null, gagal: {}, cak: null, cakWaktu: 0, sibukStatus: false, gestur: false };
+  var S = { tampil: false, denah: null, aktif: 0, edit: false, pilih: "", sel: "", info: "", lantai: {}, kotor: {}, kotorDaftar: false, seret: false, ganti: null, menyimpan: false, galat: "", tampilan: {}, rasio: {}, tmr: null, gagal: {}, cak: null, cakWaktu: 0, sibukStatus: false, gestur: false };
   var LABEL = { ok: "Sudah sesi ini", belum: "Belum", mepet: "Segera", tanpa: "Tanpa petugas" };
   var timer = null;
 
@@ -184,10 +184,35 @@
 
     // Tab denah + tombol atur
     var tab = h("div", { class: "rapat" });
+    function namaTab(x, i) { return x.nama || (x.lantai ? "Lantai " + x.lantai : "Denah " + (i + 1)); }
+    function selesaiGanti(x, inp, simpanNama) {
+      if (S.ganti === null) return;
+      S.ganti = null;
+      var baru = inp.value.trim().slice(0, 30);
+      if (simpanNama && baru !== (x.nama || "")) { x.nama = baru; simpanDaftar(); } else render();
+    }
     S.denah.forEach(function (x, i) {
-      tab.appendChild(h("button", { type: "button", class: "btn btn-pilih", "aria-pressed": i === S.aktif ? "true" : "false",
-        text: (x.nama || (x.lantai ? "Lantai " + x.lantai : "Denah " + (i + 1))) + (S.kotor[x.id] ? " *" : ""),
-        onclick: function () { S.aktif = i; S.sel = ""; S.info = ""; S.pilih = ""; render(); } }));
+      if (S.ganti === i && boleh()) {
+        var inp = h("input", { type: "text", class: "input peta-ganti", maxlength: "30", value: x.nama || "", placeholder: namaTab(x, i), "aria-label": "Nama denah" });
+        inp.addEventListener("keydown", function (ev) {
+          if (ev.key === "Enter") { ev.preventDefault(); selesaiGanti(x, inp, true); }
+          else if (ev.key === "Escape") { selesaiGanti(x, inp, false); }
+        });
+        inp.addEventListener("blur", function () { selesaiGanti(x, inp, true); });
+        tab.appendChild(inp);
+        setTimeout(function () { inp.focus(); inp.select(); }, 0);
+        return;
+      }
+      var btnTab = h("button", { type: "button", class: "btn btn-pilih", "aria-pressed": i === S.aktif ? "true" : "false",
+        title: boleh() ? "Klik dua kali untuk mengganti nama" : "",
+        text: namaTab(x, i) + (S.kotor[x.id] ? " *" : ""),
+        onclick: function () { S.aktif = i; S.sel = ""; S.info = ""; S.pilih = ""; render(); } });
+      if (boleh() && x.id) btnTab.addEventListener("dblclick", function () { S.aktif = i; S.ganti = i; render(); });
+      tab.appendChild(btnTab);
+      if (boleh() && x.id && i === S.aktif && S.ganti === null && !S.menyimpan) {
+        tab.appendChild(h("button", { type: "button", class: "peta-pena", title: "Ganti nama denah", "aria-label": "Ganti nama denah", text: "\u270E",
+          onclick: function () { S.ganti = i; render(); } }));
+      }
     });
     var kanan = h("div", { class: "rapat" });
     if (boleh()) kanan.appendChild(h("button", { type: "button", class: "btn btn-kecil " + (editAktif ? "" : "btn-garis"), text: editAktif ? "Selesai mengatur" : "Atur titik",
