@@ -658,3 +658,8 @@ input:checked + .ubin { background: linear-gradient(135deg, var(--aksen-tua), va
 .peta-pin { transform-origin: 0 0; transform: scale(var(--inv, 1)) rotateZ(var(--rz, 0deg)) rotateX(var(--rx, 0deg)) translateZ(var(--angkat, 0px)); }
 .peta-zoom { padding: 2px 10px; font-size: 11px; font-weight: 800; }
 .peta-zoom[aria-pressed="true"] { background: #0E6B5C; color: #fff; border-color: #0E6B5C; }
+
+/* Nama petugas di kepala halaman */
+.st-petugas-badge { display: inline-block; margin: 4px 6px 0 0; padding: 1px 9px; border: 0; border-radius: 6px; background: rgba(255,255,255,.95); color: #01413C; font: inherit; font-size: 12px; font-weight: 700; line-height: 1.6; cursor: pointer; }
+.st-petugas-badge:disabled { cursor: default; opacity: 1; }
+.st-lokasi-badge { margin-right: 6px; }

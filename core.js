@@ -259,6 +259,25 @@
     });
   }
 
+  // Nama petugas yang sudah dipilih ditempel di kepala halaman (di bawah tanggal), menggantikan kolom pilih nama.
+  function lencanaPetugas(teks, klik) {
+    var st = document.getElementById("stempel");
+    var meta = st && st.querySelector(".st-meta");
+    var el = document.getElementById("st-petugas-badge");
+    if (!teks) { if (el) el.remove(); return; }
+    if (!meta) return;
+    if (!el) {
+      el = document.createElement("button");
+      el.type = "button"; el.id = "st-petugas-badge"; el.className = "st-petugas-badge";
+      meta.appendChild(el);
+    }
+    el.textContent = "\uD83D\uDC64 " + teks + (klik ? "  \u2715" : "");
+    el.disabled = !klik;
+    el.onclick = klik || null;
+    el.title = klik ? "Ketuk untuk mengganti nama" : "";
+    el.setAttribute("aria-label", klik ? "Petugas " + teks + ". Ketuk untuk mengganti nama" : "Petugas " + teks);
+  }
+
   /* ------------------------------------------------- Stempel pada foto */
   function potong(ctx, teks, maks) {
     if (ctx.measureText(teks).width <= maks) return teks;
@@ -283,7 +302,7 @@
     var strip = Math.max(6, Math.round(fs * 0.4));
     x.fillStyle = "rgba(27,26,23,0.82)";
     x.fillRect(0, y0, cw, tinggiBar);
-    x.fillStyle = "#3F6AD8";
+    x.fillStyle = "#0E6B5C";
     x.fillRect(0, y0, strip, tinggiBar);
 
     var tx = strip + pad, maksLebar = cw - tx - pad, y = y0 + pad;
@@ -1151,7 +1170,7 @@
       btn.setAttribute("aria-label", gelap ? "Ganti ke tampilan terang" : "Ganti ke tampilan gelap");
       btn.title = btn.getAttribute("aria-label");
       var meta = document.querySelector('meta[name="theme-color"]');
-      if (meta) meta.setAttribute("content", gelap ? "#1E3A7A" : "#3F6AD8");
+      if (meta) meta.setAttribute("content", gelap ? "#01413C" : "#01413C");
     }
     btn.addEventListener("click", function () {
       var gelap = document.documentElement.getAttribute("data-tema") === "gelap";
@@ -1198,7 +1217,7 @@
   /* ------------------------------------------------------ Eksport */
   w.PC = {
     h: h, kosongkan: kosongkan, buatId: buatId, api: api, Jam: Jam, sinkronJam: sinkronJam, fmtWIB: fmtWIB,
-    namaHari: namaHari, toast: toast, tanya: tanya, Lokasi: Lokasi, teksGps: teksGps, pasangStempel: pasangStempel,
+    namaHari: namaHari, toast: toast, tanya: tanya, Lokasi: Lokasi, teksGps: teksGps, pasangStempel: pasangStempel, lencanaPetugas: lencanaPetugas,
     Kamera: Kamera, FotoGrid: FotoGrid, Antrean: Antrean, pasangAntrean: pasangAntrean, Combobox: Combobox,
     formTutup: formTutup, Riwayat: Riwayat, ZonaJadwal: ZonaJadwal, Lembar: Lembar, Jaringan: Jaringan,
     Checklist: Checklist, pasangPWA: pasangPWA, CFG: CFG, ikon: ikon, pasangLogo: pasangLogo, pasangTema: pasangTema

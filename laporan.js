@@ -260,22 +260,22 @@
       }));
     oto.addEventListener("change", function () { S.otoDetik = parseInt(oto.value, 10) || 0; atur(); });
 
-    var btnTemuan = h("button", { type: "button", class: "btn btn-pilih bahaya", id: "btn-temuan", text: "Hanya temuan",
+    var btnTemuan = h("button", { type: "button", class: "btn btn-pilih bahaya", id: "btn-temuan", text: "Temuan",
       "aria-pressed": S.hanyaTemuan ? "true" : "false",
       onclick: function () { S.hanyaTemuan = !S.hanyaTemuan; btnTemuan.setAttribute("aria-pressed", S.hanyaTemuan ? "true" : "false"); S.halaman = 1; render(); } });
     wadah.appendChild(h("div", { class: "filter" },
       h("div", { class: "grup" }, h("div", null, h("label", { for: "dari", text: "Dari" }), inDari), h("div", null, h("label", { for: "sampai", text: "Sampai" }), inSampai)),
       h("div", { class: "grup" }, rentangBtn("hari", "Hari ini"), rentangBtn("7", "7 hari"), rentangBtn("bulan", "Bulan ini"), rentangBtn("90", "90 hari")),
       h("div", { style: { flex: "1", minWidth: "200px", maxWidth: "340px" } }, h("label", { for: "cari", text: "Cari" }), cari),
-      h("div", null, h("label", { for: "oto", text: "Muat ulang" }), oto),
+      h("div", null, h("label", { for: "oto", text: "Otomatis" }), oto),
       h("div", { class: "grup" }, btnTemuan,
         h("button", { type: "button", class: "btn btn-utama btn-pilih", id: "btn-segarkan", text: "Muat ulang", onclick: function () { muatData(false); } })),
       h("span", { class: "status-muat", id: "status-muat" })));
     wadah.appendChild(h("div", { class: "ringkas", id: "ringkas" }));
-    wadah.appendChild(h("section", { class: "panel" }, h("h2", { text: "Perkembangan 14 hari terakhir" }), h("div", { class: "panel-isi", id: "tren" })));
+    wadah.appendChild(h("section", { class: "panel" }, h("h2", { text: "14 hari terakhir" }), h("div", { class: "panel-isi", id: "tren" })));
     wadah.appendChild(h("div", { class: "dua-kolom" },
-      h("div", { class: "panel" }, h("h2", { text: "Sesuai dan temuan" }), h("div", { class: "panel-isi", id: "donat" })),
-      h("div", { class: "panel" }, h("h2", { text: "Lokasi dengan temuan terbanyak" }), h("div", { class: "panel-isi", id: "top" }))));
+      h("div", { class: "panel" }, h("h2", { text: "Sesuai vs temuan" }), h("div", { class: "panel-isi", id: "donat" })),
+      h("div", { class: "panel" }, h("h2", { text: "Temuan terbanyak" }), h("div", { class: "panel-isi", id: "top" }))));
     function tabBtn(id, teks, n) {
       return h("button", { type: "button", role: "tab", id: "tab-" + id, "data-tab": id, "aria-selected": "false",
         onclick: function () { S.tab = id; S.halaman = 1; renderPanel(); } }, teks, n ? h("span", { class: "n", id: n, text: "0" }) : null);
@@ -331,9 +331,9 @@
     }
     var w = $("ringkas");
     PC.kosongkan(w);
-    w.appendChild(sel(String(p.length), "Total laporan patroli"));
-    w.appendChild(sel([String(buka), h("small", { text: " / " + total })], "Tenant buka hari ini", "buka", total ? Math.round(buka * 100 / total) : 0));
-    w.appendChild(sel([String(tutup), h("small", { text: " / " + total })], "Tenant tutup hari ini", "", total ? Math.round(tutup * 100 / total) : 0));
+    w.appendChild(sel(String(p.length), "Laporan patroli"));
+    w.appendChild(sel([String(buka), h("small", { text: " / " + total })], "Tenant buka", "buka", total ? Math.round(buka * 100 / total) : 0));
+    w.appendChild(sel([String(tutup), h("small", { text: " / " + total })], "Tenant tutup", "", total ? Math.round(tutup * 100 / total) : 0));
     var np = $("n-patroli"), nt = $("n-tenant");
     if (np) { np.textContent = p.length; np.className = "n" + (tp ? " bad" : ""); }
     if (nt) { nt.textContent = t.length; nt.className = "n" + (tt ? " bad" : ""); }
@@ -394,12 +394,12 @@
   function jumlahLap(x) { return (x.patroli || 0) + (x.tenant || 0); }
   function jumlah(arr, f) { return arr.reduce(function (a, x) { return a + f(x); }, 0); }
   function perubahan(skr, lalu, naikBaik) {
-    if (!lalu && !skr) return { teks: "sama seperti minggu lalu", kelas: "" };
-    if (!lalu) return { teks: "minggu lalu belum ada", kelas: "" };
+    if (!lalu && !skr) return { teks: "sama dengan minggu lalu", kelas: "" };
+    if (!lalu) return { teks: "belum ada data minggu lalu", kelas: "" };
     var pct = Math.round((skr - lalu) * 100 / lalu);
     if (!pct) return { teks: "sama seperti minggu lalu", kelas: "" };
     var naik = pct > 0, baik = naik === naikBaik;
-    return { teks: (naik ? "naik " : "turun ") + Math.abs(pct) + "% dari minggu lalu (" + lalu + ")", kelas: baik ? "baik" : "buruk" };
+    return { teks: (naik ? "naik " : "turun ") + Math.abs(pct) + "% vs minggu lalu", kelas: baik ? "baik" : "buruk" };
   }
   function renderTren() {
     var w = $("tren");
@@ -417,9 +417,9 @@
         h("div", { class: "tk-ket " + (ket.kelas || ""), text: ket.teks }));
     }
     w.appendChild(h("div", { class: "tren-kartu-baris" },
-      kartu("Laporan masuk, 7 hari terakhir", String(lapS), perubahan(lapS, lapL, true)),
-      kartu("Temuan, 7 hari terakhir", String(temS), perubahan(temS, temL, false)),
-      kartu("Laporan sesuai", sesuaiPct + "%", { teks: lapS ? (lapS - temS) + " dari " + lapS + " laporan tanpa temuan" : "belum ada laporan", kelas: sesuaiPct >= 90 ? "baik" : (sesuaiPct >= 75 ? "" : "buruk") })));
+      kartu("Laporan, 7 hari", String(lapS), perubahan(lapS, lapL, true)),
+      kartu("Temuan, 7 hari", String(temS), perubahan(temS, temL, false)),
+      kartu("Sesuai", sesuaiPct + "%", { teks: lapS ? (lapS - temS) + " dari " + lapS + " tanpa temuan" : "belum ada laporan", kelas: sesuaiPct >= 90 ? "baik" : (sesuaiPct >= 75 ? "" : "buruk") })));
 
     var maks = Math.max.apply(null, d.map(jumlahLap).concat([1]));
     var kolom = h("div", { class: "tren-kolom" });
@@ -442,10 +442,10 @@
     });
     w.appendChild(kolom);
     w.appendChild(h("div", { class: "legenda tren-legenda" },
-      h("div", null, h("i", { style: { background: "#3AC47D" } }), "Laporan sesuai"),
-      h("div", null, h("i", { style: { background: "#D92550" } }), "Laporan dengan temuan"),
-      terburuk ? h("div", { class: "tren-catatan", text: "Temuan terbanyak: " + namaHari(terburuk.tgl) + " " + terburuk.tgl.slice(8, 10) + "/" + terburuk.tgl.slice(5, 7) + " (" + terburuk.temuan + ")" })
-        : h("div", { class: "tren-catatan", text: "Tidak ada temuan dalam 14 hari terakhir" })));
+      h("div", null, h("i", { style: { background: "#3AC47D" } }), "Sesuai"),
+      h("div", null, h("i", { style: { background: "#D92550" } }), "Temuan"),
+      terburuk ? h("div", { class: "tren-catatan", text: "Terbanyak: " + namaHari(terburuk.tgl) + " " + terburuk.tgl.slice(8, 10) + "/" + terburuk.tgl.slice(5, 7) + " (" + terburuk.temuan + ")" })
+        : h("div", { class: "tren-catatan", text: "Tidak ada temuan" })));
   }
 
   /* ---------------------------------------------------------- grafik */

@@ -100,6 +100,7 @@
   function tampilKunci() {
     $("nama").disabled = !!kunci;
     $("b-nama").classList.toggle("terkunci", !!kunci);
+    segarPetugasAtas();
     gambarShift(); bangunLantai();
   }
 
@@ -345,8 +346,23 @@
     return k;
   }
 
+  // Setelah nama dipilih: nama pindah ke kepala halaman dan kolom pilih nama disembunyikan.
+  function segarPetugasAtas() {
+    if (!cbNama) return;
+    var nama = cbNama.nilai(), sh = (kunci && kunci.shift) || shiftDipilih;
+    PC.lencanaPetugas(nama ? nama + (sh ? " \u00B7 " + sh : "") : "", nama && !kunci ? function () {
+      $("nama").value = ""; ubah(); segarPetugasAtas(); try { $("nama").focus(); } catch (e) {}
+    } : null);
+    var kolom = $("nama").closest ? $("nama").closest(".medan") : null;
+    if (kolom) kolom.hidden = !!nama;
+    $("b-nama").hidden = !!nama && (!perluShift() || !!kunci);
+    var hh = $("b-nama").querySelector("h2"); if (hh) hh.textContent = nama ? "Shift" : "Petugas";
+    var ls = $("lbl-shift"); if (ls) ls.hidden = !!nama;
+  }
+
   function ubah() {
     if (!cl) return;
+    segarPetugasAtas();
     var c = cl.nilai(), k = kekurangan();
     $("progres").textContent = c.terisi + " dari " + c.total;
     $("blok-temuan").hidden = !c.adaTemuan;
