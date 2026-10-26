@@ -11,11 +11,27 @@
   var URUT_KATEGORI = ["PATROLI", "BUKA", "TUTUP"];
 
   /* ---------------------------------------------------------- data bersama */
-  function muatKelola(paksa) {
+  // Data master disimpan juga di sessionStorage (per tab) supaya pindah menu atau muat ulang halaman langsung tampil,
+  // lalu diperbarui diam-diam di latar.
+  var KUNCI_CACHE_K = "dp_kelola_cache";
+  function bacaCacheK() {
+    try {
+      var c = JSON.parse(sessionStorage.getItem(KUNCI_CACHE_K));
+      if (c && c.u === (DB.S.user && DB.S.user.username) && c.d && c.d.tenant) { K.data = c.d; K.waktu = c.w || 0; lencanaMenu(); return true; }
+    } catch (e) { /* abaikan */ }
+    return false;
+  }
+  function simpanCacheK() {
+    try {
+      var t = JSON.stringify({ u: DB.S.user && DB.S.user.username, w: K.waktu, d: K.data });
+      if (t.length < 1500000) sessionStorage.setItem(KUNCI_CACHE_K, t); else sessionStorage.removeItem(KUNCI_CACHE_K);
+    } catch (e) { /* abaikan */ }
+  }
+  function muatKelola(paksa, senyap) {
     if (K.memuat) return K.memuat;
     if (K.data && !paksa && Date.now() - K.waktu < 60000) return Promise.resolve({ status: "SUCCESS" });
-    K.memuat = DB.panggil("kelolaAmbil", {}, 60000).then(function (r) {
-      if (r.status === "SUCCESS") { K.data = r; K.waktu = Date.now(); lencanaMenu(); }
+    K.memuat = DB.panggil("kelolaAmbil", {}, 60000, !!senyap).then(function (r) {
+      if (r.status === "SUCCESS") { K.data = r; K.waktu = Date.now(); lencanaMenu(); simpanCacheK(); }
       return r;
     }).then(function (r) { K.memuat = null; return r; });
     return K.memuat;
@@ -29,7 +45,7 @@
     DB.badge("zona", aktifSaja(K.data.zona).length);
   }
   var sebelum = DB.setelahKeluar;
-  DB.setelahKeluar = function () { if (sebelum) sebelum(); K.data = null; K.waktu = 0; };
+  DB.setelahKeluar = function () { if (sebelum) sebelum(); K.data = null; K.waktu = 0; try { sessionStorage.removeItem(KUNCI_CACHE_K); } catch (e) { /* abaikan */ } };
 
   function lamaDari(jenis, o) { return jenis === "ITEM" ? { k: o.k, i: o.i } : { n: o.n }; }
 
@@ -82,7 +98,22 @@
   }
 
   function denganData(wadah, render) {
-    if (K.data) { render(wadah); return; }
+    if (!K.data) bacaCacheK();
+    if (K.data) {
+      render(wadah);
+      // Data lebih dari 1 menit: perbarui di latar. Halaman digambar ulang hanya bila isinya berubah dan pengguna tidak sedang mengisi.
+      if (!K.memuat && Date.now() - K.waktu >= 60000) {
+        var sebelumTeks = JSON.stringify(K.data);
+        muatKelola(true, true).then(function (r) {
+          if (r.status !== "SUCCESS" || !wadah.isConnected || JSON.stringify(K.data) === sebelumTeks) return;
+          var a = document.activeElement, sedangIsi = a && wadah.contains(a) && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName);
+          var dlg = $("dlg-form");
+          if (sedangIsi || (dlg && dlg.open)) return;
+          render(wadah);
+        });
+      }
+      return;
+    }
     kotakMuat(wadah);
     muatKelola(true).then(function (r) {
       if (r.status !== "SUCCESS") { kotakGalat(wadah, r, function () { denganData(wadah, render); }); return; }
@@ -968,6 +999,6 @@
   var mulaiApp = DB.mulaiApp;
   DB.mulaiApp = function () {
     mulaiApp();
-    if (DB.S.user && DB.S.user.bisaUbah) muatKelola(true);
+    if (DB.S.user && DB.S.user.bisaUbah) { var ada = bacaCacheK(); muatKelola(true, ada); }
   };
 })();

@@ -76,8 +76,8 @@
   }
 
   // Semua panggilan admin lewat sini: token ditambahkan, sesi habis ditangani sekali di satu tempat.
-  DB.panggil = function (aksi, data, ms) {
-    var jenis = jenisAksi(aksi), hasil = false;
+  DB.panggil = function (aksi, data, ms, senyap) {
+    var jenis = senyap ? "latar" : jenisAksi(aksi), hasil = false;
     Sibuk.mulai(jenis);
     return PC.api(aksi, Object.assign({ token: DB.S.token }, data || {}), ms || 40000).then(function (r) {
       if (r && r.status !== "SUCCESS" && r.kode === "SESI") { DB.keluar(r.message); }

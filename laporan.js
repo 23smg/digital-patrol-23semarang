@@ -187,9 +187,10 @@
       var kc = bacaCacheData();
       if (kc && kc.dari === dari && kc.sampai === sampai) { terapkan(kc.r, true); if (S.tampil) render(); if (st) st.textContent = "Memperbarui..."; }
     }
-    DB.panggil("ambilData", { dari: dari, sampai: sampai }, 60000).then(function (r) {
+    DB.panggil("ambilData", { dari: dari, sampai: sampai }, 60000, !!S.hariIni).then(function (r) {
       var st2 = $("status-muat");
       if (r.status !== "SUCCESS") { if (st2 && r.kode !== "SESI") st2.textContent = r.message || "Gagal memuat."; return; }
+      S.terakhir = Date.now();
       simpanCacheData(dari, sampai, r);
       terapkan(r, false);
       if (S.tampil) render();
@@ -219,9 +220,11 @@
     }
   }
 
-  function atur() {
+  // lewatBila20: dipakai saat pindah menu kembali ke Laporan. Data yang baru dimuat < 20 detik lalu dipakai langsung.
+  function atur(lewatBila20) {
     clearInterval(S.timer);
-    if (S.otoDetik > 0) S.timer = setInterval(function () { muatData(true); }, S.otoDetik * 1000);
+    if (S.otoDetik > 0) S.timer = setInterval(function () { if (!document.hidden) muatData(true); }, S.otoDetik * 1000);
+    if (lewatBila20 && S.hariIni && S.terakhir && Date.now() - S.terakhir < 20000) return;
     muatData(false);
   }
 
@@ -282,7 +285,7 @@
     wadah.appendChild(h("div", { class: "tabel-wrap", id: "panel" }));
 
     if (S.hariIni) render();
-    atur();
+    atur(true);
   }
 
   // Pemuatan data jalan terus di latar selama sesi (untuk lonceng notifikasi dan halaman Cakupan).
@@ -295,7 +298,7 @@
     S.rincianAktif = null;
   }
   DB.setelahKeluar = function () {
-    clearInterval(S.timer); S.tampil = false; S.sudahMuat = false; S.terlihat = {};
+    clearInterval(S.timer); S.tampil = false; S.sudahMuat = false; S.terakhir = 0; S.terlihat = {};
     S.tren = [];
     S.patroli = []; S.tenant = []; S.tindak = {}; S.terbuka = { patroli: [], tenant: [] }; S.hariIni = "";
     DB.lencana = {};

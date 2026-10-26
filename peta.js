@@ -28,16 +28,37 @@
   }
 
   // Satu panggilan: daftar denah + status zona. Bila server masih versi lama, jatuh ke panggilan lama.
+  var KUNCI_CACHE_P = "dp_peta_cache";
+  function bacaCacheP() {
+    try {
+      var c = JSON.parse(sessionStorage.getItem(KUNCI_CACHE_P));
+      if (c && Array.isArray(c.denah) && c.denah.length) { terapkanDenah(c.denah); S.cak = c.cak || null; S.cakWaktu = c.w || 0; return true; }
+    } catch (e) { /* abaikan */ }
+    return false;
+  }
+  function simpanCacheP(r) {
+    try { sessionStorage.setItem(KUNCI_CACHE_P, JSON.stringify({ denah: r.denah, cak: S.cak, w: S.cakWaktu })); } catch (e) { /* abaikan */ }
+  }
+
+  // Satu panggilan: daftar denah + status zona. Bila server masih versi lama, jatuh ke panggilan lama.
+  // Bila ada salinan dari kunjungan sebelumnya, denah langsung tampil dan pembaruan berjalan diam-diam.
   function muat() {
     S.galat = "";
-    return DB.panggil("petaAmbil", {}, 60000).then(function (r) {
+    var ada = !S.denah && bacaCacheP();
+    if (ada) render();
+    var senyap = !!S.denah;
+    return DB.panggil("petaAmbil", {}, 60000, senyap).then(function (r) {
       if (r && r.status === "SUCCESS") { S.cak = r.cakupan || null; S.cakWaktu = Date.now(); return r; }
-      if (r && /tidak dikenali/i.test(r.message || "")) return DB.panggil("petaZonaAmbil", {}, 30000);
+      if (r && /tidak dikenali/i.test(r.message || "")) return DB.panggil("petaZonaAmbil", {}, 30000, senyap);
       return r;
     }).then(function (r) {
-      if (!r || r.status !== "SUCCESS" || !Array.isArray(r.denah) || !r.denah.length) { S.denah = null; S.galat = pesanGalat(r); render(); return; }
-      terapkanDenah(r.denah);
-      render();
+      if (!r || r.status !== "SUCCESS" || !Array.isArray(r.denah) || !r.denah.length) {
+        if (S.denah) return;    // tetap pakai salinan lama bila pembaruan gagal
+        S.denah = null; S.galat = pesanGalat(r); render(); return;
+      }
+      if (!S.edit && !S.seret && !S.gestur) terapkanDenah(r.denah);
+      simpanCacheP(r);
+      if (S.tampil && !S.edit && !S.seret && !S.gestur) render();
     });
   }
 
@@ -46,7 +67,7 @@
     if (S.sibukStatus || !S.tampil || !S.denah) return;
     if (!paksa && (document.hidden || S.edit || S.gestur || S.seret)) return;
     S.sibukStatus = true;
-    DB.panggil("petaStatus", {}, 30000).then(function (r) {
+    DB.panggil("petaStatus", {}, 30000, true).then(function (r) {
       S.sibukStatus = false;
       if (r && r.status === "SUCCESS" && r.cakupan) {
         S.cak = r.cakupan; S.cakWaktu = Date.now();
@@ -79,7 +100,7 @@
       }
       // Bila selama menyimpan ada perubahan baru, biarkan ditandai kotor dan simpan lagi.
       var berubah = JSON.stringify(d.pin) !== JSON.stringify(kirim.pin) || d.lantai !== kirim.lantai;
-      if (berubah) { jadwalSimpan(d); } else { S.gagal[d.id] = false; S.kotor[d.id] = false; d.lantai = r.denah.lantai; d.pin = r.denah.pin; S.sel = ""; PC.toast("Titik denah tersimpan.", "ok"); }
+      if (berubah) { jadwalSimpan(d); } else { S.gagal[d.id] = false; S.kotor[d.id] = false; d.lantai = r.denah.lantai; d.pin = r.denah.pin; S.sel = ""; PC.toast("Titik denah tersimpan.", "ok"); simpanCacheP({ denah: S.denah }); }
       render();
     });
   }
@@ -282,7 +303,7 @@
         return { id: d.id, nama: d.nama || "", berkas: d.berkas || "", lantai: l && S.kotor[d.id] ? l.lantai : (d.lantai || ""), pin: l && S.kotor[d.id] ? l.pin : (d.pin || {}) };
       });
       S.aktif = Math.min(idx, S.denah.length - 1); if (S.aktif < 0) S.aktif = 0;
-      S.kotorDaftar = false; S.menyimpan = false; S.sel = ""; S.pilih = "";
+      S.kotorDaftar = false; S.menyimpan = false; S.sel = ""; S.pilih = ""; try { simpanCacheP({ denah: S.denah }); } catch (e) { /* abaikan */ }
       PC.toast("Daftar denah tersimpan.", "ok"); render();
     }).catch(function (e) {
       S.menyimpan = false; PC.toast((e && e.message) || "Gagal menyimpan daftar denah.", "bad"); render();
@@ -357,6 +378,14 @@
   }
   function tinggalkan() { S.tampil = false; S.edit = false; if (timer) { clearInterval(timer); timer = null; } }
 
+  // Muat denah di latar sesaat setelah masuk supaya menu Denah zona langsung tampil saat dibuka.
+  var sebelumMulai = DB.saatMulaiApp;
+  DB.saatMulaiApp = function () {
+    if (sebelumMulai) sebelumMulai();
+    setTimeout(function () { if (!S.denah && DB.S.token) muat(); }, 1500);
+  };
+  var sebelumKeluar = DB.setelahKeluar;
+  DB.setelahKeluar = function () { if (sebelumKeluar) sebelumKeluar(); S.denah = null; S.cak = null; try { sessionStorage.removeItem(KUNCI_CACHE_P); } catch (e) { /* abaikan */ } };
   DB.saatData(function () { if (S.tampil && !S.seret && !S.gestur && !S.cak) render(); });
   DB.daftar({ id: "denah", judul: "Denah zona", grup: "pantau", izin: "semua", tampil: tampil, tinggalkan: tinggalkan });
 })();
