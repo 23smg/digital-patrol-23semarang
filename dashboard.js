@@ -130,10 +130,20 @@
   /* ------------------------------------------------------------ menu */
   var GRUP = { pantau: "Pemantauan", data: "Data master", sistem: "Sistem" };
 
+  // Kelompok menu bisa dilipat. Awalnya hanya kelompok halaman aktif yang terbuka; pilihan diingat di peramban ini.
+  var KUNCI_MENU = "dp_menu_grup";
+  function bacaMenu() { try { var o = JSON.parse(localStorage.getItem(KUNCI_MENU)); return o && typeof o === "object" ? o : {}; } catch (e) { return {}; } }
+  function simpanMenu(o) { try { localStorage.setItem(KUNCI_MENU, JSON.stringify(o)); } catch (e) { /* abaikan */ } }
+  function bukaKelompok(el, buka) {
+    el.classList.toggle("tutup", !buka);
+    var tb = el.querySelector(".menu-grup");
+    if (tb) tb.setAttribute("aria-expanded", buka ? "true" : "false");
+  }
+
   function bangunMenu() {
     var m = $("menu");
     PC.kosongkan(m);
-    var grupTerakhir = "";
+    var kel = null, grupTerakhir = "", simpan = bacaMenu();
     var RANK = { pantau: 0, data: 1, sistem: 2 };
     DB.urutan = DB.urutan.map(function (id, i) { return { id: id, i: i }; }).sort(function (a, b) {
       return (RANK[DB.views[a.id].grup] || 0) - (RANK[DB.views[b.id].grup] || 0) || a.i - b.i;
@@ -143,12 +153,34 @@
       if (!DB.izin(v)) return;
       if (v.grup !== grupTerakhir) {
         grupTerakhir = v.grup;
-        m.appendChild(h("div", { class: "menu-grup", text: GRUP[v.grup] || v.grup }));
+        kel = h("div", { class: "menu-kel tutup", "data-grup": v.grup });
+        var isi = h("div", { class: "menu-isi" });
+        var tb = h("button", { type: "button", class: "menu-grup", "aria-expanded": "false" }, h("span", { text: GRUP[v.grup] || v.grup }), h("i", { class: "menu-panah", "aria-hidden": "true" }));
+        (function (k, g) {
+          tb.addEventListener("click", function () {
+            var buka = k.classList.contains("tutup");
+            bukaKelompok(k, buka);
+            var o = bacaMenu(); o[g] = buka; simpanMenu(o);
+          });
+        })(kel, v.grup);
+        kel.appendChild(tb); kel.appendChild(isi);
+        m.appendChild(kel);
+        if (simpan[v.grup] === true) bukaKelompok(kel, true);
       }
       var jml = h("span", { class: "jml", id: "jml-" + id, hidden: true });
-      m.appendChild(h("a", { href: "#" + id, "data-view": id }, v.judul, jml));
+      kel.querySelector(".menu-isi").appendChild(h("a", { href: "#" + id, "data-view": id }, v.judul, jml));
     });
     Object.keys(DB.lencana).forEach(function (id) { DB.badge(id, DB.lencana[id].n, DB.lencana[id].bad); });
+    if (DB.aktif) tandaiMenu(DB.aktif);
+  }
+
+  // Tandai menu aktif dan buka kelompoknya (tanpa mengubah pilihan tersimpan).
+  function tandaiMenu(id) {
+    Array.prototype.forEach.call(document.querySelectorAll("#menu a"), function (a) {
+      var aktif = a.getAttribute("data-view") === id;
+      if (aktif) { a.setAttribute("aria-current", "page"); var k = a.closest(".menu-kel"); if (k) bukaKelompok(k, true); }
+      else a.removeAttribute("aria-current");
+    });
   }
 
   DB.badge = function (id, n, bad) {
@@ -169,9 +201,7 @@
     if (!v) return;
     if (DB.aktif && DB.aktif !== id && DB.views[DB.aktif].tinggalkan) DB.views[DB.aktif].tinggalkan();
     DB.aktif = id;
-    Array.prototype.forEach.call(document.querySelectorAll("#menu a"), function (a) {
-      if (a.getAttribute("data-view") === id) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
-    });
+    tandaiMenu(id);
     $("judul-halaman").textContent = v.judul;
     DB.info("");
     var isi = $("isi");

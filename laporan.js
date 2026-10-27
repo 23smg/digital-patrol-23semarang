@@ -498,7 +498,7 @@
     var mulai = (S.halaman - 1) * PER_HALAMAN, potong = baris.slice(mulai, mulai + PER_HALAMAN);
 
     panel.appendChild(h("div", { class: "tools" }, h("span", { text: total + " laporan" }),
-      h("div", { class: "rapat" }, h("button", { type: "button", class: "btn btn-kecil btn-garis", text: "Ekspor CSV", onclick: function () { ekspor(baris); } }))));
+      h("div", { class: "rapat" }, h("button", { type: "button", class: "btn btn-kecil btn-garis", text: "Unduh Excel", onclick: function () { ekspor(baris); } }))));
     if (!total) { panel.appendChild(h("div", { class: "kosong-tabel", text: "Tidak ada laporan untuk filter ini." })); return; }
 
     var kolom = S.tab === "patroli"
@@ -673,31 +673,29 @@
   });
 
   /* ---------------------------------------------------------- ekspor */
-  function selCsv(v) {
-    v = String(v === null || v === undefined ? "" : v);
-    if (/^[=+\-@\t\r]/.test(v)) v = "'" + v;      // cegah formula injection di Excel
-    return '"' + v.replace(/"/g, '""') + '"';
-  }
+  // Berkas Excel (.xlsx) sungguhan: kolom langsung terpisah, lebar pas, judul tebal, filter aktif.
+  // Hanya kolom yang berguna dibaca admin; kode teknis (ID, akurasi, waktu foto) tidak ikut.
   function ekspor(baris0) {
     var baris = baris0.map(function (x) {
       var t = S.tindak[x.id] || {};
+      var penting = flags(x.flag).filter(function (f) { return FLAG_PENTING[f]; }).map(function (f) { return LABEL_FLAG[f] || f; }).join("; ");
       return Object.assign({}, x, {
-        tlStatus: isTemuan(x) && x.id ? STATUS_LABEL[statusTL(x)] : "", tlCatatan: t.catatan || "", tlOleh: t.oleh || "", tlWaktu: t.waktu || ""
+        tlStatus: isTemuan(x) && x.id ? STATUS_LABEL[statusTL(x)] : "", tlCatatan: t.catatan || "",
+        fotoTeks: fotoList(x.foto).map(function (f) { return "https://drive.google.com/file/d/" + f.id + "/view"; }).join("\n"), perhatian: penting,
+        temuanTeks: x.tingkat && x.tingkat !== "-" && isTemuan(x) ? x.tingkat : ""
       });
     });
     var kolom = S.tab === "patroli"
-      ? [["Waktu", "ts"], ["Petugas", "nama"], ["Zona", "zona"], ["Kondisi", "kondisi"], ["Tingkat", "tingkat"],
-        ["Temuan", "catatan"], ["Latitude", "lat"], ["Longitude", "lng"], ["Akurasi (m)", "akurasi"], ["Waktu foto", "waktuFoto"],
-        ["Catatan sistem", "flag"], ["Status tindak lanjut", "tlStatus"], ["Catatan tindak lanjut", "tlCatatan"],
-        ["Diubah oleh", "tlOleh"], ["Diubah pada", "tlWaktu"], ["Tautan foto", "foto"], ["ID", "id"]]
-      : [["Waktu", "ts"], ["Kategori", "kategori"], ["Tenant", "tenant"], ["Petugas", "petugas"], ["Hasil", "hasil"],
-        ["Tingkat", "tingkat"], ["Temuan", "ringkasan"], ["Catatan", "catatan"], ["Latitude", "lat"], ["Longitude", "lng"],
-        ["Akurasi (m)", "akurasi"], ["Waktu foto", "waktuFoto"], ["Catatan sistem", "flag"], ["Status tindak lanjut", "tlStatus"],
-        ["Catatan tindak lanjut", "tlCatatan"], ["Diubah oleh", "tlOleh"], ["Diubah pada", "tlWaktu"], ["Tautan foto", "foto"], ["ID", "id"]];
-    var csv = [kolom.map(function (k) { return selCsv(k[0]); }).join(",")]
-      .concat(baris.map(function (x) { return kolom.map(function (k) { return selCsv(x[k[1]]); }).join(","); })).join("\r\n");
-    var blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8" });
-    var a = h("a", { href: URL.createObjectURL(blob), download: "log-" + S.tab + "-" + S.dari + "_" + S.sampai + ".csv" });
+      ? [["Waktu", "ts", 19], ["Petugas", "nama", 26], ["Zona", "zona", 14], ["Kondisi", "kondisi", 12], ["Tingkat", "temuanTeks", 11],
+        ["Temuan", "catatan", 40], ["Tindak lanjut", "tlStatus", 14], ["Catatan tindak lanjut", "tlCatatan", 30],
+        ["Perhatian", "perhatian", 24], ["Latitude", "lat", 12], ["Longitude", "lng", 12], ["Foto", "fotoTeks", 46]]
+      : [["Waktu", "ts", 19], ["Kategori", "kategori", 11], ["Tenant", "tenant", 28], ["Petugas", "petugas", 26], ["Hasil", "hasil", 12],
+        ["Tingkat", "temuanTeks", 11], ["Temuan", "ringkasan", 40], ["Catatan", "catatan", 30], ["Tindak lanjut", "tlStatus", 14],
+        ["Catatan tindak lanjut", "tlCatatan", 30], ["Perhatian", "perhatian", 24], ["Latitude", "lat", 12], ["Longitude", "lng", 12], ["Foto", "fotoTeks", 46]];
+    var blob = Xlsx.buat(S.tab === "patroli" ? "Patroli" : "Tenant",
+      kolom.map(function (k) { return { j: k[0], w: k[2] }; }),
+      baris.map(function (x) { return kolom.map(function (k) { return x[k[1]]; }); }));
+    var a = h("a", { href: URL.createObjectURL(blob), download: (S.tab === "patroli" ? "laporan-patroli_" : "laporan-tenant_") + S.dari + "_" + S.sampai + ".xlsx" });
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(function () { URL.revokeObjectURL(a.href); }, 2000);
   }

@@ -841,3 +841,26 @@ body { background: #EDF2F0; color: #12302C; }
 th { color: #4B6560; }
 .sisi-merek { padding: 22px 20px 20px; }
 .btn-sisi-tutup { background: rgba(255, 255, 255, .14) !important; color: #fff !important; border: 1px solid rgba(255, 255, 255, .3) !important; }
+
+/* ===== Panel samping: kepala tidak boleh terpotong, menu dilipat per kelompok ===== */
+.sisi { overflow: hidden; }
+.sisi-merek { flex: none; min-height: 78px; align-items: center; }
+.sisi-merek > div { min-width: 0; }
+.sisi-merek b { font-size: 19px; line-height: 1.15; white-space: nowrap; }
+.sisi-merek span { margin-top: 4px; font-size: 12px; letter-spacing: .02em; text-transform: none; font-weight: 500; white-space: nowrap; }
+.menu { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 4px 0 10px; overscroll-behavior: contain; }
+.sisi-bawah { flex: none; padding-top: 12px; padding-bottom: calc(14px + env(safe-area-inset-bottom)); gap: 8px; }
+.menu-kel { padding: 0; }
+.menu-grup { display: flex; align-items: center; justify-content: space-between; width: 100%; margin: 0; border: 0; background: transparent; cursor: pointer; font: 700 11px/1 var(--teks); letter-spacing: .08em; text-transform: uppercase; color: #0E6B5C; padding: 14px 22px 8px; text-align: left; }
+.menu-grup:hover { color: #01413C; }
+.menu-grup:focus-visible { outline: 2px solid #0E6B5C; outline-offset: -2px; border-radius: 8px; }
+.menu-panah { width: 7px; height: 7px; margin-right: 3px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(45deg); transition: transform .15s ease; }
+.menu-kel.tutup .menu-panah { transform: rotate(-45deg); }
+.menu-kel.tutup .menu-isi { display: none; }
+.menu a { min-height: 36px; }
+@media (prefers-reduced-motion: reduce) { .menu-panah { transition: none; } }
+
+/* ===== Pengaturan: aturan form dan hapus data lama ===== */
+.grid-aturan { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 16px; }
+@media (max-width: 640px) { .grid-aturan { grid-template-columns: 1fr; } }
+.aksi-baris { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }

@@ -293,8 +293,8 @@
     bidang.appendChild(kontrol);
     w.appendChild(bidang);
     w.appendChild(h("div", { class: "peta-bantu", text: editAktif
-      ? "Mode atur titik: tampilan datar. Seret untuk menggeser, cubit atau roda mouse untuk zoom."
-      : "Seret untuk menggeser \u00B7 cubit atau roda mouse untuk zoom \u00B7 tombol 3D untuk memutar dan memiringkan denah (Shift + roda = putar)." }));
+      ? "Mode atur: tampilan datar."
+      : "Seret untuk geser, cubit atau roda untuk zoom, tombol 3D untuk memutar." }));
     eng.terapkan();
     S.hapusMesin = eng.hapus;
 
@@ -309,8 +309,8 @@
     if (editAktif) { w.appendChild(panelBerkas(d)); if (d.id) w.appendChild(panelAtur(d, zona)); }
     else if (!Object.keys(d.pin).length) {
       w.appendChild(h("div", { class: "pengantar", text: boleh()
-        ? "Denah ini belum punya titik. Klik \"Atur titik\" untuk menaruh lokasi QR zona di gambar."
-        : "Denah ini belum punya titik. Minta admin untuk mengaturnya." }));
+        ? "Belum ada titik. Klik \"Atur titik\"."
+        : "Belum ada titik." }));
     }
   }
 
@@ -353,7 +353,7 @@
     return h("div", { class: "panel" },
       h("div", { class: "panel-kepala" }, h("h2", { text: "Gambar denah" })),
       h("div", { class: "panel-isi" },
-        h("div", { class: "pengantar", text: "Gambar denah adalah file di folder denah pada GitHub. Unggah filenya dulu (JPG, lebar sekitar 1500 px), lalu tulis nama berkasnya di sini. Denah baru bisa ditambah kapan saja." }),
+        h("div", { class: "pengantar", text: "Gambar ada di folder denah di GitHub. Unggah dulu, lalu tulis nama berkasnya." }),
         h("div", { class: "peta-isian" }, h("label", null, h("span", { class: "label", text: "Nama denah" }), nama), h("label", null, h("span", { class: "label", text: "Nama berkas" }), berkas)),
         aksi,
         d.id ? null : h("div", { class: "oleh", text: "Simpan denah dulu sebelum menaruh titik." })));
@@ -383,7 +383,7 @@
     }
     var petunjuk = S.pilih
       ? "Klik di denah untuk menaruh titik " + S.pilih + "."
-      : "Pilih zona di bawah, lalu klik letaknya di denah. Titik yang sudah ada bisa digeser; ketuk titik lalu \"Hapus titik\" untuk membuangnya.";
+      : "Pilih zona, lalu klik letaknya di denah. Titik bisa digeser.";
     return h("div", { class: "panel" },
       h("div", { class: "panel-kepala" }, h("h2", { text: "Atur titik denah" }), pilih),
       h("div", { class: "panel-isi" },

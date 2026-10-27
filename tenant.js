@@ -159,6 +159,8 @@
       PC.Jam.sinkron(r.waktuServer + (Date.now() - t0) / 2);
       master = r;
       try { localStorage.setItem(KUNCI_MASTER, JSON.stringify(r)); } catch (e) {}
+      if (foto) foto.atur(PC.aturanForm(master).maksFoto);
+      PC.pasangPengumuman(PC.aturanForm(master).pengumuman);
       if (statusFormBerubah(r)) return;
       petaTenant = {};
       master.daftarTenant.forEach(function (t) { petaTenant[t.n] = t; });
@@ -182,6 +184,8 @@
       PC.Jam.sinkron(r.waktuServer + (Date.now() - t0) / 2);
       master = r;
       try { localStorage.setItem(KUNCI_MASTER, JSON.stringify(r)); } catch (e) { /* abaikan */ }
+      if (foto) foto.atur(PC.aturanForm(master).maksFoto);
+      PC.pasangPengumuman(PC.aturanForm(master).pengumuman);
       if (statusFormBerubah(r)) { sudahMulai = true; return; }
       if (!sudahMulai) { sudahMulai = true; mulai(); return; }
       // Daftar sudah tampil dari cache: perbarui peta tenant dan tombol lantai tanpa mengganggu isian.
@@ -227,7 +231,8 @@
         if (v) cobaKunci();
         ubah();
       } });
-    foto = PC.FotoGrid($("foto-grid"), { maks: 3, onUbah: ubah });
+    foto = PC.FotoGrid($("foto-grid"), { maks: PC.aturanForm(master).maksFoto, onUbah: ubah });
+    PC.pasangPengumuman(PC.aturanForm(master).pengumuman);
     try { localStorage.setItem("dp_cl_mode", "daftar"); } catch (e) { /* abaikan */ }   // tampilan daftar: semua item terlihat sekaligus
     cl = PC.Checklist($("checklist"), { onUbah: ubah });
     bangunLantai();
@@ -370,12 +375,12 @@
       tingkat = "";
       Array.prototype.forEach.call(document.querySelectorAll('input[name="tingkat"]'), function (r) { r.checked = false; });
     }
-    $("jml-foto").textContent = foto.daftar().length + " dari 3" + (fotoWajib() ? "" : " (opsional)");
+    $("jml-foto").textContent = foto.daftar().length + " dari " + foto.maks() + (fotoWajib() ? "" : " (opsional)");
     if (kategori) $("petunjuk-foto").textContent = PETUNJUK_FOTO[kategori] + " Tanggal, jam, tenant, petugas, dan GPS tercetak otomatis." +
       (fotoWajib() ? "" : " Foto tidak wajib bila tidak ada temuan.");
     var siapFoto = !!kategori && !!cbTenant.nilai() && !!cbNama.nilai();
     $("btn-foto").disabled = !siapFoto || foto.penuh();
-    $("btn-foto-teks").textContent = foto.penuh() ? "Foto sudah 3 (maksimal)" : (foto.daftar().length ? "Tambah foto" : "Ambil foto");
+    $("btn-foto-teks").textContent = foto.penuh() ? "Foto sudah " + foto.maks() + " (maksimal)" : (foto.daftar().length ? "Tambah foto" : "Ambil foto");
     $("hint-foto").textContent = siapFoto ? "" : "Pilih tenant dan nama petugas dulu. Keduanya dicetak pada foto.";
     $("kurang").textContent = k.length ? "Lengkapi: " + k.join(", ") : "Semua isian lengkap. Siap dikirim.";
     $("kurang").className = "kurang" + (k.length ? "" : " siap");

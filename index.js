@@ -4,7 +4,13 @@
   var PC = window.PC, h = PC.h;
   var $ = function (id) { return document.getElementById(id); };
   var KUNCI_DRAFT = "dp_draft_patroli_v2", KUNCI_MASTER = "dp_master_v2", KUNCI_NAMA = "dp_nama";
-  var TOLERANSI_GPS_MAKS = 30; // meter; akurasi GPS dipakai sbg toleransi, maksimal segini. Isi 0 = geofence mutlak.
+  // Aturan dari admin (Pengaturan > Form petugas): jumlah foto, foto wajib, toleransi GPS, pengumuman.
+  function aturan() { return PC.aturanForm(master); }
+  function terapAturan() {
+    var a = aturan();
+    PC.pasangPengumuman(a.pengumuman);
+    if (foto) foto.atur(a.maksFoto);
+  }
   var master = null, idLaporan = PC.buatId(), tingkat = "", zona = "", zonaQR = "", mengirim = false, timerDraft = null;
   var cbNama, cl, foto;
   var KUNCI_PETUGAS = "dp_kunci_petugas_v1";
@@ -111,7 +117,7 @@
       return;
     }
     var jarak = hitungJarakM(gps.lat, gps.lng, lat0, lng0);
-    var toleransi = Math.min(Math.max(parseFloat(gps.akurasi) || 0, 0), TOLERANSI_GPS_MAKS);
+    var toleransi = Math.min(Math.max(parseFloat(gps.akurasi) || 0, 0), aturan().toleransiGps);
     if (jarak - toleransi > radius) {
       geoState = "luar";
       tampilGeo("luar", "Di luar area (" + Math.round(jarak) + " m)");
@@ -487,6 +493,7 @@
       PC.Jam.sinkron(r.waktuServer + (Date.now() - t0) / 2);
       master = r;
       try { localStorage.setItem(KUNCI_MASTER, JSON.stringify(r)); } catch (e) {}
+      terapAturan();
       petaLokasi();
       if (statusFormBerubah(r)) return;
       periksaGeofence(); periksaKunci(); gambarShift(); muatRonde();
@@ -551,6 +558,7 @@
       PC.Jam.sinkron(r.waktuServer + (Date.now() - t0) / 2);
       master = r;
       try { localStorage.setItem(KUNCI_MASTER, JSON.stringify(r)); } catch (e) {}
+      terapAturan();
       petaLokasi();
       if (statusFormBerubah(r)) { sudahMulai = true; return; }
       if (!sudahMulai) { sudahMulai = true; mulai(); } else { periksaGeofence(); periksaKunci(); gambarShift(); }
@@ -588,7 +596,8 @@
     $("btn-segar").addEventListener("click", segarkan);
     setInterval(function () { periksaKunci(); if (kunci && !document.hidden) muatRonde(); }, 60000);
     document.addEventListener("visibilitychange", function () { if (!document.hidden) { periksaKunci(); muatRonde(); } });
-    foto = PC.FotoGrid($("foto-grid"), { maks: 3, onUbah: ubah });
+    foto = PC.FotoGrid($("foto-grid"), { maks: aturan().maksFoto, onUbah: ubah });
+    PC.pasangPengumuman(aturan().pengumuman);
     try { localStorage.setItem("dp_cl_mode", "daftar"); } catch (e) {}   // tampilan daftar: tanpa tombol Sebelumnya/Selesai
     cl = PC.Checklist($("checklist"), { onUbah: ubah });
     rapikanChecklist();
@@ -665,7 +674,7 @@
     if (c.adaTemuan) {
       s.push({ ok: !!tingkat, label: "tingkat temuan" });
     }
-    s.push({ ok: foto.daftar().length > 0, label: "foto" });
+    if (aturan().fotoPatroli !== "opsional") s.push({ ok: foto.daftar().length > 0, label: "foto" });
     if (geoState !== "none") {
       s.push({ ok: geoState === "ok", label: geoState === "cari" ? "GPS" : "posisi di area" });
     }
@@ -693,9 +702,9 @@
     var nFoto = foto.daftar().length;
     var lokasiOk = geoState === "none" || geoState === "ok";
     var siapFoto = !!cbNama.nilai() && !!zona && lokasiOk;
-    $("jml-foto").textContent = nFoto + "/3";
+    $("jml-foto").textContent = nFoto + "/" + foto.maks() + (aturan().fotoPatroli === "opsional" ? " (opsional)" : "");
     $("btn-foto").disabled = !siapFoto || foto.penuh();
-    $("btn-foto-teks").textContent = foto.penuh() ? "Maks 3" : (nFoto ? "Tambah Foto" : "Ambil Foto");
+    $("btn-foto-teks").textContent = foto.penuh() ? "Maks " + foto.maks() : (nFoto ? "Tambah Foto" : "Ambil Foto");
 
     $("kurang").textContent = k.length ? "Kurang: " + k.join(", ") : "Siap dikirim";
     $("kurang").className = "kurang" + (k.length ? "" : " siap");

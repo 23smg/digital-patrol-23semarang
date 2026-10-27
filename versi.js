@@ -1,8 +1,8 @@
 /* versi.js - satu-satunya tempat nomor versi aplikasi.
    Diubah setiap ada pembaruan atau perubahan fitur. Service worker (sw.js) memakai nomor ini sebagai nama cache,
    jadi versi baru otomatis memuat ulang semua berkas di HP petugas, dan nomornya tampil otomatis di halaman. */
-self.APP_VERSI = "2.14.0";
-self.APP_TANGGAL = "25 Okt 2026";
+self.APP_VERSI = "2.15.0";
+self.APP_TANGGAL = "27 Okt 2026";
 (function () {
   "use strict";
   if (typeof document === "undefined") return;

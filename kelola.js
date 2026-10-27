@@ -334,7 +334,7 @@
     var kustom = h("div", { class: "medan" },
       h("label", { for: "fm-impor", text: "Tempel dari Excel" }),
       area,
-      h("p", { class: "bantuan", text: "Blok kolom Nama, Unit, Lantai di Excel, salin, lalu tempel di sini. Lantai boleh kosong. Maksimal 600 baris sekali impor, lebih dari itu dikirim bertahap otomatis." }),
+      h("p", { class: "bantuan", text: "Salin Nama, Unit, Lantai dari Excel lalu tempel di sini." }),
       ada ? h("div", { style: { margin: "10px 0" } }, h("button", { type: "button", class: "btn btn-kecil btn-kuning",
         text: "Isi dengan daftar tenant dari Excel 13 Okt 2026 (" + window.TENANT_AWAL.length + " tenant)",
         onclick: function () { area.value = teksBawaan(); perbarui(); } })) : null,
@@ -380,8 +380,7 @@
     chip: true, tambahLabel: "Tambah tenant",
     kolom: ["Tenant", "Unit", "Lantai"],
     sel: function (o) { return [h("td", { class: "nama", text: o.n }), h("td", { class: "unit", text: o.l || "-" }), h("td", null, h("span", { class: "lencana l-abu", text: o.f || "-" }))]; },
-    pengantar: [h("b", { text: "Daftar ini yang muncul di form petugas. " }), "Tenant yang dinonaktifkan tidak muncul di form, tetapi laporan lamanya tetap tersimpan. Perubahan berlaku di HP petugas begitu mereka membuka ulang form."],
-    kosong: "Daftar tenant masih kosong. Impor dari Excel atau tambah satu per satu.",
+    kosong: "Belum ada tenant. Impor dari Excel atau tambah satu per satu.",
     formTambah: function (segar) { formTenant(null, segar); },
     formUbah: function (o, segar) { formTenant(o, segar); },
     impor: function () { imporTenant(function () { DB.buka("tenant"); }); }
@@ -417,12 +416,11 @@
   var CFG_PETUGAS = {
     jenis: "PETUGAS", kunci: "petugas", satu: "petugas", judulPanel: "Daftar petugas", labelNama: "Nama petugas", cariHint: "Cari nama petugas",
     contoh: "Budi Santoso\nSiti Aminah", tambahLabel: "Tambah petugas",
-    infoTambah: "Petugas memilih namanya dari daftar ini saat mengisi form. Tanpa PIN, jadi pastikan nama ditulis jelas dan tidak kembar.",
+    infoTambah: "Petugas memilih namanya dari daftar ini. Pastikan nama jelas dan tidak kembar.",
     infoUbah: "Nama di laporan lama tidak ikut berubah.",
     teksCari: function (o) { return o.n; }, kolom: ["Nama petugas"],
     sel: function (o) { return [h("td", { class: "nama", text: o.n })]; },
-    pengantar: [h("b", { text: "Tanpa PIN. " }), "Petugas cukup memilih namanya dari daftar aktif. Saat ada petugas berhenti, nonaktifkan namanya agar tidak bisa dipakai lagi. Satu nama dibatasi jumlah laporan per jam sebagai pengaman."],
-    kosong: "Belum ada petugas. Tambahkan nama-nama petugas, boleh banyak sekaligus."
+    kosong: "Belum ada petugas."
   };
   CFG_PETUGAS.formTambah = function (segar) { formNama(CFG_PETUGAS, null, segar); };
   CFG_PETUGAS.formUbah = function (o, segar) { formNama(CFG_PETUGAS, o, segar); };
@@ -434,7 +432,6 @@
     infoTambah: "Zona tampil di form patroli. Beri nama berpola \"L4 - 1\" agar petugas bisa memilih per lantai, lalu titiknya.", infoUbah: "Nama zona di laporan lama tidak ikut berubah.",
     teksCari: function (o) { return o.n; }, kolom: ["Zona"],
     sel: function (o) { return [h("td", { class: "nama", text: o.n }) ]; },
-    pengantar: [h("b", { text: "Zona = area yang dipatroli. " }), "Minimal satu zona harus tetap aktif. Beri nama yang singkat karena tampil sebagai tombol di HP petugas."],
     kosong: "Belum ada zona. Tambahkan minimal satu."
   };
   CFG_ZONA.formTambah = function (segar) { formNama(CFG_ZONA, null, segar); };
@@ -446,7 +443,7 @@
     var ubah = !!o;
     DB.form({
       judul: ubah ? "Ubah item checklist" : "Tambah item checklist",
-      info: "Perubahan berlaku untuk laporan berikutnya. Laporan lama menyimpan teks item saat itu.",
+      info: "Berlaku untuk laporan berikutnya.",
       simpan: ubah ? "Simpan perubahan" : "Tambah item",
       bidang: [
         { id: "k", label: "Dipakai di", tipe: "select", nilai: ubah ? o.k : kategori,
@@ -467,11 +464,6 @@
   function tampilItem(wadah) {
     denganData(wadah, function () {
       PC.kosongkan(wadah);
-      wadah.appendChild(h("div", { class: "pengantar ringkas" },
-        h("b", { text: "Pertanyaan di form petugas. " }),
-        "Pilih kategori, lalu aktifkan, ubah, atau tambah item. ",
-        h("details", { class: "pengantar-rinci" }, h("summary", { text: "Cara kerja" }),
-          h("p", { text: "Setiap item dijawab petugas dengan Sesuai, Temuan, atau N/A. Patroli tampil di form Patroli; Buka toko dan Tutup toko tampil di form Tenant. Kalau semua item satu kategori dimatikan, bagian checklist kategori itu hilang dari form petugas. Perubahan muncul di HP petugas saat form dibuka lagi." }))));
       var kotak = h("div", { class: "panel item-panel" });
       wadah.appendChild(kotak);
 
@@ -521,7 +513,7 @@
     bidang.push({ id: "nama", label: "Nama lengkap", nilai: ubah ? o.nama : "", maks: 60, separuh: true });
     bidang.push({ id: "role", label: "Peran", tipe: "select", nilai: ubah ? o.role : "Supervisor", separuh: true, pilihan: role.map(function (r) { return [r, r]; }) });
     if (!ubah) bidang.push({ id: "password", label: "Kata sandi awal", maks: 100, tombol: { teks: "Buat otomatis", klik: function (el) { el.value = sandiAcak(); } },
-      bantuan: "Minimal 8 karakter. Catat dan berikan langsung ke orangnya, setelah disimpan tidak bisa dilihat lagi." });
+      bantuan: "Minimal 8 karakter. Tidak bisa dilihat lagi setelah disimpan." });
     DB.form({
       judul: ubah ? "Ubah akun " + o.username : "Tambah pengguna",
       info: ubah ? "Mengubah peran akan mengeluarkan akun itu dari sesi yang sedang aktif." : null,
@@ -546,7 +538,7 @@
 
   function formResetSandi(o, segar) {
     DB.form({
-      judul: "Atur ulang kata sandi " + o.username, info: "Akun ini akan dikeluarkan dari semua sesi dan harus masuk dengan kata sandi baru.",
+      judul: "Atur ulang kata sandi " + o.username, info: "Akun ini keluar dari semua sesi dan perlu sandi baru.",
       simpan: "Atur ulang kata sandi",
       bidang: [{ id: "password", label: "Kata sandi baru", maks: 100, tombol: { teks: "Buat otomatis", klik: function (el) { el.value = sandiAcak(); } }, bantuan: "Minimal 8 karakter. Catat sebelum menyimpan." }],
       periksa: function (v) { return v.password.length >= 8 ? "" : "Kata sandi minimal 8 karakter."; },
@@ -558,8 +550,6 @@
   function tampilAkun(wadah) {
     denganData(wadah, function () {
       PC.kosongkan(wadah);
-      wadah.appendChild(h("div", { class: "pengantar" }, h("b", { text: "Akun ini hanya untuk dashboard, bukan untuk petugas. " }),
-        "Admin: semua fitur termasuk akun dan area. Supervisor dan Manager: kelola data tenant, petugas, zona, checklist serta tindak lanjut temuan. Viewer: hanya melihat laporan."));
       var tbodyWadah = h("div", { class: "tabel-wrap penuh", style: { border: "0", borderRadius: "0", marginBottom: "0" } });
       var panel = h("div", { class: "panel" },
         h("div", { class: "panel-kepala" }, h("h2", { text: "Akun dashboard" })),
@@ -600,7 +590,7 @@
   function isiArea(wadah) {
     {
       var g = K.data.geo || {};
-      wadah.appendChild(h("p", { class: "oleh ket-ringkas", text: "Laporan dari luar lingkaran ini tetap tersimpan, tetapi diberi catatan \"Di luar area mall\". Kosongkan isian untuk menonaktifkan." }));
+      wadah.appendChild(h("p", { class: "oleh ket-ringkas", text: "Laporan di luar lingkaran diberi catatan \"Di luar area mall\". Kosongkan untuk menonaktifkan." }));
       var lat = h("input", { id: "g-lat", class: "input", inputmode: "decimal", autocomplete: "off", placeholder: "-6.9932" });
       var lng = h("input", { id: "g-lng", class: "input", inputmode: "decimal", autocomplete: "off", placeholder: "110.4203" });
       var rad = h("input", { id: "g-rad", class: "input", inputmode: "numeric", autocomplete: "off", placeholder: "300" });
@@ -647,7 +637,7 @@
         h("div", { class: "panel-isi" },
           status,
           h("div", { style: { margin: "12px 0" } }, btnLokasi,
-            h("p", { class: "bantuan oleh", style: { marginTop: "6px" }, text: "Berdiri di tengah mall lalu tekan tombol ini, atau isi koordinat dari Google Maps." })),
+            h("p", { class: "bantuan oleh", style: { marginTop: "6px" }, text: "Berdiri di tengah mall lalu tekan tombol ini, atau isi koordinat." })),
           h("div", { class: "peta-isian" },
             h("div", { class: "medan" }, h("label", { for: "g-lat", text: "Lintang (latitude)" }), lat),
             h("div", { class: "medan" }, h("label", { for: "g-lng", text: "Bujur (longitude)" }), lng),
@@ -697,13 +687,13 @@
     function simpan() {
       var mati = (!sP.cb.checked ? 1 : 0) + (!sT.cb.checked ? 1 : 0);
       if (!mati) { kirim(); return; }
-      PC.tanya("Nonaktifkan form petugas?", "Petugas tidak bisa mengirim laporan di form yang dinonaktifkan. Laporan yang sedang antre di HP mereka juga akan ditolak sampai form diaktifkan lagi.", "Nonaktifkan", "Batal")
+      PC.tanya("Nonaktifkan form petugas?", "Petugas tidak bisa mengirim di form yang dimatikan, termasuk laporan yang masih antre di HP.", "Nonaktifkan", "Batal")
         .then(function (ya) { if (ya) kirim(); });
     }
     return h("div", { class: "panel" },
       h("div", { class: "panel-kepala" }, h("h2", { text: "Status form petugas" }), status),
       h("div", { class: "panel-isi" },
-        h("p", { class: "oleh ket-ringkas", text: "Matikan form saat pemeliharaan atau di luar jam operasional. Berlaku segera di HP petugas." }),
+        h("p", { class: "oleh ket-ringkas", text: "Matikan form saat pemeliharaan. Berlaku segera." }),
         sP.el, sT.el,
         h("div", { class: "medan" }, h("label", { for: "fs-pesan", text: "Pesan untuk petugas (opsional)" }), pesan,
           h("p", { class: "bantuan", text: "Tampil di form saat dinonaktifkan." })),
@@ -711,28 +701,107 @@
         h("button", { type: "button", class: "btn btn-utama", text: "Simpan status form", onclick: simpan })));
   }
 
-  function panelFotoTenant() {
-    var p = K.data.pengaturan || { fotoTenant: "temuan" };
-    var foto = h("select", { id: "p-foto", class: "input" },
-      h("option", { value: "temuan", text: "Wajib hanya bila ada temuan", selected: p.fotoTenant !== "selalu" }),
-      h("option", { value: "selalu", text: "Selalu wajib", selected: p.fotoTenant === "selalu" }));
+  /* Aturan form petugas: semua yang berpengaruh pada isian di HP petugas diatur dari sini. */
+  function panelAturanForm() {
+    var a = Object.assign({ maksFoto: 3, fotoPatroli: "wajib", fotoTenant: ((K.data.pengaturan || {}).fotoTenant) || "temuan", toleransiGps: 30, batasKirim: 150, pengumuman: "" }, K.data.aturan || {});
+    function pilih(id, nilai, opsi) {
+      var el = h("select", { id: id, class: "input" });
+      opsi.forEach(function (o) { el.appendChild(h("option", { value: o[0], text: o[1], selected: String(nilai) === String(o[0]) })); });
+      return el;
+    }
+    function angka(id, nilai, min, maks) {
+      var el = h("input", { id: id, class: "input", type: "number", min: String(min), max: String(maks), step: "1", inputmode: "numeric" });
+      el.value = nilai; return el;
+    }
+    function medan(id, label, el, bantu) { return h("div", { class: "medan" }, h("label", { for: id, text: label }), el, bantu ? h("p", { class: "bantuan", text: bantu }) : null); }
+    var fMaks = pilih("af-maks", a.maksFoto, [[1, "1 foto"], [2, "2 foto"], [3, "3 foto"]]);
+    var fPat = pilih("af-pat", a.fotoPatroli, [["wajib", "Wajib"], ["opsional", "Boleh tanpa foto"]]);
+    var fTen = pilih("af-ten", a.fotoTenant, [["temuan", "Wajib bila ada temuan"], ["selalu", "Selalu wajib"]]);
+    var gps = angka("af-gps", a.toleransiGps, 0, 100);
+    var bts = angka("af-bts", a.batasKirim, 20, 500);
+    var info = h("input", { id: "af-info", class: "input", type: "text", maxlength: "200", placeholder: "Kosongkan bila tidak ada" });
+    info.value = a.pengumuman || "";
     var galat = h("p", { class: "galat", role: "alert", hidden: true });
     function simpan() {
       galat.hidden = true;
-      DB.panggil("fotoTenantSimpan", { fotoTenant: foto.value }, 40000).then(function (r) {
+      DB.panggil("aturanFormSimpan", { aturan: { maksFoto: Number(fMaks.value), fotoPatroli: fPat.value, fotoTenant: fTen.value,
+        toleransiGps: Number(gps.value), batasKirim: Number(bts.value), pengumuman: info.value } }, 40000).then(function (r) {
         if (r.status === "SUCCESS") {
-          K.data.pengaturan = r.pengaturan; if (r.riwayat) K.data.riwayat = r.riwayat;
-          PC.toast("Pengaturan foto tenant disimpan.", "ok");
+          K.data.aturan = r.aturan; if (r.pengaturan) K.data.pengaturan = r.pengaturan; if (r.riwayat) K.data.riwayat = r.riwayat;
+          PC.toast("Aturan form disimpan.", "ok");
         } else if (r.kode !== "SESI") { galat.textContent = r.message || "Gagal menyimpan."; galat.hidden = false; }
       });
     }
     return h("div", { class: "panel" },
-      h("div", { class: "panel-kepala" }, h("h2", { text: "Foto checklist tenant" })),
+      h("div", { class: "panel-kepala" }, h("h2", { text: "Aturan form" })),
       h("div", { class: "panel-isi" },
-        h("div", { class: "medan" }, h("label", { for: "p-foto", text: "Aturan foto" }), foto,
-          h("p", { class: "bantuan", text: "Foto patroli tetap wajib." })),
+        h("div", { class: "grid-aturan" },
+          medan("af-maks", "Foto per laporan", fMaks),
+          medan("af-pat", "Foto patroli", fPat),
+          medan("af-ten", "Foto tenant", fTen),
+          medan("af-gps", "Toleransi GPS (m)", gps, "0 sampai 100."),
+          medan("af-bts", "Maks laporan per nama per jam", bts, "20 sampai 500.")),
+        medan("af-info", "Pengumuman di form", info, "Tampil di atas form petugas."),
         galat,
-        h("button", { type: "button", class: "btn btn-utama", text: "Simpan", onclick: simpan })));
+        h("button", { type: "button", class: "btn btn-utama", text: "Simpan aturan", onclick: simpan })));
+  }
+
+  /* Hapus otomatis data lama (bawaan 3 bulan): baris sheet dan foto Drive. */
+  function panelRetensi() {
+    var wadah = h("div", { class: "panel" });
+    function tglId(t) { var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(t || ""); return m ? m[3] + "/" + m[2] + "/" + m[1] : (t || "-"); }
+    function isi() {
+      PC.kosongkan(wadah);
+      var rt = Object.assign({ aktif: false, bulan: 3, batas: "", pemicu: null, terakhir: "" }, K.data.retensi || {});
+      var cb = h("input", { type: "checkbox", id: "rt-aktif", role: "switch" });
+      cb.checked = !!rt.aktif;
+      var saklar = h("label", { class: "saklar", for: "rt-aktif" }, cb, h("span", { class: "saklar-geser", "aria-hidden": "true" }),
+        h("span", { class: "saklar-teks" }, h("b", { text: "Hapus otomatis tiap hari" }), h("span", { text: "Laporan, tindak lanjut, riwayat, dan foto." })));
+      var bulanOpsi = [[1, "1 bulan"], [2, "2 bulan"], [3, "3 bulan"], [6, "6 bulan"], [12, "12 bulan"]];
+      if (!bulanOpsi.some(function (o) { return o[0] === rt.bulan; })) bulanOpsi.push([rt.bulan, rt.bulan + " bulan"]);
+      var bln = h("select", { id: "rt-bulan", class: "input" });
+      bulanOpsi.forEach(function (o) { bln.appendChild(h("option", { value: o[0], text: o[1], selected: o[0] === rt.bulan })); });
+      var galat = h("p", { class: "galat", role: "alert", hidden: true });
+      var hasil = h("p", { class: "oleh", hidden: true });
+      var tombol = [];
+      function sibuk(v) { tombol.forEach(function (t) { t.disabled = v; }); }
+      function panggil(aksi, data, ms, kerja) {
+        galat.hidden = true; sibuk(true);
+        DB.panggil(aksi, data, ms).then(function (r) {
+          sibuk(false);
+          if (r.status === "SUCCESS") { if (r.retensi) K.data.retensi = r.retensi; if (r.riwayat) K.data.riwayat = r.riwayat; kerja(r); }
+          else if (r.kode !== "SESI") { galat.textContent = r.message || "Gagal."; galat.hidden = false; }
+        });
+      }
+      function simpan() {
+        panggil("retensiSimpan", { aktif: cb.checked, bulan: Number(bln.value) }, 60000, function () { PC.toast("Pengaturan disimpan.", "ok"); isi(); });
+      }
+      function hitung() {
+        panggil("retensiJalankan", { op: "hitung" }, 120000, function (r) { hasil.textContent = r.pesan; hasil.hidden = false; });
+      }
+      function hapus() {
+        PC.tanya("Hapus data lama sekarang?", "Data sebelum " + tglId(rt.batas) + " dihapus: baris laporan, tindak lanjut, riwayat, dan fotonya. Tidak bisa dibatalkan (foto masih bisa dipulihkan dari Sampah Drive selama 30 hari).", "Hapus", "Batal").then(function (ya) {
+          if (!ya) return;
+          panggil("retensiJalankan", { op: "hapus" }, 330000, function (r) { PC.toast(r.pesan, "ok"); isi(); });
+        });
+      }
+      var bSimpan = h("button", { type: "button", class: "btn btn-utama", text: "Simpan", onclick: simpan });
+      var bHitung = h("button", { type: "button", class: "btn btn-garis", text: "Hitung dulu", onclick: hitung });
+      var bHapus = h("button", { type: "button", class: "btn btn-garis btn-bahaya", text: "Hapus sekarang", onclick: hapus });
+      tombol = [bSimpan, bHitung, bHapus];
+      wadah.appendChild(h("div", { class: "panel-kepala" }, h("h2", { text: "Hapus data lama" }),
+        h("span", { class: "lencana " + (rt.aktif ? "l-ok" : "l-abu"), text: rt.aktif ? "Aktif" : "Nonaktif" })));
+      wadah.appendChild(h("div", { class: "panel-isi" },
+        saklar,
+        h("div", { class: "medan" }, h("label", { for: "rt-bulan", text: "Simpan data selama" }), bln,
+          h("p", { class: "bantuan", text: "Data sebelum " + tglId(rt.batas) + " termasuk yang akan dihapus." })),
+        rt.aktif && rt.pemicu === false ? h("p", { class: "galat", text: "Jadwal harian belum terpasang. Tekan Simpan." }) : null,
+        h("p", { class: "oleh", text: "Terakhir: " + (rt.terakhir || "belum pernah") }),
+        hasil, galat,
+        h("div", { class: "rapat aksi-baris" }, bSimpan, bHitung, bHapus)));
+    }
+    isi();
+    return wadah;
   }
 
   function panelSistem() {
@@ -761,21 +830,21 @@
       wadah.appendChild(h("div", { class: "panel-kepala" }, h("h2", { text: "Pemeriksaan sistem" })));
       var daftar = h("div", { class: "panel-isi periksa-daftar" });
       daftar.appendChild(baris(s.adminPenuh >= 2, "Jumlah akun admin",
-        s.adminPenuh >= 2 ? s.adminPenuh + " akun admin aktif." : "Hanya " + s.adminPenuh + " akun admin. Tambahkan satu lagi di menu Pengguna agar tidak terkunci bila satu lupa kata sandi."));
+        s.adminPenuh >= 2 ? s.adminPenuh + " akun admin aktif." : "Hanya " + s.adminPenuh + " akun admin. Tambah satu lagi di menu Pengguna."));
       daftar.appendChild(baris(!s.adminBawaan, "Nama pengguna bawaan",
-        s.adminBawaan ? "Akun \"admin\" bawaan masih ada dan mudah ditebak. Buat akun admin baru dengan nama lain, masuk dengannya, lalu hapus akun \"admin\"." : "Tidak ada akun dengan nama pengguna bawaan."));
+        s.adminBawaan ? "Akun \"admin\" bawaan mudah ditebak. Buat admin baru, lalu hapus yang bawaan." : "Tidak ada akun dengan nama pengguna bawaan."));
       daftar.appendChild(baris(!!s.geoDiatur, "Batas area patroli",
-        s.geoDiatur ? "Aktif. Laporan dari luar area diberi catatan." : "Belum diatur. Atur di bagian Area patroli di bawah."));
+        s.geoDiatur ? "Aktif. Laporan dari luar area diberi catatan." : "Belum diatur. Atur di tab Area patroli."));
       daftar.appendChild(baris(s.pemicu === null ? null : !!s.pemicu, "Cadangan dan arsip mingguan",
-        s.pemicu === null ? "Status jadwal tidak bisa dibaca. Berikan izin baru saat membuat versi deployment, lalu muat ulang halaman ini."
+        s.pemicu === null ? "Status jadwal tidak terbaca. Buat versi deployment baru, lalu muat ulang."
           : (s.pemicu ? "Jadwal aktif: setiap Senin dini hari." : "Belum dijadwalkan."),
         h("button", { type: "button", class: "btn btn-kecil " + (s.pemicu ? "btn-garis" : "btn-utama"), text: s.pemicu ? "Pasang ulang" : "Pasang jadwal",
           onclick: function () { jalankan("pemicu"); } })));
-      daftar.appendChild(baris(null, "Cadangan terakhir", s.cadangan || "Belum pernah. Salinan disimpan di folder Cadangan_Digital_Patrol di Google Drive (8 terbaru).",
+      daftar.appendChild(baris(null, "Cadangan terakhir", s.cadangan || "Belum pernah. Salinan di folder Cadangan_Digital_Patrol (8 terbaru).",
         h("button", { type: "button", class: "btn btn-kecil btn-garis", text: "Buat sekarang", onclick: function () { jalankan("cadangan"); } })));
-      daftar.appendChild(baris(null, "Arsip log terakhir", s.arsip || "Belum pernah. Log lebih tua dari 180 hari dipindah ke spreadsheet arsip agar sheet tetap cepat.",
+      if (!(K.data.retensi && K.data.retensi.aktif)) daftar.appendChild(baris(null, "Arsip log terakhir", s.arsip || "Belum pernah. Log lebih dari 180 hari dipindah ke arsip.",
         h("button", { type: "button", class: "btn btn-kecil btn-garis", text: "Arsipkan sekarang",
-          onclick: function () { jalankan("arsip", ["Arsipkan log lama?", "Baris log yang lebih tua dari 180 hari dipindah ke spreadsheet arsip, lalu dihapus dari sheet utama. Tindak lanjut dan laporan terbaru tidak terpengaruh."]); } })));
+          onclick: function () { jalankan("arsip", ["Arsipkan log lama?", "Log lebih dari 180 hari dipindah ke spreadsheet arsip. Laporan terbaru tidak terpengaruh."]); } })));
       wadah.appendChild(daftar);
     }
     isi();
@@ -797,9 +866,9 @@
       function gambar() {
         Array.prototype.forEach.call(bar.children, function (b) { b.setAttribute("aria-selected", b.id === "tabp-" + tabPengaturan ? "true" : "false"); });
         PC.kosongkan(isiTab);
-        if (tabPengaturan === "form") { isiTab.appendChild(panelFormPetugas()); isiTab.appendChild(panelFotoTenant()); }
+        if (tabPengaturan === "form") { isiTab.appendChild(panelFormPetugas()); isiTab.appendChild(panelAturanForm()); }
         else if (tabPengaturan === "area") { var area = h("div"); isiTab.appendChild(area); isiArea(area); }
-        else isiTab.appendChild(panelSistem());
+        else { isiTab.appendChild(panelRetensi()); isiTab.appendChild(panelSistem()); }
       }
       gambar();
     });
@@ -809,7 +878,6 @@
   function tampilRiwayat(wadah) {
     denganData(wadah, function () {
       PC.kosongkan(wadah);
-      wadah.appendChild(h("div", { class: "pengantar" }, h("b", { text: "Catatan audit. " }), "Setiap perubahan data master, akun, dan batas area tercatat di sini beserta pelakunya. Kata sandi tidak pernah dicatat. Menampilkan 100 perubahan terakhir."));
       var tabel = h("div", { class: "tabel-wrap penuh", style: { border: "0", borderRadius: "0", marginBottom: "0" } });
       var hitung = h("span");
       var cari = h("input", { type: "search", class: "input", placeholder: "Cari pengguna, jenis, atau isi", "aria-label": "Cari riwayat" });
@@ -930,8 +998,6 @@
     return h("div", { class: "panel" },
       h("div", { class: "panel-kepala" }, h("h2", { text: "Shift dan durasi sesi" })),
       h("div", { class: "panel-isi" },
-        h("div", { class: "pengantar" }, h("b", { text: "Sesi dihitung dari jam mulai shift. " }),
-          "Dalam satu sesi, petugas wajib mendatangi semua zona di lantai tugasnya (zona berpola \"LG - 85\" milik lantai LG). Saat sesi berganti, progres kembali ke nol. Shift yang selesai lebih pagi dari jam mulainya dianggap melewati tengah malam. Petugas memilih shift dan lantai sendiri di form Patroli; HP mengunci pilihan itu sampai shift berakhir."),
         h("div", { class: "medan", style: { maxWidth: "220px" } }, h("label", { for: "sh-ronde", text: "Durasi sesi (jam)" }), inRonde,
           h("p", { class: "bantuan", text: "1 sampai 12, kelipatan 0,5." })),
         daftar,
@@ -943,7 +1009,7 @@
         h("div", { class: "grup" },
           h("button", { type: "button", class: "btn btn-utama", text: "Simpan shift", onclick: simpan }),
           h("button", { type: "button", class: "btn btn-garis", text: "Buka kunci semua petugas", onclick: function () {
-            PC.tanya("Buka kunci semua petugas?", "Semua HP petugas akan melepas kunci nama dan shift saat form patroli dibuka berikutnya. Petugas memilih lagi.", "Buka kunci", "Batal").then(function (ya) {
+            PC.tanya("Buka kunci semua petugas?", "Semua HP melepas kunci nama dan shift. Petugas memilih lagi.", "Buka kunci", "Batal").then(function (ya) {
               if (!ya) return;
               kirimShift({ op: "bukaKunci" }).then(function (r) {
                 if (r.status === "SUCCESS") PC.toast("Kunci dibuka untuk semua petugas.", "ok");
@@ -963,8 +1029,6 @@
       } })));
     var isi = h("div", { class: "panel-isi" });
     wadah.appendChild(isi);
-    isi.appendChild(h("div", { class: "pengantar" }, h("b", { text: "Tidak perlu diatur. " }),
-      "Petugas memilih shift dan lantainya sendiri di form Patroli, lalu HP-nya terkunci sampai shift berakhir. Daftar ini terisi otomatis. Bila ada yang salah pilih nama atau lantai, gunakan Buka kunci di barisnya."));
     var daftar = p.tugas.filter(function (t) { return t.aktif; });
     if (!daftar.length) { isi.appendChild(h("div", { class: "kosong-tabel", text: "Belum ada petugas yang memilih shift dan lantai." })); return wadah; }
     var tbody = h("tbody");

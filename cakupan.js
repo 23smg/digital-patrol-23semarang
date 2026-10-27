@@ -66,8 +66,8 @@
     var n = { ok: 0, belum: 0, mepet: 0, tanpa: 0 };
     daftar.forEach(function (x) { n[x.s]++; });
 
-    w.appendChild(h("div", { class: "pengantar" }, h("b", { text: "Cara membaca: " }),
-      "tiap zona di lantai yang ada petugasnya wajib dipatroli sekali per sesi (" + jamRonde + " jam). Hijau = sudah, kuning = belum, merah = segera. Arahkan kursor ke zona untuk rincian."));
+    w.appendChild(h("div", { class: "pengantar" }, h("b", { text: "Cara baca: " }),
+      "tiap zona dipatroli sekali per sesi (" + jamRonde + " jam). Hijau sudah, kuning belum, merah segera."));
 
     var sel = function (angka, ket, kls) {
       return h("div", { class: kls || "" }, h("div", { class: "angka" }, angka), h("div", { class: "ket", text: ket }));
@@ -92,7 +92,7 @@
     });
     if (!lantaiAktif.length) {
       w.appendChild(h("div", { class: "panel" }, h("div", { class: "kosong-info",
-        text: "Belum ada petugas yang bertugas saat ini. Petugas mengunci shift dan lantainya di HP, lalu lantai itu muncul di sini." })));
+        text: "Belum ada petugas bertugas. Lantai muncul setelah petugas mengunci shift." })));
     }
     lantaiAktif.forEach(function (L) {
       var zonaL = daftar.filter(function (x) { return x.z.lantai === L.f; });

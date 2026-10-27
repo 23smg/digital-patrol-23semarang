@@ -260,6 +260,12 @@
   }
 
   // Nama petugas yang sudah dipilih ditempel di kepala halaman (di bawah tanggal), menggantikan kolom pilih nama.
+  // "MUHAMMAD DIN NURUDIN" -> "Muhammad Din Nurudin" (gelar bertanda baca seperti "S,H." dibiarkan).
+  function rapikanNama(n) {
+    if (n !== n.toUpperCase()) return n;
+    return n.replace(/\S+/g, function (k) { return /[.,]/.test(k) ? k : k.charAt(0) + k.slice(1).toLowerCase(); });
+  }
+
   function lencanaPetugas(teks, klik) {
     var st = document.getElementById("stempel");
     var meta = st && st.querySelector(".st-meta");
@@ -271,11 +277,40 @@
       el.type = "button"; el.id = "st-petugas-badge"; el.className = "st-petugas-badge";
       meta.appendChild(el);
     }
-    el.textContent = "\uD83D\uDC64 " + teks + (klik ? "  \u2715" : "");
+    var i = teks.lastIndexOf(" \u00B7 "), nama = i > 0 ? teks.slice(0, i) : teks, sh = i > 0 ? teks.slice(i + 3) : "";
+    kosongkan(el);
+    el.className = "st-petugas-badge" + (!sh && !klik ? " polos" : "");
+    el.appendChild(h("span", { class: "pb-nama", text: rapikanNama(nama) }));
+    if (sh) el.appendChild(h("span", { class: "pb-shift", text: sh }));
+    if (klik) el.appendChild(h("span", { class: "pb-x", "aria-hidden": "true", text: "\u2715" }));
     el.disabled = !klik;
     el.onclick = klik || null;
     el.title = klik ? "Ketuk untuk mengganti nama" : "";
-    el.setAttribute("aria-label", klik ? "Petugas " + teks + ". Ketuk untuk mengganti nama" : "Petugas " + teks);
+    el.setAttribute("aria-label", "Petugas " + nama + (sh ? ", shift " + sh : "") + (klik ? ". Ketuk untuk mengganti nama" : ""));
+  }
+
+  // Aturan form dari admin (Pengaturan > Form petugas). Nilai bawaan dipakai bila server belum mengirimnya.
+  function aturanForm(master) {
+    var a = (master && master.aturan) || {};
+    return {
+      maksFoto: Math.max(1, Math.min(3, Number(a.maksFoto) || 3)),
+      fotoPatroli: a.fotoPatroli === "opsional" ? "opsional" : "wajib",
+      toleransiGps: isFinite(Number(a.toleransiGps)) && a.toleransiGps !== "" && a.toleransiGps !== undefined ? Math.max(0, Math.min(100, Number(a.toleransiGps))) : 30,
+      pengumuman: String(a.pengumuman || "")
+    };
+  }
+
+  // Pengumuman dari admin: pita di atas form, tidak tampil bila kosong.
+  function pasangPengumuman(teks) {
+    var el = document.getElementById("pengumuman");
+    if (!teks) { if (el) el.remove(); return; }
+    if (!el) {
+      var app = document.querySelector("main.app");
+      if (!app) return;
+      el = h("div", { id: "pengumuman", class: "pengumuman", role: "note" });
+      app.insertBefore(el, app.firstChild);
+    }
+    el.textContent = teks;
   }
 
   /* ------------------------------------------------- Stempel pada foto */
@@ -518,7 +553,9 @@
       tambah: function (f) { if (daftar.length < o.maks) { daftar.push(f); render(); if (o.onUbah) o.onUbah(); } },
       daftar: function () { return daftar.slice(); },
       kosongkan: function () { daftar = []; render(); if (o.onUbah) o.onUbah(); },
-      penuh: function () { return daftar.length >= o.maks; }
+      penuh: function () { return daftar.length >= o.maks; },
+      maks: function () { return o.maks; },
+      atur: function (m) { m = Math.max(1, Math.min(3, Number(m) || 3)); if (m === o.maks) return; o.maks = m; if (daftar.length > m) daftar = daftar.slice(0, m); render(); if (o.onUbah) o.onUbah(); }
     };
   }
 
@@ -1217,7 +1254,7 @@
   /* ------------------------------------------------------ Eksport */
   w.PC = {
     h: h, kosongkan: kosongkan, buatId: buatId, api: api, Jam: Jam, sinkronJam: sinkronJam, fmtWIB: fmtWIB,
-    namaHari: namaHari, toast: toast, tanya: tanya, Lokasi: Lokasi, teksGps: teksGps, pasangStempel: pasangStempel, lencanaPetugas: lencanaPetugas,
+    namaHari: namaHari, toast: toast, tanya: tanya, Lokasi: Lokasi, teksGps: teksGps, pasangStempel: pasangStempel, lencanaPetugas: lencanaPetugas, aturanForm: aturanForm, pasangPengumuman: pasangPengumuman,
     Kamera: Kamera, FotoGrid: FotoGrid, Antrean: Antrean, pasangAntrean: pasangAntrean, Combobox: Combobox,
     formTutup: formTutup, Riwayat: Riwayat, ZonaJadwal: ZonaJadwal, Lembar: Lembar, Jaringan: Jaringan,
     Checklist: Checklist, pasangPWA: pasangPWA, CFG: CFG, ikon: ikon, pasangLogo: pasangLogo, pasangTema: pasangTema
