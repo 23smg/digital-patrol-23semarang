@@ -152,7 +152,7 @@
   /* ---------- Daftar zona terjadwal ---------- */
   // Saran zona berikutnya: yang terlambat atau belum dipatroli hari ini.
   // Zona yang ditampilkan: bila petugas punya lantai tugas dan shift berjalan, hanya zona lantainya (yang belum dipatroli ronde ini di atas).
-  function lantaiZonaJs(z) { var m = String(z || "").trim().match(/^([A-Za-z0-9]{1,4})\s*[-\u2013]/); return m ? m[1].toUpperCase() : ""; }
+  function lantaiZonaJs(z) { var m = String(z || "").trim().match(/^([A-Za-z0-9]{1,12})\s*[-\u2013]/); return m ? m[1].toUpperCase() : ""; }
   function zonaTampil() {
     var semua = master ? master.daftarZona : [];
     var lt = lantaiDipilih || (kunci && kunci.lantai) || "";
