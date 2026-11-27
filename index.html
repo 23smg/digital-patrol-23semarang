@@ -2,29 +2,27 @@
 <html lang="id">
 <head>
 <meta charset="utf-8">
-<meta name="color-scheme" content="light dark">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#01413C">
+<meta name="theme-color" content="#2563eb">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src https://script.google.com https://script.googleusercontent.com; media-src blob:; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="SmartPatrol">
+<meta name="apple-mobile-web-app-title" content="Patrol 23">
 <script src="tema.js"></script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" type="image/png" href="icons/icon-192.png">
-<title>SmartPatrol - Patroli</title>
-<link rel="stylesheet" href="petugas.css?v=50">
+<title>Patroli - Mall 23Semarang</title>
+<link rel="stylesheet" href="petugas.css?v=18">
 </head>
 <body>
 
-<div class="atas-tetap">
 <header class="kepala">
   <div class="kepala-isi">
     <div class="merek-grup">
-      <div class="judul">SmartPatrol</div>
+      <div class="judul">Patroli 23</div>
     </div>
     <nav class="nav-app" aria-label="Halaman">
       <a href="index.html" aria-current="page">Patroli</a>
@@ -34,35 +32,24 @@
 </header>
 
 <div class="stempel" id="stempel" aria-label="Waktu"></div>
-</div>
 
 <main class="app">
-  <div class="atas-status"><div id="antrean-wadah"></div><button type="button" id="btn-segar" class="btn-segar" aria-label="Muat ulang data" title="Muat ulang">&#8635;</button></div>
+  <div id="antrean-wadah"></div>
   <div id="hasil" class="hasil" role="status" hidden></div>
-  <section id="ronde" class="ronde" aria-label="Tugas dan progres sesi patroli" hidden></section>
   <div id="muat" class="muat" role="status">Memuat...</div>
 
   <form id="form" hidden novalidate>
     <section class="bagian" id="b-lokasi">
-      <div class="bagian-kepala"><h2>Lokasi</h2><button type="button" id="btn-izin" class="btn-izin" hidden>Izinkan akses</button></div>
-      <div class="lokasi-nama" id="lokasi-nama" hidden></div>
-      <div class="peta-lok" id="peta-lok" hidden></div>
-      <button type="button" id="btn-scan" class="btn btn-foto">Scan QR</button>
+      <h2>Lokasi</h2>
+      <div class="lokasi-nama" id="lokasi-nama">Scan QR lokasi</div>
+      <p class="petunjuk" id="lokasi-petunjuk" hidden></p>
       <div class="geo" id="geo-status" data-state="cari" role="status" aria-live="polite" hidden>
         <span class="dot" aria-hidden="true"></span><span id="geo-teks"></span>
       </div>
     </section>
 
     <section class="bagian" id="b-nama">
-      <h2>Petugas</h2>
-      <div class="medan" id="shift-wadah" hidden>
-        <span class="label" id="lbl-shift">Shift</span>
-        <div class="lantai-grup" id="shift-grup" role="radiogroup" aria-labelledby="lbl-shift"></div>
-      </div>
-      <div class="medan" id="lantai-wadah" hidden>
-        <span class="label" id="lbl-lantai">Lantai</span>
-        <div class="lantai-grup" id="lantai-grup" role="radiogroup" aria-labelledby="lbl-lantai"></div>
-      </div>
+      <h2>Nama</h2>
       <div class="medan">
         <div class="kombo">
           <input id="nama" class="input" type="text" autocomplete="off" placeholder="Pilih nama" aria-label="Nama petugas" aria-controls="daftar-nama">
@@ -73,7 +60,8 @@
     </section>
 
     <section class="bagian" id="b-cl">
-      <h2 id="cl-kepala">Checklist <small id="progres">0/0</small></h2>
+      <h2>Checklist <small id="progres">0/0</small></h2>
+      <button type="button" id="btn-semua" class="btn btn-semua">Semua Sesuai</button>
       <div id="checklist"></div>
       <div id="blok-temuan" hidden>
         <div class="medan">
@@ -86,25 +74,18 @@
         </div>
       </div>
       <div class="medan">
-        <textarea id="catatan" class="input" rows="1" maxlength="500" placeholder="Catatan (opsional)" aria-label="Catatan"></textarea>
+        <textarea id="catatan" class="input" rows="2" maxlength="500" placeholder="Catatan (opsional)" aria-label="Catatan"></textarea>
       </div>
     </section>
 
     <section class="bagian" id="b-foto">
       <h2>Foto <small id="jml-foto">0/3</small></h2>
       <div id="foto-grid" class="foto-grid"></div>
-      <button type="button" id="btn-foto" class="btn btn-foto"><span id="btn-foto-teks">Ambil Foto</span></button>
+      <button type="button" id="btn-foto" class="btn btn-foto"><span id="ikon-foto"></span><span id="btn-foto-teks">Ambil Foto</span></button>
+      <p id="hint-foto" class="petunjuk"></p>
     </section>
   </form>
-  <footer class="kaki-app"><span>Developed by alif.rizal@23semarang.id</span><span data-versi></span></footer>
 </main>
-
-<div class="scan" id="scan" role="dialog" aria-label="Scan QR lokasi" hidden>
-  <video id="scan-video" playsinline muted></video>
-  <div class="scan-bingkai" aria-hidden="true"></div>
-  <p class="scan-teks" id="scan-teks"></p>
-  <button type="button" id="scan-batal" class="btn scan-batal">Batal</button>
-</div>
 
 <div class="bar-kirim" id="bar-kirim" hidden>
   <div class="bar-isi">
@@ -114,11 +95,8 @@
   </div>
 </div>
 
-<script src="versi.js?v=2"></script>
-<script src="config.js?v=48"></script>
-<script src="core.js?v=50"></script>
-<script src="jsqr.js?v=48"></script>
-<script src="denah3d.js?v=1"></script>
-<script src="index.js?v=50"></script>
+<script src="config.js?v=18"></script>
+<script src="core.js?v=18"></script>
+<script src="index.js?v=18"></script>
 </body>
 </html>

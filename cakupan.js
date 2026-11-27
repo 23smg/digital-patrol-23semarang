@@ -118,15 +118,30 @@
       w.appendChild(h("div", { class: "panel" }, kepala, h("div", { class: "panel-isi" }, info, bar, grid)));
     });
 
-    // Lantai yang tidak ada petugas bertugas: ringkas saja.
-    var tanpa = {};
-    daftar.forEach(function (x) { if (x.s === "tanpa") tanpa[x.z.lantai] = (tanpa[x.z.lantai] || 0) + 1; });
+    // Lantai yang tidak ada petugas bertugas (misalnya External): zonanya tetap ditampilkan, berwarna abu-abu.
+    var tanpa = {}, jmlTanpa = 0;
+    daftar.forEach(function (x) {
+      if (x.s !== "tanpa") return;
+      (tanpa[x.z.lantai] = tanpa[x.z.lantai] || []).push(x);
+      jmlTanpa++;
+    });
     var kunciTanpa = Object.keys(tanpa).sort(function (a, b) { return a.localeCompare(b, "id", { numeric: true }); });
     if (kunciTanpa.length) {
+      var blok = kunciTanpa.map(function (f) {
+        var arr = tanpa[f].slice().sort(function (a, b) { return a.z.zona.localeCompare(b.z.zona, "id", { numeric: true }); });
+        var grid = h("div", { class: "zona-grid zona-ringkas" });
+        arr.forEach(function (x) {
+          grid.appendChild(h("div", { class: "zona-chip s-tanpa", tabindex: "0",
+            title: x.z.zona + " - " + LABEL.tanpa + "\n" + teksTerakhir(x.z) + "\nHari ini: " + x.z.hariIni + " kali", text: x.z.zona }));
+        });
+        return h("div", { class: "lantai-tanpa" },
+          h("div", { class: "lantai-info" }, h("span", null, h("b", { text: "Lantai " + (f || "tanpa nama") }), "  " + arr.length + " zona")),
+          grid);
+      });
       w.appendChild(h("div", { class: "panel" },
-        h("div", { class: "panel-kepala" }, h("h2", { text: "Lantai tanpa petugas bertugas" }), h("span", { class: "oleh", text: kunciTanpa.length + " lantai" })),
-        h("div", { class: "panel-isi" },
-          h("div", { class: "chip-wadah" }, kunciTanpa.map(function (f) { return h("span", { class: "lencana l-abu", text: f + " · " + tanpa[f] + " zona" }); })))));
+        h("div", { class: "panel-kepala" }, h("h2", { text: "Lantai tanpa petugas bertugas" }),
+          h("span", { class: "oleh", text: kunciTanpa.length + " lantai, " + jmlTanpa + " zona" })),
+        h("div", { class: "panel-isi" }, blok)));
     }
   }
 

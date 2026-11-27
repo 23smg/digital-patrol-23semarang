@@ -654,6 +654,7 @@ dialog.dialog, dialog.dialog-lebar { border-radius: 22px; background: #FAFBFC; }
 .zona-chip.s-belum { border-left-color: #F7B924; background: #FFFCF2; }
 .zona-chip.s-mepet { border-left-color: var(--merah); background: #FFF8F9; }
 .zona-chip.s-tanpa { border-left-color: var(--garis-2); color: #8A94A6; }
+.lantai-tanpa + .lantai-tanpa { margin-top: 14px; }
 
 /* Denah zona */
 .peta-legenda { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 12px; }
