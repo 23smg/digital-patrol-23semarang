@@ -165,6 +165,14 @@
     return f.filter(function (z) { return sudah.indexOf(z) < 0; }).concat(f.filter(function (z) { return sudah.indexOf(z) >= 0; }), lain);
   }
 
+  // Zona yang di-scan ada di lantai lain padahal sesi lantai tugas petugas belum lengkap.
+  // Memblokir: petugas wajib menyelesaikan sesi lantai tugasnya dulu sebelum scan zona di lantai lain.
+  function zonaDiLuarTugas(z) {
+    if (!kunci || !kunci.lantai || !ronde || !ronde.ada || !ronde.aktif || ronde.lengkap) return false;
+    var f = lantaiZonaJs(z);
+    return !!f && f !== kunci.lantai;
+  }
+
   function saranZona() { var el = $("zona-saran"); if (el) el.hidden = true; }
 
   /* ---------- Scan QR lokasi (langsung dari form) ---------- */
@@ -286,7 +294,13 @@
       p.then(function (teks) {
         if (!teks) return;
         var z = zonaDariQR(teks);
-        if (z) { tutupScan(); setZona(z); PC.toast("Lokasi: " + z, "ok"); }
+        if (z) {
+          tutupScan();
+          if (zonaDiLuarTugas(z)) {
+            var sisaZ = ronde.belum && ronde.belum.length ? ronde.belum.length : Math.max(1, ronde.total - ronde.selesaiJml);
+            PC.toast("Patroli Lantai " + kunci.lantai + " belum selesai. Masih terdapat " + sisaZ + " zona yang perlu dipatroli sebelum berpindah ke Lantai " + lantaiZonaJs(z) + " (zona " + z + "). Mohon selesaikan terlebih dahulu.", "bad");
+          } else { setZona(z); PC.toast("Lokasi: " + z, "ok"); }
+        }
         else { $("scan-teks").textContent = "QR bukan lokasi patroli"; }
       }).catch(function () {}).then(function () { sibuk = false; });
     }, 200);
